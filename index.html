@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANKITSTUDIOAI — Prompt Marketplace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow1"></div>
+<div class="bg-glow2"></div>
+
+<div class="sidebar">
+    <a href="#" class="side-link active">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </a>
+    <a href="#featured" class="side-link" onclick="scrollToSection('featured')">
+        <i class="fas fa-search"></i>
+        <span>Search</span>
+    </a>
+    <a href="#" class="side-link">
+        <i class="fas fa-clock-rotate-left"></i>
+        <span>History</span>
+    </a>
+    <a href="#" class="side-link">
+        <i class="fas fa-layer-group"></i>
+        <span>Favorites</span>
+    </a>
+
+    <div class="side-section-title">Categories</div>
+
+    <a href="#" class="side-link" onclick="toggleTagsSubmenu(event)">
+        <i class="fas fa-hashtag"></i>
+        <span>Tags</span>
+        <i class="fas fa-chevron-right arrow-icon" id="tagsArrowIcon"></i>
+    </a>
+    
+    <div class="side-submenu" id="tagsSubmenu">
+        <a href="#" class="sub-link active">All</a>
+        <a href="#" class="sub-link">UI & Graphic</a>
+        <a href="#" class="sub-link">Poster Design</a>
+        <a href="#" class="sub-link">Product & Brand</a>
+        <a href="#" class="sub-link">Videos <span class="blue-dot"></span></a>
+        <a href="#" class="sub-link">Photography</a>
+        <a href="#" class="sub-link">Illustration & 3D</a>
+        <a href="#" class="sub-link">Food & Drink</a>
+    </div>
+
+    <a href="#" class="side-link">
+        <i class="far fa-clock"></i>
+        <span>Recent Updates</span>
+    </a>
+</div>
+
+<nav>
+    <div class="nav-logo">ANKITSTUDIOAI<span>Prompt Market</span></div>
+    
+    <button class="nav-link ghost" onclick="scrollToSection('featured')">Browse</button>
+    <button class="nav-link ghost" onclick="scrollToSection('categories')">Categories</button>
+
+    <div class="nav-search">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search prompts..." id="navSearch" oninput="filterPrompts()">
+    </div>
+    <div class="nav-links">
+        <button class="nav-link ghost" id="userDisplay" style="color:var(--gold); display:none; font-weight:700;"></button>
+        <button class="nav-link primary" id="loginBtn" onclick="openAuthModal()"><i class="fas fa-user"></i> Login</button>
+    </div>
+</nav>
+
+<div class="trust-bar">
+    <div class="trust-item"><i class="fas fa-star"></i> 4.9 Rating</div>
+    <div class="trust-item"><i class="fas fa-bolt"></i> 500+ Prompts</div>
+    <div class="trust-item"><i class="fas fa-users"></i> 10K+ Users</div>
+    <div class="trust-item"><i class="fas fa-shield-alt"></i> Verified Quality</div>
+</div>
+
+<div class="hero-container">
+    
+    <div class="hero-profile-wrapper">
+        <div class="hero-hex-panel"></div>
+        <div class="hero-glowing-ring"></div>
+        <img class="hero-profile-img" src="myphoto.png" alt="Ankit Burdak Profile" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%236a7090\'><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'">
+    </div>
+
+    <div class="hero">
+        <div class="hero-badge"><i class="fas fa-fire"></i> India's #1 AI Prompt Library</div>
+        <h1>AI PROMPT<br><span class="highlight">MARKETPLACE</span></h1>
+        <div class="hero-sub">Access 500+ high-quality AI prompts by ANKITSTUDIOAI</div>
+        <div class="hero-tags">
+            <span class="t1">Midjourney</span> ·
+            <span class="t2">ChatGPT</span> ·
+            <span class="t3">Gemini</span> ·
+            <span class="t4">Leonardo</span> ·
+            <span style="color:var(--muted)">& more</span>
+        </div>
+        <div class="hero-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search 500+ prompts..." id="heroSearch" oninput="filterPrompts()">
+            <button class="hero-search-btn" onclick="filterPrompts()">SEARCH</button>
+        </div>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-num">500+</div>
+                <div class="stat-lbl">Prompts</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">12</div>
+                <div class="stat-lbl">Categories</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">10K+</div>
+                <div class="stat-lbl">Downloads</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">FREE</div>
+                <div class="stat-lbl">To Use</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section" id="categories">
+    <div class="section-head">
+        <div class="section-title"><i class="fas fa-th-large"></i> Categories</div>
+        <div class="see-all" onclick="setCategoryFilter('')">View All →</div>
+    </div>
+    <div class="cat-grid">
+        <div class="cat-card" onclick="setCategoryFilter('Portrait')">
+            <div class="cat-icon">🎨</div>
+            <div class="cat-name">Portrait</div>
+            <div class="cat-count">120+ prompts</div>
+        </div>
+        <div class="cat-card" onclick="setCategoryFilter('Landscape')">
+            <div class="cat-icon">🌄</div>
+            <div class="cat-name">Landscape</div>
+            <div class="cat-count">85+ prompts</div>
+        </div>
+        <div class="cat-card" onclick="setCategoryFilter('Logo')">
+            <div class="cat-icon">⚡</div>
+            <div class="cat-name">Logo & Brand</div>
+            <div class="cat-count">60+ prompts</div>
+        </div>
+        <div class="cat-card" onclick="setCategoryFilter('Anime')">
+            <div class="cat-icon">🌸</div>
+            <div class="cat-name">Anime</div>
+            <div class="cat-count">95+ prompts</div>
+        </div>
+        <div class="cat-card" onclick="setCategoryFilter('ChatGPT')">
+            <div class="cat-icon">🤖</div>
+            <div class="cat-name">ChatGPT</div>
+            <div class="cat-count">70+ prompts</div>
+        </div>
+        <div class="cat-card" onclick="setCategoryFilter('Video')">
+            <div class="cat-icon">🎬</div>
+            <div class="cat-name">Video / Veo</div>
+            <div class="cat-count">40+ prompts</div>
+        </div>
+        <div class="cat-card" onclick="setCategoryFilter('Fantasy')">
+            <div class="cat-icon">🐉</div>
+            <div class="cat-name">Fantasy</div>
+            <div class="cat-count">55+ prompts</div>
+        </div>
+        <div class="cat-card" onclick="setCategoryFilter('')">
+            <div class="cat-icon">✨</div>
+            <div class="cat-name">All Prompts</div>
+            <div class="cat-count">500+ total</div>
+        </div>
+    </div>
+</div>
+
+<div class="section" style="padding-top:0">
+    <div class="featured-banner">
+        <div class="featured-icon">🔥</div>
+        <div class="featured-text">
+            <h3>Submit Your Prompt</h3>
+            <p>Share your best AI prompts with the ANKITSTUDIOAI community — get featured!</p>
+        </div>
+        <button class="featured-btn" onclick="openAuthModal()"><i class="fas fa-upload"></i> SUBMIT NOW</button>
+    </div>
+</div>
+
+<div class="section" style="padding-top:0">
+    <div class="prompt-redirect-box-wrapper">
+        <a href="https://ankitburdak05-oss.github.io/ANKITSTUDIO/prompts" class="prompt-redirect-box">
+            <span class="prompt-redirect-text">100+ PROMPTS</span>
+            <i class="fas fa-external-link-alt prompt-redirect-icon"></i>
+        </a>
+    </div>
+</div>
+
+<div class="section" style="padding-top:0">
+    <div class="tools-grid">
+        
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                <i class="fas fa-wand-magic-sparkles"></i>
+            </div>
+            <div class="tool-title">AI Prompt Generator</div>
+            <div class="tool-desc">Transform your ideas into professional prompts</div>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(168, 85, 247, 0.15); color: #a855f7;">
+                <i class="far fa-circle-check"></i>
+            </div>
+            <div class="tool-title">Prompt Checking</div>
+            <div class="tool-desc">Verify your prompt quality</div>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(236, 72, 153, 0.15); color: #ec4899;">
+                <i class="far fa-image"></i>
+            </div>
+            <div class="tool-title">Image Prompts</div>
+            <div class="tool-desc">Create stunning AI images</div>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                <i class="fas fa-video"></i>
+            </div>
+            <div class="tool-title">VEO3 Video Prompts</div>
+            <div class="tool-desc">Create stunning AI videos</div>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                <i class="fas fa-magnifying-glass"></i>
+            </div>
+            <div class="tool-title">AI Text Detector</div>
+            <div class="tool-desc">Detect AI-generated text</div>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                <i class="fas fa-pen-nib"></i>
+            </div>
+            <div class="tool-title">Ai Humanizer</div>
+            <div class="tool-desc">Humanize AI Text Easily with Our Free AI Humanizer Tool</div>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(249, 115, 22, 0.15); color: #f97316;">
+                <i class="fas fa-laptop-code"></i>
+            </div>
+            <div class="tool-title">Image to Prompt</div>
+            <div class="tool-desc">Convert images to AI prompts</div>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">
+                <i class="far fa-file-lines"></i>
+            </div>
+            <div class="tool-title">Image to Text</div>
+            <div class="tool-desc">Extract text from images</div>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
+                <i class="fas fa-images"></i>
+            </div>
+            <div class="tool-title">Two Images to Prompt</div>
+            <div class="tool-desc">Convert two images to one prompt</div>
+        </div>
+
+        <div class="tool-card">
+            <div class="tool-icon-wrap" style="background: rgba(234, 179, 8, 0.15); color: #eab308;">
+                <i class="fas fa-cart-shopping"></i>
+            </div>
+            <div class="tool-title">AI Product Description Generator</div>
+            <div class="tool-desc">Create professional product descriptions</div>
+        </div>
+
+    </div>
+</div>
+<div class="section" id="featured">
+    <div class="section-head">
+        <div class="section-title"><i class="fas fa-fire"></i> Featured Prompts</div>
+        <div class="see-all" id="clearFilter" onclick="setCategoryFilter('')" style="display:none;color:var(--red)">Clear Filter ✕</div>
+    </div>
+
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="setAiFilter('', this)">All</button>
+        <button class="filter-btn" onclick="setAiFilter('Midjourney', this)">Midjourney</button>
+        <button class="filter-btn" onclick="setAiFilter('ChatGPT', this)">ChatGPT</button>
+        <button class="filter-btn" onclick="setAiFilter('Leonardo', this)">Leonardo</button>
+        <button class="filter-btn" onclick="setAiFilter('Gemini', this)">Gemini</button>
+        <button class="filter-btn" onclick="setAiFilter('Stable Diffusion', this)">Stable Diffusion</button>
+    </div>
+
+    <div class="prompt-grid" id="promptGrid">
+        </div>
+    <div id="noResults" style="display:none;text-align:center;padding:40px;color:var(--muted);font-size:1.1rem;font-weight:600;letter-spacing:2px;">
+        <i class="fas fa-search" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+        No prompts found. Try a different search!
+    </div>
+</div>
+
+<div class="divider"></div>
+
+<footer>
+    <div class="footer-logo">ANKITSTUDIOAI</div>
+    <div class="footer-links">
+        <span class="footer-link" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">Home</span>
+        <span class="footer-link" onclick="scrollToSection('featured')">Browse</span>
+        <span class="footer-link" onclick="openAuthModal()">Submit</span>
+        <span class="footer-link">YouTube</span>
+        <span class="footer-link">Instagram</span>
+    </div>
+    <div class="footer-copy">Made with <span>♥</span> by Ankit Burdak · ANKITSTUDIOAI © 2026</div>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="modal">
+        <button class="modal-close" onclick="closeModalDirect()"><i class="fas fa-times"></i></button>
+        <div class="modal-ai-tag" id="modalAiTag"></div>
+        <h2 id="modalTitle"></h2>
+        <div class="modal-meta" id="modalMeta"></div>
+        <div class="modal-prompt-box" id="modalPrompt"></div>
+        <button class="modal-copy-btn" id="modalCopyBtn" onclick="copyModalPrompt()">
+            <i class="fas fa-copy"></i> &nbsp; COPY PROMPT
+        </button>
+    </div>
+</div>
+
+<div class="auth-overlay" id="authOverlay" onclick="closeAuthOutside(event)">
+    <div class="auth-box" id="authBox">
+        <button class="auth-close" onclick="closeAuth()"><i class="fas fa-times"></i></button>
+
+        <div class="auth-logo-icon">⚡</div>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tabCreate" onclick="switchTab('create')">Create Account</button>
+            <button class="auth-tab" id="tabLogin" onclick="switchTab('login')">Login</button>
+        </div>
+
+        <div id="authForm">
+            <div class="auth-title" id="authTitle">CREATE ACCOUNT</div>
+            <div class="auth-sub" id="authSub">Join 10,000+ AI enthusiasts & creators</div>
+
+            <button class="google-btn" onclick="loginWithGoogle()">
+                <div class="google-icon"></div>
+                Continue with Google
+            </button>
+
+            <div class="auth-divider"><span>or continue with email</span></div>
+
+            <input type="email" class="auth-input" id="authEmail" placeholder="Email address*">
+            <input type="password" class="auth-input auth-password" id="authPassword" placeholder="Password*">
+
+            <div class="auth-checkbox-row" id="authCheckboxRow">
+                <input type="checkbox" class="auth-checkbox" id="authCheckbox" checked>
+                <label class="auth-checkbox-label" for="authCheckbox">
+                    Get updates about new ANKITSTUDIOAI prompts. Only important announcements, unsubscribe anytime.
+                </label>
+            </div>
+
+            <button class="auth-continue-btn" onclick="handleContinue()">
+                <span id="continueText">CONTINUE</span>
+            </button>
+
+            <div class="auth-terms">
+                By continuing, you agree to our <a>Terms of Service</a> and <a>Privacy Policy</a>.
+            </div>
+
+            <div class="auth-switch" id="authSwitch" onclick="switchTab('login')">
+                Already have an account? <span>Login here</span>
+            </div>
+        </div>
+
+        <div class="auth-success" id="authSuccess">
+            <div class="success-icon">✅</div>
+            <div class="success-text">WELCOME!</div>
+            <div class="success-sub">You are now part of ANKITSTUDIOAI 🔥</div>
+        </div>
+    </div>
+</div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/prompts-data.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>
