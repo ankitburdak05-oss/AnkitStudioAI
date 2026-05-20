@@ -1086,10 +1086,13 @@ footer {
 .success-text { font-family: 'Bebas Neue',sans-serif; font-size:1.8rem; letter-spacing:3px; color: var(--green); }
 .success-sub { font-size:13px; color:var(--muted); }
 
-/* Profile Dropdown Styling */
+/* ==========================================================================
+   APPROVED PATCH: OPTIMIZED PROFILE DROPDOWN WITH LAYOUT SAFE-GUARDS
+   ========================================================================== */
 .profile-dropdown {
     position: relative;
     display: inline-block;
+    z-index: 250; /* Fixed: Added high z-index stacking context over hero container */
 }
 
 .dropdown-trigger {
@@ -1102,6 +1105,11 @@ footer {
     text-transform: uppercase;
     cursor: pointer;
     border-radius: 4px;
+    transition: all 0.2s ease;
+}
+.dropdown-trigger:hover {
+    background: rgba(255, 0, 60, 0.25);
+    box-shadow: 0 0 12px var(--red-glow);
 }
 
 .dropdown-content {
@@ -1109,39 +1117,48 @@ footer {
     position: absolute;
     right: 0;
     background-color: #0d0d11;
-    min-width: 200px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
-    border: 1px solid #222;
-    z-index: 999;
+    min-width: 220px; /* Enhanced: Prevent layout text wrap */
+    max-width: 280px;
+    box-shadow: 0px 8px 32px 0px rgba(0,0,0,0.7);
+    border: 1px solid var(--border2);
+    z-index: 1000;
     margin-top: 8px;
-    border-radius: 4px;
+    border-radius: 6px;
+    overflow: hidden; /* Prevent inner background leaking */
 }
 
-/* Jab wrapper par hover ya open class ho tab dropdown dikhe */
+/* Hover dynamic state execution pipeline */
 .profile-dropdown:hover .dropdown-content {
     display: block;
+    animation: fadeUp 0.2s ease both;
 }
 
 .user-info-header {
-    padding: 12px 16px;
+    padding: 14px 16px;
     font-family: 'Rajdhani', sans-serif;
+    background: rgba(255, 255, 255, 0.01);
 }
 
 #dropdownUserName {
     color: #fff;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
-    margin: 0;
+    margin: 0 0 2px 0;
+    letter-spacing: 0.5px;
 }
 
 #dropdownUserEmail {
-    color: #666;
+    color: var(--muted);
     font-size: 12px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Fixed: Wrap long email addresses safely */
 }
 
 .dropdown-divider {
     border: 0;
-    border-top: 1px solid #222;
+    border-top: 1px solid var(--border);
     margin: 0;
 }
 
@@ -1149,12 +1166,20 @@ footer {
     color: #ff3333;
     padding: 12px 16px;
     text-decoration: none;
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
-    transition: 0.2s;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.logout-link i {
+    font-size: 13px;
 }
 
 .logout-link:hover {
-    background-color: #ff333315;
+    background-color: rgba(255, 51, 51, 0.12);
+    color: #ff5555;
 }
