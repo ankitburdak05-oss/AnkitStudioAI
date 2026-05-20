@@ -28,7 +28,7 @@ body {
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
-    padding-left: 240px; /* Space for the expanded left sidebar */
+    padding-left: 240px;
 }
 
 /* BG Effects */
@@ -247,7 +247,7 @@ nav {
     letter-spacing: 1px; text-transform: uppercase;
     cursor: pointer; border: none;
     font-family: 'Rajdhani', sans-serif;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 .nav-link.ghost { background: transparent; color: var(--muted); }
@@ -255,7 +255,7 @@ nav {
 .nav-link.primary { background: var(--red); color: #fff; }
 .nav-link.primary:hover { background: #ff4455; transform: translateY(-1px); box-shadow: 0 4px 16px var(--red-glow); }
 
-/* ===== HERO CONTAINER LAYOUT WITH PROFILE OVERLAY ===== */
+/* ===== HERO CONTAINER LAYOUT ===== */
 .hero-container {
     display: flex;
     align-items: center;
@@ -906,12 +906,13 @@ footer {
     .arrow-icon { display: none; }
     .side-submenu { display: none !important; }
 }
+
 @media(max-width:400px) {
     .prompt-grid { grid-template-columns: 1fr; }
     .tools-grid { grid-template-columns: 1fr; }
 }
 
-/* ===== AUTH MODAL ===== */
+/* ===== AUTH MODAL & DROPDOWN (RESTORED OUTSIDE MEDIA QUERY) ===== */
 .auth-overlay {
     display: none;
     position: fixed; inset: 0; z-index: 300;
@@ -1086,13 +1087,11 @@ footer {
 .success-text { font-family: 'Bebas Neue',sans-serif; font-size:1.8rem; letter-spacing:3px; color: var(--green); }
 .success-sub { font-size:13px; color:var(--muted); }
 
-/* ==========================================================================
-   APPROVED PATCH: OPTIMIZED PROFILE DROPDOWN WITH LAYOUT SAFE-GUARDS
-   ========================================================================== */
+/* Approved Profile Dropdown Structure */
 .profile-dropdown {
     position: relative;
     display: inline-block;
-    z-index: 250; /* Fixed: Added high z-index stacking context over hero container */
+    z-index: 250;
 }
 
 .dropdown-trigger {
@@ -1117,17 +1116,16 @@ footer {
     position: absolute;
     right: 0;
     background-color: #0d0d11;
-    min-width: 220px; /* Enhanced: Prevent layout text wrap */
+    min-width: 220px;
     max-width: 280px;
     box-shadow: 0px 8px 32px 0px rgba(0,0,0,0.7);
     border: 1px solid var(--border2);
     z-index: 1000;
     margin-top: 8px;
     border-radius: 6px;
-    overflow: hidden; /* Prevent inner background leaking */
+    overflow: hidden;
 }
 
-/* Hover dynamic state execution pipeline */
 .profile-dropdown:hover .dropdown-content {
     display: block;
     animation: fadeUp 0.2s ease both;
@@ -1153,7 +1151,7 @@ footer {
     display: block;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Fixed: Wrap long email addresses safely */
+    text-overflow: ellipsis;
 }
 
 .dropdown-divider {
