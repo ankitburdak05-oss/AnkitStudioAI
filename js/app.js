@@ -117,6 +117,26 @@ function scrollToSection(id) {
 let currentTab = 'create';
 let emailEntered = false;
 
+// Google Sign-In Function
+function loginWithGoogle() {
+    const provider = new window.GoogleAuthProvider();
+    window.signInWithPopup(window.auth, provider)
+        .then((result) => {
+            console.log('User signed in:', result.user);
+            const userName = result.user.displayName || result.user.email;
+            document.getElementById('userDisplay').textContent = userName;
+            document.getElementById('userDisplay').style.display = 'inline-block';
+            document.getElementById('loginBtn').style.display = 'none';
+            closeAuth();
+        })
+        .catch((error) => {
+            console.error('Sign-in error:', error.message);
+            alert('Sign-in failed: ' + error.message);
+        });
+}
+// Expose immediately after definition to ensure availability for inline handlers
+window.loginWithGoogle = loginWithGoogle;
+
 function openAuthModal() {
     document.getElementById('authOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -195,8 +215,8 @@ function fakeLogin() {
 
 renderCards(prompts);
 // ===== PERFECT SELECTOR MATCH ENGINE =====
-db.collection("layout_settings").doc("main_config").onSnapshot((doc) => {
-    if(doc.exists) {
+window.getDbSnapshot("layout_settings", "main_config", (doc) => {
+    if(doc.exists()) {
         let data = doc.data();
         
         // 1. Text Update (Main Title)
@@ -238,3 +258,18 @@ db.collection("layout_settings").doc("main_config").onSnapshot((doc) => {
 }, (err) => {
     console.log("Sync error: ", err);
 });
+
+// Expose commonly used UI functions to `window` so they're available
+// when the site is served from GitHub Pages or other hosts.
+window.loginWithGoogle = loginWithGoogle;
+window.openAuthModal = openAuthModal;
+window.closeAuth = closeAuth;
+window.closeModalDirect = closeModalDirect;
+window.copyModalPrompt = copyModalPrompt;
+window.scrollToSection = scrollToSection;
+window.filterPrompts = filterPrompts;
+window.setCategoryFilter = setCategoryFilter;
+window.setAiFilter = setAiFilter;
+window.openModal = openModal;
+window.handleContinue = handleContinue;
+window.switchTab = switchTab;
