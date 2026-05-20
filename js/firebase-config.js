@@ -11,3 +11,19 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+// Google Auth Provider Initialization
+const provider = new firebase.auth.GoogleAuthProvider();
+
+// Global Function for Google Login (Which app.js calls)
+function loginWithGoogle() {
+    firebase.auth().signInWithPopup(provider)
+        .then((result) => {
+            console.log("Google Sign-In Successful:", result.user);
+            // Login kamyaab hone par popup modal ko band karne ke liye
+            if(typeof closeAuth === 'function') closeAuth();
+        })
+        .catch((error) => {
+            console.error("Google Sign-In Error:", error.message);
+            alert("Google Login Failed: " + error.message);
+        });
+}
