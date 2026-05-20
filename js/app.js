@@ -1,3 +1,49 @@
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+function loginWithGoogle() {
+    auth.signInWithPopup(provider).then((result) => {
+        const user = result.user;
+        alert("Welcome " + user.displayName + "! Login successful to AnkitStudio ✔");
+        closeAuth();
+    }).catch((error) => {
+        console.error("Authentication Fail:", error);
+        alert("Login block or cancelled! Make sure domain is authorized in Firebase console settings tab.");
+    });
+}
+
+auth.onAuthStateChanged((user) => {
+    const loginBtn = document.getElementById('loginBtn');
+    const userDisplay = document.getElementById('userDisplay');
+    if (user) {
+        if(loginBtn) loginBtn.style.display = 'none';
+        if(userDisplay) {
+            userDisplay.textContent = user.displayName.toUpperCase();
+            userDisplay.style.display = 'inline-block';
+        }
+    } else {
+        if(loginBtn) loginBtn.style.display = 'inline-block';
+        if(userDisplay) userDisplay.style.display = 'none';
+    }
+});
+
+function toggleTagsSubmenu(event) {
+    event.preventDefault();
+    const submenu = document.getElementById('tagsSubmenu');
+    const arrowIcon = document.getElementById('tagsArrowIcon');
+    
+    submenu.classList.toggle('open');
+    arrowIcon.classList.toggle('open');
+}
+
+document.querySelectorAll('.sub-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.sub-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
 let activeCategory = '';
 let activeAi = '';
 let searchQuery = '';
@@ -113,29 +159,8 @@ function scrollToSection(id) {
     document.getElementById(id).scrollIntoView({behavior:'smooth'});
 }
 
-// ===== AUTH SYSTEM AGENTS =====
 let currentTab = 'create';
 let emailEntered = false;
-
-// Google Sign-In Function
-function loginWithGoogle() {
-    const provider = new window.GoogleAuthProvider();
-    window.signInWithPopup(window.auth, provider)
-        .then((result) => {
-            console.log('User signed in:', result.user);
-            const userName = result.user.displayName || result.user.email;
-            document.getElementById('userDisplay').textContent = userName;
-            document.getElementById('userDisplay').style.display = 'inline-block';
-            document.getElementById('loginBtn').style.display = 'none';
-            closeAuth();
-        })
-        .catch((error) => {
-            console.error('Sign-in error:', error.message);
-            alert('Sign-in failed: ' + error.message);
-        });
-}
-// Expose immediately after definition to ensure availability for inline handlers
-window.loginWithGoogle = loginWithGoogle;
 
 function openAuthModal() {
     document.getElementById('authOverlay').classList.add('open');
@@ -214,12 +239,20 @@ function fakeLogin() {
 }
 
 renderCards(prompts);
-// ===== PERFECT SELECTOR MATCH ENGINE =====
-window.getDbSnapshot("layout_settings", "main_config", (doc) => {
-    if(doc.exists()) {
+
+db.collection("layout_settings").doc("main_config").onSnapshot((doc) => {
+    if(doc.exists) {
         let data = doc.data();
         
-        // 1. Text Update (Main Title)
+        let brand = document.querySelector(".logo") || document.querySelector(".nav-brand") || document.querySelector("header h1");
+        if(brand && data.navLogoText) brand.innerText = data.navLogoText;
+        
+        let m1 = document.querySelectorAll("nav a")[0] || document.querySelector(".nav-link-1");
+        if(m1 && data.mTxt1) m1.innerText = data.mTxt1;
+        
+        let m2 = document.querySelectorAll("nav a")[1] || document.querySelector(".nav-link-2");
+        if(m2 && data.mTxt2) m2.innerText = data.mTxt2;
+
         let mainHeading = document.querySelector(".hero-container h1") || document.querySelector("h1");
         if(mainHeading && data.heroTitle) {
             if(mainHeading.childNodes.length > 0) {
@@ -228,50 +261,54 @@ window.getDbSnapshot("layout_settings", "main_config", (doc) => {
                 mainHeading.textContent = data.heroTitle;
             }
         }
+        let highlightText = document.querySelector(".hero-container h1 span") || document.querySelector(".highlight") || document.querySelector("h1 span");
+        if(highlightText && data.heroHighlight) highlightText.innerText = data.heroHighlight;
         
-        // 2. Highlight Text (Gold Color)
-        let highlightText = document.querySelector(".hero-container h1 span") || document.querySelector(".highlight");
-        if(highlightText && data.heroHighlight) {
-            highlightText.innerText = data.heroHighlight;
-        }
-        
-        // 3. Position Data Parsing
         let imgX = Number(data.imgLeft) || 0;
         let imgY = Number(data.imgTop) || 0;
         let textY = Number(data.textTop) || 0;
         
-        // 4. Photo Hex Frame Movement
-        // Tere layout me jo round red glow wali photo hai use track karega
-        let profileBox = document.querySelector(".hero-container img") || document.querySelector(".hero-profile-wrapper");
-        if(profileBox) {
-            profileBox.style.transform = `translate(${imgX}px, ${imgY}px)`;
-        }
+        let profileBox = document.querySelector(".hero-profile-wrapper") || document.querySelector(".hero-container img") || document.querySelector("img");
+        if(profileBox) profileBox.style.transform = `translate(${imgX}px, ${imgY}px)`;
         
-        // 5. Whole Text Block & Search Bar Movement (Home Content)
-        // Ye poore text wrapper aur buttons ko ek saath upar-neeche adjust karega
-        let textBox = document.querySelector(".hero-container") || document.querySelector(".hero");
-        if(textBox) {
-            // Sirf Text aur buttons wale box ko adjust karne ke liye vertical movement apply ki hai
-            textBox.style.transform = `translate(0px, ${textY}px)`;
-        }
-    }
-}, (err) => {
-    console.log("Sync error: ", err);
-});
+        let textBox = document.querySelector(".hero-content-move-box") || document.querySelector(".hero-container") || document.querySelector(".hero");
+        if(textBox) textBox.style.transform = `translate(0px, ${textY}px)`;
+        
+        let inputField = document.querySelector(".search-box input") || document.querySelector("input[type='text']");
+        if(inputField && data.searchHint) inputField.placeholder = data.searchHint;
 
-// Expose commonly used UI functions to `window` so they're available
-// when the site is served from GitHub Pages or other hosts.
-window.loginWithGoogle = loginWithGoogle;
-window.openAuthModal = openAuthModal;
-window.closeAuth = closeAuth;
-window.closeModal = closeModal;
-window.closeModalDirect = closeModalDirect;
-window.closeAuthOutside = closeAuthOutside;
-window.copyModalPrompt = copyModalPrompt;
-window.scrollToSection = scrollToSection;
-window.filterPrompts = filterPrompts;
-window.setCategoryFilter = setCategoryFilter;
-window.setAiFilter = setAiFilter;
-window.openModal = openModal;
-window.handleContinue = handleContinue;
-window.switchTab = switchTab;
+        let inputBtn = document.querySelector(".search-box button") || document.querySelector(".search-btn") || document.querySelector(".search-container button");
+        if(inputBtn && data.searchBtn) inputBtn.innerText = data.searchBtn;
+
+        let boxes = document.querySelectorAll(".stat-box") || document.querySelectorAll(".stats-grid div");
+        if(boxes.length >= 3) {
+            if(data.st1) { let h1 = boxes[0].querySelector("h3") || boxes[0]; h1.innerText = data.st1; }
+            if(data.st2) { let h2 = boxes[1].querySelector("h3") || boxes[1]; h2.innerText = data.st2; }
+            if(data.st3) { let h3 = boxes[2].querySelector("h3") || boxes[2]; h3.innerText = data.st3; }
+        }
+
+        let cardTools = document.querySelectorAll(".tool-card h3") || document.querySelectorAll(".grid-item h4");
+        if(cardTools.length >= 2) {
+            if(data.tool1) cardTools[0].innerText = data.tool1;
+            if(data.tool2) cardTools[1].innerText = data.tool2;
+        }
+
+        let promptTitles = document.querySelectorAll(".prompt-card h3") || document.querySelectorAll(".prompt-title");
+        if(promptTitles.length >= 2) {
+            if(data.pCard1) promptTitles[0].innerText = data.pCard1;
+            if(data.pCard2) promptTitles[1].innerText = data.pCard2;
+        }
+
+        let sTitle = document.querySelector(".submit-banner h2") || document.querySelector(".submit-section h3");
+        if(sTitle && data.subTitle) sTitle.innerText = data.subTitle;
+
+        let sBtn = document.querySelector(".submit-banner button") || document.querySelector(".submit-btn-action");
+        if(sBtn && data.subBtn) sBtn.innerText = data.subBtn;
+
+        let footB = document.querySelector("footer p") || document.querySelector(".footer-copyright");
+        if(footB && data.footBr) footB.innerText = data.footBr;
+
+        let authBtn = document.querySelector(".login-btn") || document.querySelector("#loginBtn") || document.querySelector(".top-login-action");
+        if(authBtn && data.loginTxt) authBtn.innerText = data.loginTxt;
+    }
+});

@@ -1,18 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ANKITSTUDIOAI — Prompt Marketplace</title>
+    <title>ANKITSTUDIOAI â€” Prompt Marketplace</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-<div class="bg-grid"></div>
 <div class="bg-glow1"></div>
 <div class="bg-glow2"></div>
 
@@ -95,10 +98,10 @@
         <h1>AI PROMPT<br><span class="highlight">MARKETPLACE</span></h1>
         <div class="hero-sub">Access 500+ high-quality AI prompts by ANKITSTUDIOAI</div>
         <div class="hero-tags">
-            <span class="t1">Midjourney</span> ·
-            <span class="t2">ChatGPT</span> ·
-            <span class="t3">Gemini</span> ·
-            <span class="t4">Leonardo</span> ·
+            <span class="t1">Midjourney</span> Â·
+            <span class="t2">ChatGPT</span> Â·
+            <span class="t3">Gemini</span> Â·
+            <span class="t4">Leonardo</span> Â·
             <span style="color:var(--muted)">& more</span>
         </div>
         <div class="hero-search">
@@ -132,46 +135,46 @@
 <div class="section" id="categories">
     <div class="section-head">
         <div class="section-title"><i class="fas fa-th-large"></i> Categories</div>
-        <div class="see-all" onclick="setCategoryFilter('')">View All →</div>
+        <div class="see-all" onclick="setCategoryFilter('')">View All â†’</div>
     </div>
     <div class="cat-grid">
         <div class="cat-card" onclick="setCategoryFilter('Portrait')">
-            <div class="cat-icon">🎨</div>
+            <div class="cat-icon">ðŸŽ¨</div>
             <div class="cat-name">Portrait</div>
             <div class="cat-count">120+ prompts</div>
         </div>
         <div class="cat-card" onclick="setCategoryFilter('Landscape')">
-            <div class="cat-icon">🌄</div>
+            <div class="cat-icon">ðŸŒ„</div>
             <div class="cat-name">Landscape</div>
             <div class="cat-count">85+ prompts</div>
         </div>
         <div class="cat-card" onclick="setCategoryFilter('Logo')">
-            <div class="cat-icon">⚡</div>
+            <div class="cat-icon">âš¡</div>
             <div class="cat-name">Logo & Brand</div>
             <div class="cat-count">60+ prompts</div>
         </div>
         <div class="cat-card" onclick="setCategoryFilter('Anime')">
-            <div class="cat-icon">🌸</div>
+            <div class="cat-icon">ðŸŒ¸</div>
             <div class="cat-name">Anime</div>
             <div class="cat-count">95+ prompts</div>
         </div>
         <div class="cat-card" onclick="setCategoryFilter('ChatGPT')">
-            <div class="cat-icon">🤖</div>
+            <div class="cat-icon">ðŸ¤–</div>
             <div class="cat-name">ChatGPT</div>
             <div class="cat-count">70+ prompts</div>
         </div>
         <div class="cat-card" onclick="setCategoryFilter('Video')">
-            <div class="cat-icon">🎬</div>
+            <div class="cat-icon">ðŸŽ¬</div>
             <div class="cat-name">Video / Veo</div>
             <div class="cat-count">40+ prompts</div>
         </div>
         <div class="cat-card" onclick="setCategoryFilter('Fantasy')">
-            <div class="cat-icon">🐉</div>
+            <div class="cat-icon">ðŸ‰</div>
             <div class="cat-name">Fantasy</div>
             <div class="cat-count">55+ prompts</div>
         </div>
         <div class="cat-card" onclick="setCategoryFilter('')">
-            <div class="cat-icon">✨</div>
+            <div class="cat-icon">âœ¨</div>
             <div class="cat-name">All Prompts</div>
             <div class="cat-count">500+ total</div>
         </div>
@@ -180,10 +183,10 @@
 
 <div class="section" style="padding-top:0">
     <div class="featured-banner">
-        <div class="featured-icon">🔥</div>
+        <div class="featured-icon">ðŸ”¥</div>
         <div class="featured-text">
             <h3>Submit Your Prompt</h3>
-            <p>Share your best AI prompts with the ANKITSTUDIOAI community — get featured!</p>
+            <p>Share your best AI prompts with the ANKITSTUDIOAI community â€” get featured!</p>
         </div>
         <button class="featured-btn" onclick="openAuthModal()"><i class="fas fa-upload"></i> SUBMIT NOW</button>
     </div>
@@ -191,7 +194,7 @@
 
 <div class="section" style="padding-top:0">
     <div class="prompt-redirect-box-wrapper">
-        <a href="prompts" class="prompt-redirect-box">
+        <a href="https://ankitburdak05-oss.github.io/ANKITSTUDIO/prompts" class="prompt-redirect-box">
             <span class="prompt-redirect-text">100+ PROMPTS</span>
             <i class="fas fa-external-link-alt prompt-redirect-icon"></i>
         </a>
@@ -286,7 +289,7 @@
 <div class="section" id="featured">
     <div class="section-head">
         <div class="section-title"><i class="fas fa-fire"></i> Featured Prompts</div>
-        <div class="see-all" id="clearFilter" onclick="setCategoryFilter('')" style="display:none;color:var(--red)">Clear Filter ✕</div>
+        <div class="see-all" id="clearFilter" onclick="setCategoryFilter('')" style="display:none;color:var(--red)">Clear Filter âœ•</div>
     </div>
 
     <div class="filter-bar">
@@ -317,7 +320,7 @@
         <span class="footer-link">YouTube</span>
         <span class="footer-link">Instagram</span>
     </div>
-    <div class="footer-copy">Made with <span>♥</span> by Ankit Burdak · ANKITSTUDIOAI © 2026</div>
+    <div class="footer-copy">Made with <span>â™¥</span> by Ankit Burdak Â· ANKITSTUDIOAI Â© 2026</div>
 </footer>
 
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
@@ -337,7 +340,7 @@
     <div class="auth-box" id="authBox">
         <button class="auth-close" onclick="closeAuth()"><i class="fas fa-times"></i></button>
 
-        <div class="auth-logo-icon">⚡</div>
+        <div class="auth-logo-icon">âš¡</div>
 
         <div class="auth-tabs">
             <button class="auth-tab active" id="tabCreate" onclick="switchTab('create')">Create Account</button>
@@ -379,45 +382,16 @@
         </div>
 
         <div class="auth-success" id="authSuccess">
-            <div class="success-icon">✅</div>
+            <div class="success-icon">âœ…</div>
             <div class="success-text">WELCOME!</div>
-            <div class="success-sub">You are now part of ANKITSTUDIOAI 🔥</div>
+            <div class="success-sub">You are now part of ANKITSTUDIOAI ðŸ”¥</div>
         </div>
     </div>
 </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-        import { getAuth, signInWithPopup, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-        import { getFirestore, collection, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-        
-        const firebaseConfig = {
-          apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
-          authDomain: "ankitstudioai.firebaseapp.com",
-          projectId: "ankitstudioai",
-          storageBucket: "ankitstudioai.firebasestorage.app",
-          messagingSenderId: "450755070024",
-          appId: "1:450755070024:web:4bf14bc4da4caf1200b07d",
-          measurementId: "G-BJ44E7P08S"
-        };
-        
-        window.app = initializeApp(firebaseConfig);
-        window.auth = getAuth(window.app);
-        const db = getFirestore(window.app);
-        window.GoogleAuthProvider = GoogleAuthProvider;
-        window.signInWithPopup = signInWithPopup;
-        
-        // Firestore helper for app.js
-        window.getDbSnapshot = (collectionName, docName, successCallback, errorCallback) => {
-            onSnapshot(
-                doc(collection(db, collectionName), docName), 
-                successCallback, 
-                errorCallback || ((err) => console.error(err))
-            );
-        };
-    </script>
-    <script src="js/prompts-data.js" defer></script>
-    <script src="js/app.js" defer></script>
-
+<script src="js/firebase-config.js"></script>
+<script src="js/prompts.js"></script>
+<script src="js/app.js" defer></script>
 </body>
 </html>
+

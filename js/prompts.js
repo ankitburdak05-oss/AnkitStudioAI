@@ -1,3 +1,4 @@
+// Prompt dataset for the app
 const prompts = [
     {
         id:1, title:"Cinematic Sunset Portrait",
