@@ -18,7 +18,9 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         if(loginBtn) loginBtn.style.display = 'none';
         if(userDisplay) {
-            userDisplay.textContent = user.displayName.toUpperCase();
+            // Safe check: Agar name nahi hai toh email ka pehla part ya 'CREATOR' dikhayega
+            const nameToShow = user.displayName || user.email.split('@')[0] || "CREATOR";
+            userDisplay.textContent = nameToShow.toUpperCase();
             userDisplay.style.display = 'inline-block';
         }
     } else {
@@ -240,10 +242,12 @@ function fakeLogin() {
 
 renderCards(prompts);
 
+// Master layout config with error handling
 db.collection("layout_settings").doc("main_config").onSnapshot((doc) => {
     if(doc.exists) {
         let data = doc.data();
         
+        // 1. Header Module Links
         let brand = document.querySelector(".logo") || document.querySelector(".nav-brand") || document.querySelector("header h1");
         if(brand && data.navLogoText) brand.innerText = data.navLogoText;
         
@@ -253,6 +257,7 @@ db.collection("layout_settings").doc("main_config").onSnapshot((doc) => {
         let m2 = document.querySelectorAll("nav a")[1] || document.querySelector(".nav-link-2");
         if(m2 && data.mTxt2) m2.innerText = data.mTxt2;
 
+        // 2. Hero Component Controls
         let mainHeading = document.querySelector(".hero-container h1") || document.querySelector("h1");
         if(mainHeading && data.heroTitle) {
             if(mainHeading.childNodes.length > 0) {
@@ -273,13 +278,15 @@ db.collection("layout_settings").doc("main_config").onSnapshot((doc) => {
         
         let textBox = document.querySelector(".hero-content-move-box") || document.querySelector(".hero-container") || document.querySelector(".hero");
         if(textBox) textBox.style.transform = `translate(0px, ${textY}px)`;
-        
+
+        // 3. Search Engine Layout
         let inputField = document.querySelector(".search-box input") || document.querySelector("input[type='text']");
         if(inputField && data.searchHint) inputField.placeholder = data.searchHint;
 
         let inputBtn = document.querySelector(".search-box button") || document.querySelector(".search-btn") || document.querySelector(".search-container button");
         if(inputBtn && data.searchBtn) inputBtn.innerText = data.searchBtn;
 
+        // 4. Statistics Row Counter
         let boxes = document.querySelectorAll(".stat-box") || document.querySelectorAll(".stats-grid div");
         if(boxes.length >= 3) {
             if(data.st1) { let h1 = boxes[0].querySelector("h3") || boxes[0]; h1.innerText = data.st1; }
@@ -287,28 +294,35 @@ db.collection("layout_settings").doc("main_config").onSnapshot((doc) => {
             if(data.st3) { let h3 = boxes[2].querySelector("h3") || boxes[2]; h3.innerText = data.st3; }
         }
 
+        // 5. Tool Grid Items
         let cardTools = document.querySelectorAll(".tool-card h3") || document.querySelectorAll(".grid-item h4");
         if(cardTools.length >= 2) {
             if(data.tool1) cardTools[0].innerText = data.tool1;
             if(data.tool2) cardTools[1].innerText = data.tool2;
         }
 
+        // 6. Featured Prompt Grid Items
         let promptTitles = document.querySelectorAll(".prompt-card h3") || document.querySelectorAll(".prompt-title");
         if(promptTitles.length >= 2) {
             if(data.pCard1) promptTitles[0].innerText = data.pCard1;
             if(data.pCard2) promptTitles[1].innerText = data.pCard2;
         }
 
+        // 7. Submit Prompt Banner Strip
         let sTitle = document.querySelector(".submit-banner h2") || document.querySelector(".submit-section h3");
         if(sTitle && data.subTitle) sTitle.innerText = data.subTitle;
 
         let sBtn = document.querySelector(".submit-banner button") || document.querySelector(".submit-btn-action");
         if(sBtn && data.subBtn) sBtn.innerText = data.subBtn;
 
+        // 8. Footer Areas Content
         let footB = document.querySelector("footer p") || document.querySelector(".footer-copyright");
         if(footB && data.footBr) footB.innerText = data.footBr;
 
+        // 9. Auth Top Action Trigger Label
         let authBtn = document.querySelector(".login-btn") || document.querySelector("#loginBtn") || document.querySelector(".top-login-action");
         if(authBtn && data.loginTxt) authBtn.innerText = data.loginTxt;
     }
+}, (err) => {
+    console.error("Sync error: ", err);
 });
