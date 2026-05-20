@@ -354,18 +354,37 @@ if (typeof prompts !== 'undefined' && prompts) {
 if (typeof firebase !== 'undefined' && firebase.auth) {
     firebase.auth().onAuthStateChanged((user) => {
         const loginBtn = document.getElementById('loginBtn');
+        const userProfileWrapper = document.getElementById('userProfileWrapper');
         const userDisplay = document.getElementById('userDisplay');
+        const dropdownUserName = document.getElementById('dropdownUserName');
+        const dropdownUserEmail = document.getElementById('dropdownUserEmail');
         
         if (user) {
+            // 1. Login button chhupao aur profile dropdown dikhao
             if (loginBtn) loginBtn.style.display = 'none';
-            if (userDisplay) {
-                const nameToShow = user.displayName || user.email.split('@')[0] || "CREATOR";
-                userDisplay.textContent = nameToShow.toUpperCase();
-                userDisplay.style.display = 'inline-block';
-            }
+            if (userProfileWrapper) userProfileWrapper.style.display = 'inline-block';
+            
+            // 2. Naam aur Email set karo
+            const nameToShow = user.displayName || user.email.split('@')[0] || "CREATOR";
+            if (userDisplay) userDisplay.textContent = nameToShow.toUpperCase();
+            if (dropdownUserName) dropdownUserName.textContent = nameToShow.toUpperCase();
+            if (dropdownUserEmail) dropdownUserEmail.textContent = user.email;
+            
         } else {
+            // 3. Agar logged out hai toh dropdown chhupao aur login button dikhao
             if (loginBtn) loginBtn.style.display = 'inline-block';
-            if (userDisplay) userDisplay.style.display = 'none';
+            if (userProfileWrapper) userProfileWrapper.style.display = 'none';
         }
+    });
+
+    // Logout Button Event Listener
+    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        firebase.auth().signOut().then(() => {
+            console.log("AnkitStudioAI: User Logged Out Successfully.");
+            window.location.reload(); // State reset karne ke liye page reload
+        }).catch((error) => {
+            console.error("Logout Error:", error);
+        });
     });
 }

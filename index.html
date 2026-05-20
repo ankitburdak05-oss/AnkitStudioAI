@@ -77,9 +77,22 @@
         <input type="text" placeholder="Search prompts..." id="navSearch">
     </div>
     <div class="nav-links">
-        <button class="nav-link ghost" id="userDisplay" style="color:var(--gold); display:none; font-weight:700;"></button>
-        <button class="nav-link primary" id="loginBtn"><i class="fas fa-user"></i> Login</button>
+    <div id="userProfileWrapper" class="profile-dropdown" style="display: none;">
+        <button id="userDisplay" class="dropdown-trigger"></button>
+        <div class="dropdown-content">
+            <div class="user-info-header">
+                <p id="dropdownUserName">ANONYMOUS</p>
+                <span id="dropdownUserEmail">user@example.com</span>
+            </div>
+            <hr class="dropdown-divider">
+            <a href="#" id="logoutBtn" class="logout-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
     </div>
+
+    <button class="nav-link primary" id="loginBtn"><i class="fas fa-user"></i> Login</button>
+</div>
 </nav>
 
 <div class="trust-bar">
