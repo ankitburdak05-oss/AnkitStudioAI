@@ -14,13 +14,32 @@ const db = firebase.firestore();
 // Google Auth Provider Initialization
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// Global Function for Google Login (Which app.js calls)
+// Global Function for Google Login
 function loginWithGoogle() {
     firebase.auth().signInWithPopup(provider)
         .then((result) => {
             console.log("Google Sign-In Successful:", result.user);
-            // Login kamyaab hone par popup modal ko band karne ke liye
-            if(typeof closeAuth === 'function') closeAuth();
+            
+            // 1. Auth Overlay Popup Modal ko band karo
+            const authOverlay = document.getElementById('authOverlay');
+            if (authOverlay) {
+                authOverlay.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+            
+            // 2. Form values ko reset karo
+            if (document.getElementById('authEmail')) document.getElementById('authEmail').value = '';
+            if (document.getElementById('authPassword')) document.getElementById('authPassword').value = '';
+
+            // 3. User ka naam upar navbar mein turant update karo
+            const loginBtn = document.getElementById('loginBtn');
+            const userDisplay = document.getElementById('userDisplay');
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (userDisplay) {
+                const nameToShow = result.user.displayName || result.user.email.split('@')[0] || "CREATOR";
+                userDisplay.textContent = nameToShow.toUpperCase();
+                userDisplay.style.display = 'inline-block';
+            }
         })
         .catch((error) => {
             console.error("Google Sign-In Error:", error.message);
