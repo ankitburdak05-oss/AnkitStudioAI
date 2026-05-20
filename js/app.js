@@ -351,20 +351,21 @@ if (typeof prompts !== 'undefined' && prompts) {
 });
 
 // Firebase User Instance Auth Status State Pipeline Listener
-if (typeof auth !== 'undefined') {
-    auth.onAuthStateChanged((user) => {
+if (typeof firebase !== 'undefined' && firebase.auth) {
+    firebase.auth().onAuthStateChanged((user) => {
         const loginBtn = document.getElementById('loginBtn');
         const userDisplay = document.getElementById('userDisplay');
+        
         if (user) {
-            if(loginBtn) loginBtn.style.display = 'none';
-            if(userDisplay) {
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (userDisplay) {
                 const nameToShow = user.displayName || user.email.split('@')[0] || "CREATOR";
                 userDisplay.textContent = nameToShow.toUpperCase();
                 userDisplay.style.display = 'inline-block';
             }
         } else {
-            if(loginBtn) loginBtn.style.display = 'inline-block';
-            if(userDisplay) userDisplay.style.display = 'none';
+            if (loginBtn) loginBtn.style.display = 'inline-block';
+            if (userDisplay) userDisplay.style.display = 'none';
         }
     });
 }
