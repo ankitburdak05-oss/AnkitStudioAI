@@ -340,10 +340,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Initial Engine Boot Hydration Run
-    if (typeof prompts !== 'undefined') {
-        renderCards(prompts);
-    }
+    // Line 343: Initial Engine Boot Hydration Run
+if (typeof prompts !== 'undefined' && prompts) {
+    renderCards(prompts);
+} else if (window.prompts) {
+    renderCards(window.prompts);
+} else {
+    console.warn("AnkitStudioAI Warn: prompts array missing from runtime snapshot.");
+}
 });
 
 // Firebase User Instance Auth Status State Pipeline Listener
