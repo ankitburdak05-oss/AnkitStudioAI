@@ -131,7 +131,13 @@ function toggleFavoritesPageView(enable) {
         
         activeCategory = '';
         activeAi = '';
-        repositionHeroProfileWrapper();
+
+        // FIX: Timing delay added so browser has time to render the layout before repositioning the photo
+        setTimeout(() => {
+            if (typeof repositionHeroProfileWrapper === 'function') {
+                repositionHeroProfileWrapper();
+            }
+        }, 100); // 100 millisecond delay is perfect for smooth rendering
     }
     renderCards(getFiltered());
 }
