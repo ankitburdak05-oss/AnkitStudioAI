@@ -5,6 +5,7 @@ let searchQuery = '';
 let currentTab = 'create';
 let showOnlyFavorites = false; // Favorites mode toggle engine state
 let heroProfileCoords = { x: 0, y: 0 }; // Persist latest hero profile layout coordinates
+let profileRepositionTimeout = null; // Anti-race condition timer state
 
 // Real-Time Event Debouncing System Engine 
 function debounce(func, delay = 300) {
@@ -132,12 +133,17 @@ function toggleFavoritesPageView(enable) {
         activeCategory = '';
         activeAi = '';
 
-        // FIX: Timing delay added so browser has time to render the layout before repositioning the photo
-        setTimeout(() => {
-            if (typeof repositionHeroProfileWrapper === 'function') {
+        // FIX: Clear existing timer to prevent race conditions during rapid UI toggling
+        if (profileRepositionTimeout) {
+            clearTimeout(profileRepositionTimeout);
+        }
+        
+        profileRepositionTimeout = setTimeout(() => {
+            // Ek aur safety check: Sirf tabhi photo hile jab user sach mein home page par ho
+            if (typeof repositionHeroProfileWrapper === 'function' && !showOnlyFavorites) {
                 repositionHeroProfileWrapper();
             }
-        }, 100); // 100 millisecond delay is perfect for smooth rendering
+        }, 100);
     }
     renderCards(getFiltered());
 }
