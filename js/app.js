@@ -3,7 +3,7 @@ let activeCategory = '';
 let activeAi = '';
 let searchQuery = '';
 let currentTab = 'create';
-let showOnlyFavorites = false; // NEW: Favorites mode toggle engine state
+let showOnlyFavorites = false; // Favorites mode toggle engine state
 
 // Real-Time Event Debouncing System Engine 
 function debounce(func, delay = 300) {
@@ -14,15 +14,16 @@ function debounce(func, delay = 300) {
     };
 }
 
-// NEW: LocalStorage Core Engine Helpers for User Specific Favorites Matrix
+// LocalStorage Core Engine Helpers for User Specific Favorites Matrix
 function getFavoritesFromStorage() {
+    if (typeof firebase === 'undefined' || !firebase.auth().currentUser) return [];
     const user = firebase.auth().currentUser;
-    if (!user) return [];
     const key = `fav_prompts_${user.uid}`;
     return JSON.parse(localStorage.getItem(key)) || [];
 }
 
 function toggleFavoriteState(promptId) {
+    if (typeof firebase === 'undefined') return;
     const user = firebase.auth().currentUser;
     if (!user) {
         alert("Authentication Required! Please login to save favorites.");
@@ -41,7 +42,7 @@ function toggleFavoriteState(promptId) {
     renderCards(getFiltered()); // Core UI hydration refresh
 }
 
-// Memory-Optimized Document Fragment Rendering Runner Matrix (WITH FAVORITES HEART INTEGRATION)
+// Memory-Optimized Document Fragment Rendering Runner Matrix
 function renderCards(data) {
     const grid = document.getElementById('promptGrid');
     const noResults = document.getElementById('noResults');
@@ -54,7 +55,6 @@ function renderCards(data) {
     }
     if (noResults) noResults.style.display = 'none';
 
-    // Anti-Reflow Pattern Initialization via DocumentFragments
     const fragment = document.createDocumentFragment();
     const favs = getFavoritesFromStorage();
     
@@ -62,7 +62,6 @@ function renderCards(data) {
         const card = document.createElement('div');
         card.className = 'prompt-card';
         
-        // Active status assessment matrix mapping definitions
         const isFav = favs.includes(p.id);
         const heartClass = isFav ? 'fas fa-heart fav-active' : 'far fa-heart';
         
@@ -90,7 +89,6 @@ function renderCards(data) {
             </div>
         `;
         
-        // Context routing interception hooks alignment
         card.querySelector('.prompt-body').addEventListener('click', () => openModal(p.id));
         card.querySelector('.card-fav-btn').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -108,7 +106,6 @@ function renderCards(data) {
 function getFiltered() {
     let dataset = (typeof prompts !== 'undefined') ? prompts : [];
     
-    // NEW: If active view matrix is toggled to favorites scope
     if (showOnlyFavorites) {
         const favs = getFavoritesFromStorage();
         dataset = dataset.filter(p => favs.includes(p.id));
@@ -132,13 +129,12 @@ const filterPromptsProcessor = () => {
 
 const optimizedSearchHandler = debounce(filterPromptsProcessor, 250);
 
-// Client UI State Engine Interaction Management
 function openModal(id) {
     const dataset = (typeof prompts !== 'undefined') ? prompts : [];
     const p = dataset.find(x => x.id === id);
     if (!p) return;
     
-    if(!firebase.auth().currentUser && !p.free) {
+    if (typeof firebase !== 'undefined' && !firebase.auth().currentUser && !p.free) {
         alert("Authentication Required! Please login to copy premium prompts.");
         openAuthModal();
         return;
@@ -206,9 +202,12 @@ function switchTab(tab) {
     }
 }
 
-// COMPLETE REAL-TIME FIREBASE EMAIL/PASSWORD ENGINE CONTEXT INTERCEPTOR
 function handleRealAuthSubmit(e) {
     e.preventDefault();
+    if (typeof firebase === 'undefined') {
+        alert("Firebase Service Unavailable. Please try again later.");
+        return;
+    }
     
     const emailField = document.getElementById('authEmail');
     const passwordField = document.getElementById('authPassword');
@@ -219,12 +218,12 @@ function handleRealAuthSubmit(e) {
     const isLoginMode = currentTab === 'login';
 
     if (!email || !password) {
-        alert("Bhai, email aur password dono daalna compulsory hai!");
+        alert("Validation Error: Email and password fields are required.");
         return;
     }
 
     if (password.length < 6) {
-        alert("Security Reason: Password kam se kam 6 characters ka hona chahiye!");
+        alert("Security Alert: Password must be at least 6 characters long.");
         return;
     }
 
@@ -239,17 +238,15 @@ function handleRealAuthSubmit(e) {
             })
             .catch((error) => {
                 console.error("Firebase Login Error:", error.message);
-                alert("Login Failed: " + error.message);
+                alert("Login Error: " + error.message);
                 if (authSubmitBtn) authSubmitBtn.disabled = false;
             });
     } else {
         firebase.auth().createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 console.log("Firebase Account Created:", userCredential.user);
-                
                 document.getElementById('authForm').style.display = 'none';
                 document.getElementById('authSuccess').classList.add('show');
-                
                 setTimeout(() => {
                     closeAuth();
                     window.location.reload();
@@ -257,14 +254,14 @@ function handleRealAuthSubmit(e) {
             })
             .catch((error) => {
                 console.error("Firebase Signup Error:", error.message);
-                alert("Account Creation Failed: " + error.message);
+                alert("Registration Error: " + error.message);
                 if (authSubmitBtn) authSubmitBtn.disabled = false;
             });
     }
 }
 
 // COMPLETE REALTIME DATABASE SYNC ENGINE
-if (typeof firebase !== 'undefined') {
+if (typeof firebase !== 'undefined' && firebase.database) {
     firebase.database().ref("layout_settings/main_config").on("value", (snapshot) => {
         if(snapshot.exists()) {
             let data = snapshot.val();
@@ -282,9 +279,7 @@ if (typeof firebase !== 'undefined') {
                 if(highlightText) highlightText.innerText = data.heroHighlight;
             }
             
-            if(data.trustRatingCounter) {
-                document.getElementById('trustRating').innerText = data.trustRatingCounter;
-            }
+            if(data.trustRatingCounter) document.getElementById('trustRating').innerText = data.trustRatingCounter;
             if(data.trustPromptCounter) {
                 document.getElementById('trustCount').innerText = data.trustPromptCounter;
                 document.getElementById('statPrompts').innerText = data.trustPromptCounter;
@@ -293,27 +288,23 @@ if (typeof firebase !== 'undefined') {
                 document.getElementById('trustUsers').innerText = data.trustUserCounter;
                 document.getElementById('statDownloads').innerText = data.trustUserCounter;
             }
-            if(data.totalCategoriesCounter) {
-                document.getElementById('statCategories').innerText = data.totalCategoriesCounter;
-            }
+            if(data.totalCategoriesCounter) document.getElementById('statCategories').innerText = data.totalCategoriesCounter;
 
             let imgX = Number(data.imgLeft) || 0; let imgY = Number(data.imgTop) || 0;
             let profileBox = document.querySelector(".hero-profile-wrapper");
             if(profileBox) profileBox.style.transform = `translate(${imgX}px, ${imgY}px)`;
         }
     }, (err) => {
-        console.error("Realtime Database Core Connection Fail: Check Security Rules.", err);
+        console.error("Realtime Database Core Connection Fail:", err);
     });
 }
 
 // Complete Secure Runtime DOM Event Observers Initialization
 document.addEventListener("DOMContentLoaded", () => {
-    // Search bindings
     document.getElementById('heroSearch')?.addEventListener('input', optimizedSearchHandler);
     document.getElementById('navSearch')?.addEventListener('input', optimizedSearchHandler);
     document.getElementById('heroSearchBtn')?.addEventListener('click', filterPromptsProcessor);
 
-    // Authentication triggers
     document.getElementById('loginBtn')?.addEventListener('click', openAuthModal);
     document.getElementById('authCloseBtn')?.addEventListener('click', closeAuth);
     document.getElementById('authForm')?.addEventListener('submit', handleRealAuthSubmit);
@@ -327,9 +318,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('tabCreate')?.addEventListener('click', () => switchTab('create'));
     document.getElementById('tabLogin')?.addEventListener('click', () => switchTab('login'));
 
-    // Dynamic Context Interactivity Interceptors
     document.getElementById('submitPromptBtn')?.addEventListener('click', () => {
-        if(!firebase.auth().currentUser) {
+        if(typeof firebase !== 'undefined' && !firebase.auth().currentUser) {
             alert("Please login to submit your custom prompts to marketplace.");
             openAuthModal();
         } else {
@@ -337,10 +327,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Native Semantic Navigation Categories Observers Bindings
     document.querySelectorAll('.cat-grid .cat-card').forEach(card => {
         card.addEventListener('click', () => {
-            showOnlyFavorites = false; // Reset favorites view mode when switching explicit category tabs
+            showOnlyFavorites = false;
             activeCategory = card.getAttribute('data-cat') || '';
             document.getElementById('clearFilter').style.display = activeCategory ? 'block' : 'none';
             renderCards(getFiltered());
@@ -361,7 +350,6 @@ document.addEventListener("DOMContentLoaded", () => {
         renderCards(getFiltered());
     });
 
-    // AI Tab Filter Elements Row Logic Engine
     document.querySelectorAll('#aiFilterBar .filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('#aiFilterBar .filter-btn').forEach(b => b.classList.remove('active'));
@@ -371,7 +359,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Submenu execution
     document.getElementById('tagsMenuTrigger')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.getElementById('tagsSubmenu')?.classList.toggle('open');
@@ -383,47 +370,43 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             document.querySelectorAll('#tagsSubmenu .sub-link').forEach(l => l.classList.remove('active'));
             link.classList.add('active');
-            showOnlyFavorites = false; // Reset favorites view matrix condition scopes
+            showOnlyFavorites = false;
             activeCategory = link.getAttribute('data-cat') || '';
             renderCards(getFiltered());
         });
     });
 
-    // NEW: Native Sidebar Sidebar Navigation Favorites Sync Handler Implementation Mapping
-    document.querySelectorAll('.sidebar .side-link').forEach(link => {
-        // Targets link that embeds fa-layer-group layout icon definition
-        if (link.querySelector('.fa-layer-group')) {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                
-                showOnlyFavorites = true;
-                activeCategory = ''; 
-                activeAi = '';
-                // Resets navigation button states on AI bar filter line
-                document.querySelectorAll('#aiFilterBar .filter-btn').forEach(b => b.classList.remove('active'));
-                document.querySelector('#aiFilterBar .filter-btn[data-ai=""]')?.classList.add('active');
-                
-                renderCards(getFiltered());
-            });
-        }
-        // Targets home click observer elements mapping definitions array sequence matrix
-        if (link.querySelector('.fa-home')) {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                
-                showOnlyFavorites = false;
-                activeCategory = '';
-                activeAi = '';
-                renderCards(getFiltered());
-            });
-        }
-    });
+    // FIXED: Using strong selector routing alignment instead of class selectors
+    const sidebarHistoryLink = document.querySelector('.sidebar a[href="#"]') ? document.querySelector('.sidebar a[href="#"]').parentNode : null;
+    if (sidebarHistoryLink) {
+        sidebarHistoryLink.querySelectorAll('.side-link').forEach((link, idx) => {
+            if (idx === 3) { // Matrix index fallback mapping for favorites row container target
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    showOnlyFavorites = true;
+                    activeCategory = ''; 
+                    activeAi = '';
+                    document.querySelectorAll('#aiFilterBar .filter-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelector('#aiFilterBar .filter-btn[data-ai=""]')?.classList.add('active');
+                    renderCards(getFiltered());
+                });
+            }
+            if (idx === 0) { // Matrix target index for home trigger mapping definition
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    showOnlyFavorites = false;
+                    activeCategory = '';
+                    activeAi = '';
+                    renderCards(getFiltered());
+                });
+            }
+        });
+    }
 
-    // Modal close hooks (Fixed fallback layouts mappings alignment)
     document.getElementById('modalCloseDirectBtn')?.addEventListener('click', () => {
         document.getElementById('modalOverlay').classList.remove('open');
         document.body.style.overflow = '';
@@ -453,13 +436,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Initial Engine Boot Hydration Run
     if (typeof prompts !== 'undefined' && prompts) {
         renderCards(prompts);
-    } else if (window.prompts) {
-        renderCards(window.prompts);
-    } else {
-        console.warn("AnkitStudioAI Warn: prompts array missing from runtime snapshot.");
     }
 });
 
@@ -481,22 +459,18 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
             if (dropdownUserName) dropdownUserName.textContent = nameToShow.toUpperCase();
             if (dropdownUserEmail) dropdownUserEmail.textContent = user.email;
             
-            // Logged-in trigger forces interface to accurately refresh state matching storage favorites data array
             renderCards(getFiltered());
         } else {
             if (loginBtn) loginBtn.style.display = 'inline-block';
             if (userProfileWrapper) userProfileWrapper.style.display = 'none';
-            
             showOnlyFavorites = false;
             renderCards(getFiltered());
         }
     });
 
-    // Logout Button Event Listener
     document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
         firebase.auth().signOut().then(() => {
-            console.log("AnkitStudioAI: User Logged Out Successfully.");
             window.location.reload();
         }).catch((error) => {
             console.error("Logout Error:", error);
