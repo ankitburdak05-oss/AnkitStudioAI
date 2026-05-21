@@ -24,7 +24,8 @@ function getFavoritesFromStorage() {
     
     try {
         const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : [];
+        const parsed = data ? JSON.parse(data) : [];
+        return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
         console.error("AnkitStudioAI Storage Validation Fail - Resetting local stream context:", e);
         return [];
@@ -235,7 +236,7 @@ function openModal(id) {
     const p = dataset.find(x => x.id === id);
     if (!p) return;
     
-    if (typeof firebase !== 'undefined' && !firebase.auth().currentUser && !p.free) {
+    if (typeof firebase !== 'undefined' && firebase.auth && !firebase.auth().currentUser && !p.free) {
         alert("Authentication Required! Please login to copy premium prompts.");
         openAuthModal();
         return;
@@ -305,7 +306,7 @@ function switchTab(tab) {
 
 function handleRealAuthSubmit(e) {
     e.preventDefault();
-    if (typeof firebase === 'undefined') {
+    if (typeof firebase === 'undefined' || !firebase.auth) {
         alert("Firebase Service Unavailable. Please try again later.");
         return;
     }
@@ -336,7 +337,7 @@ function handleRealAuthSubmit(e) {
                 console.log("Firebase Email Login Success:", userCredential.user);
                 migrateGuestFavoritesToUser(userCredential.user.uid); // Trigger auto storage sync migration
                 closeAuth();
-                window.location.reload();
+                applyAuthState(userCredential.user);
             })
             .catch((error) => {
                 console.error("Firebase Login Error:", error.message);
@@ -352,7 +353,7 @@ function handleRealAuthSubmit(e) {
                 document.getElementById('authSuccess').classList.add('show');
                 setTimeout(() => {
                     closeAuth();
-                    window.location.reload();
+                    applyAuthState(userCredential.user);
                 }, 2000);
             })
             .catch((error) => {
@@ -422,7 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('tabLogin')?.addEventListener('click', () => switchTab('login'));
 
     document.getElementById('submitPromptBtn')?.addEventListener('click', () => {
-        if(typeof firebase !== 'undefined' && !firebase.auth().currentUser) {
+        if(typeof firebase === 'undefined' || !firebase.auth || !firebase.auth().currentUser) {
             alert("Please login to submit your custom prompts to marketplace.");
             openAuthModal();
         } else {
@@ -534,39 +535,89 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Helper to apply authentication state changes in-place (no full reload)
+function applyAuthState(user) {
+    const loginBtn = document.getElementById('loginBtn');
+    const userProfileWrapper = document.getElementById('userProfileWrapper');
+    const userDisplay = document.getElementById('userDisplay');
+    const dropdownUserName = document.getElementById('dropdownUserName');
+    const dropdownUserEmail = document.getElementById('dropdownUserEmail');
+
+    if (user) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (userProfileWrapper) userProfileWrapper.style.display = 'inline-block';
+
+        const nameToShow = user.displayName || (user.email ? user.email.split('@')[0] : '') || "CREATOR";
+        if (userDisplay) userDisplay.textContent = nameToShow.toUpperCase();
+        if (dropdownUserName) dropdownUserName.textContent = nameToShow.toUpperCase();
+        if (dropdownUserEmail) dropdownUserEmail.textContent = user.email || '';
+
+        try { migrateGuestFavoritesToUser(user.uid); } catch (e) { console.error(e); }
+    } else {
+        if (loginBtn) loginBtn.style.display = 'inline-block';
+        if (userProfileWrapper) userProfileWrapper.style.display = 'none';
+        if (showOnlyFavorites) toggleFavoritesPageView(false);
+    }
+
+    renderCards(getFiltered());
+}
+
 // Firebase User Instance Auth Status State Pipeline Listener
 if (typeof firebase !== 'undefined' && firebase.auth) {
-    firebase.auth().onAuthStateChanged((user) => {
-        const loginBtn = document.getElementById('loginBtn');
-        const userProfileWrapper = document.getElementById('userProfileWrapper');
-        const userDisplay = document.getElementById('userDisplay');
-        const dropdownUserName = document.getElementById('dropdownUserName');
-        const dropdownUserEmail = document.getElementById('dropdownUserEmail');
-        
-        if (user) {
-            if (loginBtn) loginBtn.style.display = 'none';
-            if (userProfileWrapper) userProfileWrapper.style.display = 'inline-block';
-            
-            const nameToShow = user.displayName || user.email.split('@')[0] || "CREATOR";
-            if (userDisplay) userDisplay.textContent = nameToShow.toUpperCase();
-            if (dropdownUserName) dropdownUserName.textContent = nameToShow.toUpperCase();
-            if (dropdownUserEmail) dropdownUserEmail.textContent = user.email;
-            
-            migrateGuestFavoritesToUser(user.uid); // Ensure runtime sync for active auth stream session logins
-            renderCards(getFiltered());
-        } else {
-            if (loginBtn) loginBtn.style.display = 'inline-block';
-            if (userProfileWrapper) userProfileWrapper.style.display = 'none';
-            renderCards(getFiltered()); // Keeps guest filters hydrated
-        }
-    });
+    firebase.auth().onAuthStateChanged((user) => { applyAuthState(user); });
 
     document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
         firebase.auth().signOut().then(() => {
-            window.location.reload();
+            applyAuthState(null);
         }).catch((error) => {
             console.error("Logout Error:", error);
         });
     });
 }
+
+// Quick browser smoke-test for favorites, migration and fallback UI
+window.runFavoritesSmokeTest = async function() {
+    console.log('Running ANKITSTUDIOAI favorites smoke test...');
+    try {
+        const promptsArr = (typeof prompts !== 'undefined') ? prompts : window.prompts || [];
+        const grid = document.getElementById('promptGrid');
+        if (!grid) { console.warn('promptGrid element not found — aborting smoke test.'); return; }
+        if (!promptsArr || promptsArr.length === 0) { console.warn('No prompts found — smoke test requires at least one prompt.'); return; }
+
+        const testId = promptsArr[0].id;
+        // Cleanup any previous test keys
+        localStorage.removeItem('fav_prompts_guest_test');
+        localStorage.removeItem('fav_prompts_guest');
+        localStorage.removeItem('fav_prompts_TEST_UID');
+
+        // Ensure guest flow: clear user and set guest favorite
+        localStorage.removeItem('fav_prompts_guest');
+        toggleFavoriteState(testId);
+        const guestFavs = JSON.parse(localStorage.getItem('fav_prompts_guest') || '[]');
+        console.log('Guest favs after toggle:', guestFavs);
+
+        // Enter favorites portal (guest)
+        toggleFavoritesPageView(true);
+        await new Promise(r => setTimeout(r, 150));
+        console.log('Favorites portal (guest) dataset count:', getFiltered().length);
+
+        // Migrate guest to simulated user
+        migrateGuestFavoritesToUser('TEST_UID');
+        const userFavs = JSON.parse(localStorage.getItem('fav_prompts_TEST_UID') || '[]');
+        console.log('User favs after migration:', userFavs);
+
+        // Simulate auth state apply
+        applyAuthState({ uid: 'TEST_UID', email: 'test@example.com', displayName: 'Tester' });
+        console.log('applyAuthState simulated — UI should show logged-in state.');
+
+        // Cleanup test keys
+        localStorage.removeItem('fav_prompts_guest');
+        localStorage.removeItem('fav_prompts_TEST_UID');
+        toggleFavoritesPageView(false);
+        renderCards(getFiltered());
+        console.log('Smoke test completed successfully.');
+    } catch (e) {
+        console.error('Smoke test failed:', e);
+    }
+};
