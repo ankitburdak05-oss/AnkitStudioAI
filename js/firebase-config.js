@@ -9,13 +9,17 @@ const firebaseConfig = {
   measurementId: "G-BJ44E7P08S"
 };
 
+// Core Engine Initialization
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-// Google Auth Provider Initialization
-const provider = new firebase.auth.GoogleAuthProvider();
+
+// FIXED: Initialized Realtime Database to perfectly match app.js sync logic
+const database = firebase.database(); 
 
 // Global Function for Google Login
 function loginWithGoogle() {
+    // Secure instantiation inside authorization flow scope
+    const provider = new firebase.auth.GoogleAuthProvider();
+    
     firebase.auth().signInWithPopup(provider)
         .then((result) => {
             console.log("Google Sign-In Successful:", result.user);
