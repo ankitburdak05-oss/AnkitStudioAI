@@ -42,6 +42,68 @@ function toggleFavoriteState(promptId) {
     renderCards(getFiltered()); // Core UI hydration refresh
 }
 
+// NEW: Toggle Full-Screen Favorites Page View Layout Matrix
+function toggleFavoritesPageView(enable) {
+    showOnlyFavorites = enable;
+    
+    const heroContainer = document.querySelector('.hero-container');
+    const trustBar = document.querySelector('.trust-bar');
+    const categoriesSection = document.getElementById('categories');
+    const featuredSection = document.getElementById('featured');
+    const bannerSection = document.querySelector('.featured-banner')?.parentNode;
+    const redirectBox = document.querySelector('.prompt-redirect-box-wrapper')?.parentNode;
+    const toolsGrid = document.querySelector('.tools-grid')?.parentNode;
+    const sectionHead = document.querySelector('#featured .section-head');
+
+    if (enable) {
+        // Main page ke saare kachre ko hide kardo naye view ke liye
+        if (heroContainer) heroContainer.style.display = 'none';
+        if (trustBar) trustBar.style.display = 'none';
+        if (categoriesSection) categoriesSection.style.display = 'none';
+        if (bannerSection) bannerSection.style.display = 'none';
+        if (redirectBox) redirectBox.style.display = 'none';
+        if (toolsGrid) toolsGrid.style.display = 'none';
+        
+        // Featured block ko layout screen par rakho par head custom badlo
+        if (featuredSection) featuredSection.style.paddingTop = '40px';
+        if (sectionHead) {
+            sectionHead.innerHTML = `
+                <div class="section-title" id="favBackBtn" style="cursor:pointer; color:var(--red); font-family:'Orbitron',sans-serif; font-size:16px; letter-spacing:2px; display:flex; align-items:center; gap:10px; transition:0.2s;">
+                    <i class="fas fa-arrow-left"></i> BACK TO HOME
+                </div>
+                <div class="see-all" style="color:var(--muted); font-family:'Orbitron',sans-serif; font-size:12px;">🌟 MY FAVORITES PORTAL</div>
+            `;
+            // Instantly bind the new left back option button click trigger
+            document.getElementById('favBackBtn')?.addEventListener('click', () => {
+                toggleFavoritesPageView(false);
+            });
+        }
+    } else {
+        // Wapas home screen par aate hi sab restore kar do standard layout me
+        if (heroContainer) heroContainer.style.display = 'block';
+        if (trustBar) trustBar.style.display = 'flex';
+        if (categoriesSection) categoriesSection.style.display = 'block';
+        if (bannerSection) bannerSection.style.display = 'block';
+        if (redirectBox) redirectBox.style.display = 'block';
+        if (toolsGrid) toolsGrid.style.display = 'block';
+        
+        if (featuredSection) featuredSection.style.paddingTop = '0';
+        if (sectionHead) {
+            sectionHead.innerHTML = `
+                <div class="section-title"><i class="fas fa-fire"></i> Featured Prompts</div>
+                <div class="see-all" id="clearFilter" style="display:none;color:var(--red)">Clear Filter ✕</div>
+            `;
+        }
+        // Sidebar home link active set matrix reset state
+        document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
+        document.querySelector('.sidebar .side-link [class*="fa-home"]')?.parentNode?.classList.add('active');
+        
+        activeCategory = '';
+        activeAi = '';
+    }
+    renderCards(getFiltered());
+}
+
 // Memory-Optimized Document Fragment Rendering Runner Matrix
 function renderCards(data) {
     const grid = document.getElementById('promptGrid');
@@ -329,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll('.cat-grid .cat-card').forEach(card => {
         card.addEventListener('click', () => {
-            showOnlyFavorites = false;
+            if (showOnlyFavorites) toggleFavoritesPageView(false);
             activeCategory = card.getAttribute('data-cat') || '';
             document.getElementById('clearFilter').style.display = activeCategory ? 'block' : 'none';
             renderCards(getFiltered());
@@ -337,14 +399,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.getElementById('viewAllCats')?.addEventListener('click', () => {
-        showOnlyFavorites = false;
+        if (showOnlyFavorites) toggleFavoritesPageView(false);
         activeCategory = '';
         document.getElementById('clearFilter').style.display = 'none';
         renderCards(getFiltered());
     });
 
     document.getElementById('clearFilter')?.addEventListener('click', () => {
-        showOnlyFavorites = false;
+        if (showOnlyFavorites) toggleFavoritesPageView(false);
         activeCategory = '';
         document.getElementById('clearFilter').style.display = 'none';
         renderCards(getFiltered());
@@ -370,38 +432,30 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             document.querySelectorAll('#tagsSubmenu .sub-link').forEach(l => l.classList.remove('active'));
             link.classList.add('active');
-            showOnlyFavorites = false;
+            if (showOnlyFavorites) toggleFavoritesPageView(false);
             activeCategory = link.getAttribute('data-cat') || '';
             renderCards(getFiltered());
         });
     });
 
-    // FIXED: Using strong selector routing alignment instead of class selectors
+    // Sidebar View Routing Observers Strategy Configuration
     const sidebarHistoryLink = document.querySelector('.sidebar a[href="#"]') ? document.querySelector('.sidebar a[href="#"]').parentNode : null;
     if (sidebarHistoryLink) {
         sidebarHistoryLink.querySelectorAll('.side-link').forEach((link, idx) => {
-            if (idx === 3) { // Matrix index fallback mapping for favorites row container target
+            if (idx === 3) { // Favorites Row Trigger Definition Mapping
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
-                    showOnlyFavorites = true;
-                    activeCategory = ''; 
-                    activeAi = '';
-                    document.querySelectorAll('#aiFilterBar .filter-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelector('#aiFilterBar .filter-btn[data-ai=""]')?.classList.add('active');
-                    renderCards(getFiltered());
+                    
+                    // NEW: Directly triggers full page view configuration mode instead of base inline filtering
+                    toggleFavoritesPageView(true);
                 });
             }
-            if (idx === 0) { // Matrix target index for home trigger mapping definition
+            if (idx === 0) { // Home Click Reset Matrix Observer Trigger
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
-                    link.classList.add('active');
-                    showOnlyFavorites = false;
-                    activeCategory = '';
-                    activeAi = '';
-                    renderCards(getFiltered());
+                    toggleFavoritesPageView(false);
                 });
             }
         });
@@ -463,7 +517,7 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
         } else {
             if (loginBtn) loginBtn.style.display = 'inline-block';
             if (userProfileWrapper) userProfileWrapper.style.display = 'none';
-            showOnlyFavorites = false;
+            if (showOnlyFavorites) toggleFavoritesPageView(false);
             renderCards(getFiltered());
         }
     });
