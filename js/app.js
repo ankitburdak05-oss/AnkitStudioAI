@@ -4,6 +4,7 @@ let activeAi = '';
 let searchQuery = '';
 let currentTab = 'create';
 let showOnlyFavorites = false; // Favorites mode toggle engine state
+let heroProfileCoords = { x: 0, y: 0 }; // Persist latest hero profile layout coordinates
 
 // Real-Time Event Debouncing System Engine 
 function debounce(func, delay = 300) {
@@ -70,6 +71,13 @@ function migrateGuestFavoritesToUser(userUid) {
     }
 }
 
+function repositionHeroProfileWrapper() {
+    const profileBox = document.querySelector('.hero-profile-wrapper');
+    if (profileBox) {
+        profileBox.style.transform = `translate(${heroProfileCoords.x}px, ${heroProfileCoords.y}px)`;
+    }
+}
+
 // Toggle Full-Screen Favorites Page View Layout Matrix
 function toggleFavoritesPageView(enable) {
     showOnlyFavorites = enable;
@@ -123,6 +131,7 @@ function toggleFavoritesPageView(enable) {
         
         activeCategory = '';
         activeAi = '';
+        repositionHeroProfileWrapper();
     }
     renderCards(getFiltered());
 }
@@ -395,6 +404,8 @@ if (typeof firebase !== 'undefined' && firebase.database) {
             if(data.totalCategoriesCounter) document.getElementById('statCategories').innerText = data.totalCategoriesCounter;
 
             let imgX = Number(data.imgLeft) || 0; let imgY = Number(data.imgTop) || 0;
+            heroProfileCoords.x = imgX;
+            heroProfileCoords.y = imgY;
             let profileBox = document.querySelector(".hero-profile-wrapper");
             if(profileBox) profileBox.style.transform = `translate(${imgX}px, ${imgY}px)`;
         }
