@@ -115,12 +115,13 @@ function toggleFavoritesPageView(enable) {
             });
         }
     } else {
-        if (heroContainer) heroContainer.style.display = 'block';
-        if (trustBar) trustBar.style.display = 'flex';
-        if (categoriesSection) categoriesSection.style.display = 'block';
-        if (bannerSection) bannerSection.style.display = 'block';
-        if (redirectBox) redirectBox.style.display = 'block';
-        if (toolsGrid) toolsGrid.style.display = 'block';
+        // FIX: Remove forced 'block'/'flex' to let original style.css rules take over seamlessly
+        if (heroContainer) heroContainer.style.display = '';
+        if (trustBar) trustBar.style.display = '';
+        if (categoriesSection) categoriesSection.style.display = '';
+        if (bannerSection) bannerSection.style.display = '';
+        if (redirectBox) redirectBox.style.display = '';
+        if (toolsGrid) toolsGrid.style.display = '';
         
         if (featuredSection) featuredSection.style.paddingTop = '0';
         if (sectionHead) {
@@ -135,13 +136,11 @@ function toggleFavoritesPageView(enable) {
         activeCategory = '';
         activeAi = '';
 
-        // FIX: Clear existing timer to prevent race conditions during rapid UI toggling
         if (profileRepositionTimeout) {
             clearTimeout(profileRepositionTimeout);
         }
         
         profileRepositionTimeout = setTimeout(() => {
-            // Ek aur safety check: Sirf tabhi photo hile jab user sach mein home page par ho
             if (typeof repositionHeroProfileWrapper === 'function' && !showOnlyFavorites) {
                 repositionHeroProfileWrapper();
             }
