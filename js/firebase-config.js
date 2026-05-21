@@ -32,3 +32,5 @@ function loginWithGoogle() {
             alert("Google Login Failed: " + error.message);
         });
 }
+// Is line ko firebase-config.js ke ekdam aakhiri mein daal do
+window.loginWithGoogle = loginWithGoogle;
