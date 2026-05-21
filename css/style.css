@@ -905,6 +905,13 @@ footer {
     .side-link.active { background: transparent; color: var(--red); }
     .arrow-icon { display: none; }
     .side-submenu { display: none !important; }
+
+    /* Fix 3: Mobile Dropdown Screen Clipping Offset spacing */
+    .dropdown-content {
+        right: -10px !important;
+        min-width: 200px !important;
+        max-width: 240px !important;
+    }
 }
 
 @media(max-width:400px) {
@@ -912,7 +919,7 @@ footer {
     .tools-grid { grid-template-columns: 1fr; }
 }
 
-/* ===== AUTH MODAL & DROPDOWN (RESTORED OUTSIDE MEDIA QUERY) ===== */
+/* ===== AUTH MODAL & DROPDOWN STRUCTURE (RESTORED OUTSIDE MEDIA QUERY) ===== */
 .auth-overlay {
     display: none;
     position: fixed; inset: 0; z-index: 300;
@@ -1087,7 +1094,7 @@ footer {
 .success-text { font-family: 'Bebas Neue',sans-serif; font-size:1.8rem; letter-spacing:3px; color: var(--green); }
 .success-sub { font-size:13px; color:var(--muted); }
 
-/* Approved Profile Dropdown Structure */
+/* Approved Profile Dropdown Design */
 .profile-dropdown {
     position: relative;
     display: inline-block;
