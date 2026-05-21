@@ -237,7 +237,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Authentication triggers (Fixed target definitions mapping)
     document.getElementById('loginBtn')?.addEventListener('click', openAuthModal);
     document.getElementById('authCloseBtn')?.addEventListener('click', closeAuth);
-    document.getElementById('modalCloseBtn')?.addEventListener('click', closeAuth); // Layout support
     document.getElementById('authForm')?.addEventListener('submit', handleAuthValidationSubmit);
     document.getElementById('googleAuthBtn')?.addEventListener('click', () => {
         if(typeof loginWithGoogle === 'function') loginWithGoogle();
