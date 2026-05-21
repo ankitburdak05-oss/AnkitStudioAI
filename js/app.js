@@ -579,21 +579,51 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
 // Quick browser smoke-test for favorites, migration and fallback UI
 window.runFavoritesSmokeTest = async function() {
     console.log('Running ANKITSTUDIOAI favorites smoke test...');
+
+    const originalShowOnlyFavorites = showOnlyFavorites;
+    const originalUser = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser : null;
+    const originalGuestData = localStorage.getItem('fav_prompts_guest');
+    const originalUserData = originalUser ? localStorage.getItem(`fav_prompts_${originalUser.uid}`) : null;
+
+    const cleanupTempKeys = () => {
+        localStorage.removeItem('fav_prompts_guest_test');
+        localStorage.removeItem('fav_prompts_TEST_UID');
+    };
+
+    const restoreStorage = () => {
+        if (originalGuestData !== null) {
+            localStorage.setItem('fav_prompts_guest', originalGuestData);
+        } else {
+            localStorage.removeItem('fav_prompts_guest');
+        }
+
+        if (originalUser && originalUserData !== null) {
+            localStorage.setItem(`fav_prompts_${originalUser.uid}`, originalUserData);
+        }
+    };
+
     try {
         const promptsArr = (typeof prompts !== 'undefined') ? prompts : window.prompts || [];
         const grid = document.getElementById('promptGrid');
-        if (!grid) { console.warn('promptGrid element not found — aborting smoke test.'); return; }
-        if (!promptsArr || promptsArr.length === 0) { console.warn('No prompts found — smoke test requires at least one prompt.'); return; }
+        if (!grid) {
+            console.warn('promptGrid element not found — aborting smoke test.');
+            return;
+        }
+        if (!promptsArr || promptsArr.length === 0) {
+            console.warn('No prompts found — smoke test requires at least one prompt.');
+            return;
+        }
 
         const testId = promptsArr[0].id;
-        // Cleanup any previous test keys
-        localStorage.removeItem('fav_prompts_guest_test');
-        localStorage.removeItem('fav_prompts_guest');
-        localStorage.removeItem('fav_prompts_TEST_UID');
+        cleanupTempKeys();
 
-        // Ensure guest flow: clear user and set guest favorite
+        // Ensure guest flow: clear test data and set guest favorite
         localStorage.removeItem('fav_prompts_guest');
-        toggleFavoriteState(testId);
+        if (!originalUser) {
+            toggleFavoriteState(testId);
+        } else {
+            localStorage.setItem('fav_prompts_guest', JSON.stringify([testId]));
+        }
         const guestFavs = JSON.parse(localStorage.getItem('fav_prompts_guest') || '[]');
         console.log('Guest favs after toggle:', guestFavs);
 
@@ -611,13 +641,20 @@ window.runFavoritesSmokeTest = async function() {
         applyAuthState({ uid: 'TEST_UID', email: 'test@example.com', displayName: 'Tester' });
         console.log('applyAuthState simulated — UI should show logged-in state.');
 
-        // Cleanup test keys
-        localStorage.removeItem('fav_prompts_guest');
-        localStorage.removeItem('fav_prompts_TEST_UID');
-        toggleFavoritesPageView(false);
-        renderCards(getFiltered());
         console.log('Smoke test completed successfully.');
     } catch (e) {
         console.error('Smoke test failed:', e);
+    } finally {
+        cleanupTempKeys();
+        restoreStorage();
+
+        if (showOnlyFavorites !== originalShowOnlyFavorites) {
+            toggleFavoritesPageView(originalShowOnlyFavorites);
+        } else {
+            renderCards(getFiltered());
+        }
+
+        applyAuthState(originalUser);
+        console.log('Smoke test cleanup complete. UI restored to original state.');
     }
 };
