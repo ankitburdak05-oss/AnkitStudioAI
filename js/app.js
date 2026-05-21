@@ -4,7 +4,7 @@ let activeAi = '';
 let searchQuery = '';
 let currentTab = 'create';
 let showOnlyFavorites = false; // Favorites mode toggle engine state
-let heroProfileCoords = { x: 0, y: 0 }; // Persist latest hero profile layout coordinates
+let heroProfileCoords = { x: null, y: null }; // Persist latest hero profile layout coordinates
 let profileRepositionTimeout = null; // Anti-race condition timer state
 
 // Real-Time Event Debouncing System Engine 
@@ -74,7 +74,9 @@ function migrateGuestFavoritesToUser(userUid) {
 
 function repositionHeroProfileWrapper() {
     const profileBox = document.querySelector('.hero-profile-wrapper');
-    if (profileBox) {
+    
+    // Safety Lock: Agar box mil gaya AUR coordinates null nahi hain, tabhi photo ko hila
+    if (profileBox && heroProfileCoords.x !== null && heroProfileCoords.y !== null) {
         profileBox.style.transform = `translate(${heroProfileCoords.x}px, ${heroProfileCoords.y}px)`;
     }
 }
