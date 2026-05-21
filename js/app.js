@@ -14,23 +14,31 @@ function debounce(func, delay = 300) {
     };
 }
 
-// LocalStorage Core Engine Helpers for User Specific Favorites Matrix
+// FIXED: Added defensive try/catch architecture against malformed storage contents
 function getFavoritesFromStorage() {
-    if (typeof firebase === 'undefined' || !firebase.auth().currentUser) return [];
-    const user = firebase.auth().currentUser;
-    const key = `fav_prompts_${user.uid}`;
-    return JSON.parse(localStorage.getItem(key)) || [];
+    let key = 'fav_prompts_guest'; // Fallback guest key representation vector mapping
+    if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+        const user = firebase.auth().currentUser;
+        key = `fav_prompts_${user.uid}`;
+    }
+    
+    try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        console.error("AnkitStudioAI Storage Validation Fail - Resetting local stream context:", e);
+        return [];
+    }
 }
 
+// FIXED: Allows guest users to collect favorites locally and seamlessly migrates them after login
 function toggleFavoriteState(promptId) {
-    if (typeof firebase === 'undefined') return;
-    const user = firebase.auth().currentUser;
-    if (!user) {
-        alert("Authentication Required! Please login to save favorites.");
-        openAuthModal();
-        return;
+    let key = 'fav_prompts_guest';
+    if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+        const user = firebase.auth().currentUser;
+        key = `fav_prompts_${user.uid}`;
     }
-    const key = `fav_prompts_${user.uid}`;
+    
     let favs = getFavoritesFromStorage();
     
     if (favs.includes(promptId)) {
@@ -42,7 +50,26 @@ function toggleFavoriteState(promptId) {
     renderCards(getFiltered()); // Core UI hydration refresh
 }
 
-// NEW: Toggle Full-Screen Favorites Page View Layout Matrix
+// NEW: Automatically migrate local guest records to user account space upon success authentication state pipeline trigger
+function migrateGuestFavoritesToUser(userUid) {
+    try {
+        const guestFavs = JSON.parse(localStorage.getItem('fav_prompts_guest')) || [];
+        if (guestFavs.length > 0) {
+            const userKey = `fav_prompts_${userUid}`;
+            let userFavs = JSON.parse(localStorage.getItem(userKey)) || [];
+            
+            // Deduplicate lists array intersection variables matrix
+            let merged = Array.from(new Set([...userFavs, ...guestFavs]));
+            localStorage.setItem(userKey, JSON.stringify(merged));
+            localStorage.removeItem('fav_prompts_guest'); // Flush temporary buffer
+            console.log("AnkitStudioAI Engine: Local guest bookmarks migrated successfully.");
+        }
+    } catch (e) {
+        console.error("Migration runtime validation failed:", e);
+    }
+}
+
+// Toggle Full-Screen Favorites Page View Layout Matrix
 function toggleFavoritesPageView(enable) {
     showOnlyFavorites = enable;
     
@@ -56,7 +83,6 @@ function toggleFavoritesPageView(enable) {
     const sectionHead = document.querySelector('#featured .section-head');
 
     if (enable) {
-        // Main page ke saare kachre ko hide kardo naye view ke liye
         if (heroContainer) heroContainer.style.display = 'none';
         if (trustBar) trustBar.style.display = 'none';
         if (categoriesSection) categoriesSection.style.display = 'none';
@@ -64,7 +90,6 @@ function toggleFavoritesPageView(enable) {
         if (redirectBox) redirectBox.style.display = 'none';
         if (toolsGrid) toolsGrid.style.display = 'none';
         
-        // Featured block ko layout screen par rakho par head custom badlo
         if (featuredSection) featuredSection.style.paddingTop = '40px';
         if (sectionHead) {
             sectionHead.innerHTML = `
@@ -73,13 +98,11 @@ function toggleFavoritesPageView(enable) {
                 </div>
                 <div class="see-all" style="color:var(--muted); font-family:'Orbitron',sans-serif; font-size:12px;">🌟 MY FAVORITES PORTAL</div>
             `;
-            // Instantly bind the new left back option button click trigger
             document.getElementById('favBackBtn')?.addEventListener('click', () => {
                 toggleFavoritesPageView(false);
             });
         }
     } else {
-        // Wapas home screen par aate hi sab restore kar do standard layout me
         if (heroContainer) heroContainer.style.display = 'block';
         if (trustBar) trustBar.style.display = 'flex';
         if (categoriesSection) categoriesSection.style.display = 'block';
@@ -94,7 +117,6 @@ function toggleFavoritesPageView(enable) {
                 <div class="see-all" id="clearFilter" style="display:none;color:var(--red)">Clear Filter ✕</div>
             `;
         }
-        // Sidebar home link active set matrix reset state
         document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
         document.querySelector('.sidebar .side-link [class*="fa-home"]')?.parentNode?.classList.add('active');
         
@@ -104,14 +126,31 @@ function toggleFavoritesPageView(enable) {
     renderCards(getFiltered());
 }
 
-// Memory-Optimized Document Fragment Rendering Runner Matrix
+// Memory-Optimized Document Fragment Rendering Runner Matrix (WITH FALLBACK UI INTERCEPTOR)
 function renderCards(data) {
     const grid = document.getElementById('promptGrid');
     const noResults = document.getElementById('noResults');
     if (!grid) return;
 
+    // FIXED: Render highly immersive custom fallback UI whenever the active favorite collection is fully vacant instead of basic empty list
     if (data.length === 0) {
         grid.innerHTML = '';
+        if (showOnlyFavorites) {
+            if (noResults) noResults.style.display = 'none';
+            grid.innerHTML = `
+                <div class="favorites-empty-fallback" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--muted); border: 1px dashed rgba(255,255,255,0.05); border-radius: 12px; background: rgba(15,10,30,0.2);">
+                    <i class="far fa-heart" style="font-size: 3rem; color: var(--red); margin-bottom: 15px; display: block; animation: pulse 2s infinite;"></i>
+                    <h4 style="font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 2px; color: #fff; margin-bottom: 8px;">PORTAL EMPTY</h4>
+                    <p style="font-size: 12px; max-width: 400px; margin: 0 auto 20px; line-height: 1.6;">Bhai, tumne abhi tak koi bhi prompt bookmark nahi kiya hai! Home par jaakar kisi bhi card ke heart icon par click karo.</p>
+                    <button class="nav-link primary" id="backToHomeFromEmpty" style="margin: 0 auto; padding: 10px 24px; font-size: 11px; letter-spacing: 2px;">DISCOVER PROMPTS</button>
+                </div>
+            `;
+            document.getElementById('backToHomeFromEmpty')?.addEventListener('click', () => {
+                toggleFavoritesPageView(false);
+            });
+            return;
+        }
+        
         if (noResults) noResults.style.display = 'block';
         return;
     }
@@ -295,6 +334,7 @@ function handleRealAuthSubmit(e) {
         firebase.auth().signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 console.log("Firebase Email Login Success:", userCredential.user);
+                migrateGuestFavoritesToUser(userCredential.user.uid); // Trigger auto storage sync migration
                 closeAuth();
                 window.location.reload();
             })
@@ -307,6 +347,7 @@ function handleRealAuthSubmit(e) {
         firebase.auth().createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 console.log("Firebase Account Created:", userCredential.user);
+                migrateGuestFavoritesToUser(userCredential.user.uid); // Trigger auto storage sync migration
                 document.getElementById('authForm').style.display = 'none';
                 document.getElementById('authSuccess').classList.add('show');
                 setTimeout(() => {
@@ -442,17 +483,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const sidebarHistoryLink = document.querySelector('.sidebar a[href="#"]') ? document.querySelector('.sidebar a[href="#"]').parentNode : null;
     if (sidebarHistoryLink) {
         sidebarHistoryLink.querySelectorAll('.side-link').forEach((link, idx) => {
-            if (idx === 3) { // Favorites Row Trigger Definition Mapping
+            if (idx === 3) { 
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
-                    
-                    // NEW: Directly triggers full page view configuration mode instead of base inline filtering
                     toggleFavoritesPageView(true);
                 });
             }
-            if (idx === 0) { // Home Click Reset Matrix Observer Trigger
+            if (idx === 0) { 
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     toggleFavoritesPageView(false);
@@ -513,12 +552,12 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
             if (dropdownUserName) dropdownUserName.textContent = nameToShow.toUpperCase();
             if (dropdownUserEmail) dropdownUserEmail.textContent = user.email;
             
+            migrateGuestFavoritesToUser(user.uid); // Ensure runtime sync for active auth stream session logins
             renderCards(getFiltered());
         } else {
             if (loginBtn) loginBtn.style.display = 'inline-block';
             if (userProfileWrapper) userProfileWrapper.style.display = 'none';
-            if (showOnlyFavorites) toggleFavoritesPageView(false);
-            renderCards(getFiltered());
+            renderCards(getFiltered()); // Keeps guest filters hydrated
         }
     });
 
