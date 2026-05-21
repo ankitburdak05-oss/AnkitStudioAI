@@ -3,7 +3,7 @@ let activeCategory = '';
 let activeAi = '';
 let searchQuery = '';
 let currentTab = 'create';
-let emailEntered = false;
+let showOnlyFavorites = false; // NEW: Favorites mode toggle engine state
 
 // Real-Time Event Debouncing System Engine 
 function debounce(func, delay = 300) {
@@ -14,7 +14,34 @@ function debounce(func, delay = 300) {
     };
 }
 
-// Memory-Optimized Document Fragment Rendering Runner Matrix
+// NEW: LocalStorage Core Engine Helpers for User Specific Favorites Matrix
+function getFavoritesFromStorage() {
+    const user = firebase.auth().currentUser;
+    if (!user) return [];
+    const key = `fav_prompts_${user.uid}`;
+    return JSON.parse(localStorage.getItem(key)) || [];
+}
+
+function toggleFavoriteState(promptId) {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert("Authentication Required! Please login to save favorites.");
+        openAuthModal();
+        return;
+    }
+    const key = `fav_prompts_${user.uid}`;
+    let favs = getFavoritesFromStorage();
+    
+    if (favs.includes(promptId)) {
+        favs = favs.filter(id => id !== promptId);
+    } else {
+        favs.push(promptId);
+    }
+    localStorage.setItem(key, JSON.stringify(favs));
+    renderCards(getFiltered()); // Core UI hydration refresh
+}
+
+// Memory-Optimized Document Fragment Rendering Runner Matrix (WITH FAVORITES HEART INTEGRATION)
 function renderCards(data) {
     const grid = document.getElementById('promptGrid');
     const noResults = document.getElementById('noResults');
@@ -29,16 +56,21 @@ function renderCards(data) {
 
     // Anti-Reflow Pattern Initialization via DocumentFragments
     const fragment = document.createDocumentFragment();
+    const favs = getFavoritesFromStorage();
     
     data.forEach(p => {
         const card = document.createElement('div');
         card.className = 'prompt-card';
-        card.addEventListener('click', () => openModal(p.id));
+        
+        // Active status assessment matrix mapping definitions
+        const isFav = favs.includes(p.id);
+        const heartClass = isFav ? 'fas fa-heart fav-active' : 'far fa-heart';
         
         card.innerHTML = `
             <div class="prompt-thumb" style="background:${p.thumbGrad}">
                 <span class="thumb-icon">${p.emoji}</span>
                 ${p.badge ? `<div class="prompt-badge ${p.badgeClass}">${p.badge}</div>` : ''}
+                <button class="card-fav-btn" data-id="${p.id}" style="position: absolute; top: 12px; right: 12px; background: rgba(15, 10, 30, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); width: 32px; height: 32px; border-radius: 50%; color: #ff3366; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: transform 0.2s; z-index: 5;"><i class="${heartClass}"></i></button>
             </div>
             <div class="prompt-body">
                 <div class="prompt-ai-tag ${p.aiClass}">${p.ai}</div>
@@ -57,6 +89,14 @@ function renderCards(data) {
                 </div>
             </div>
         `;
+        
+        // Context routing interception hooks alignment
+        card.querySelector('.prompt-body').addEventListener('click', () => openModal(p.id));
+        card.querySelector('.card-fav-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavoriteState(p.id);
+        });
+        
         fragment.appendChild(card);
     });
 
@@ -66,7 +106,14 @@ function renderCards(data) {
 }
 
 function getFiltered() {
-    const dataset = (typeof prompts !== 'undefined') ? prompts : [];
+    let dataset = (typeof prompts !== 'undefined') ? prompts : [];
+    
+    // NEW: If active view matrix is toggled to favorites scope
+    if (showOnlyFavorites) {
+        const favs = getFavoritesFromStorage();
+        dataset = dataset.filter(p => favs.includes(p.id));
+    }
+    
     return dataset.filter(p => {
         const matchCat = !activeCategory || p.category === activeCategory || p.ai.includes(activeCategory) || p.title.toLowerCase().includes(activeCategory.toLowerCase());
         const matchAi  = !activeAi || p.ai === activeAi;
@@ -119,69 +166,101 @@ function openAuthModal() {
     document.body.style.overflow = 'hidden';
     document.getElementById('authSuccess').classList.remove('show');
     document.getElementById('authForm').style.display = 'block';
+    switchTab(currentTab);
 }
 
 function closeAuth() {
     document.getElementById('authOverlay').classList.remove('open');
     document.body.style.overflow = '';
-    emailEntered = false;
     document.getElementById('authEmail').value = '';
     document.getElementById('authPassword').value = '';
-    document.getElementById('authPassword').style.display = 'none';
-    document.getElementById('continueText').textContent = 'CONTINUE';
 }
 
 function switchTab(tab) {
     currentTab = tab;
-    emailEntered = false;
-    document.getElementById('authPassword').style.display = 'none';
     document.getElementById('authEmail').value = '';
     document.getElementById('authPassword').value = '';
-    document.getElementById('continueText').textContent = 'CONTINUE';
     document.getElementById('tabCreate').classList.toggle('active', tab === 'create');
     document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
 
+    const authTitle = document.getElementById('authTitle');
+    const authSub = document.getElementById('authSub');
+    const authCheckboxRow = document.getElementById('authCheckboxRow');
+    const continueText = document.getElementById('continueText');
+    const authPassword = document.getElementById('authPassword');
+
+    if (authPassword) authPassword.style.display = 'block';
+
     if (tab === 'create') {
-        document.getElementById('authTitle').textContent = 'CREATE ACCOUNT';
-        document.getElementById('authSub').textContent = 'Join 10,000+ AI enthusiasts & creators';
-        document.getElementById('authCheckboxRow').style.display = 'flex';
+        if (authTitle) authTitle.textContent = 'CREATE ACCOUNT';
+        if (authSub) authSub.textContent = 'Join 10,000+ AI enthusiasts & creators';
+        if (authCheckboxRow) authCheckboxRow.style.display = 'flex';
         document.getElementById('authSwitch').innerHTML = 'Already have an account? <span>Login here</span>';
+        if (continueText) continueText.textContent = 'CONTINUE';
     } else {
-        document.getElementById('authTitle').textContent = 'WELCOME BACK';
-        document.getElementById('authSub').textContent = 'Login to your ANKITSTUDIOAI account';
-        document.getElementById('authCheckboxRow').style.display = 'none';
+        if (authTitle) authTitle.textContent = 'WELCOME BACK';
+        if (authSub) authSub.textContent = 'Login to your ANKITSTUDIOAI account';
+        if (authCheckboxRow) authCheckboxRow.style.display = 'none';
         document.getElementById('authSwitch').innerHTML = "Don't have an account? <span>Sign up free</span>";
+        if (continueText) continueText.textContent = 'LOGIN';
     }
 }
 
-function handleAuthValidationSubmit(e) {
+// COMPLETE REAL-TIME FIREBASE EMAIL/PASSWORD ENGINE CONTEXT INTERCEPTOR
+function handleRealAuthSubmit(e) {
     e.preventDefault();
+    
     const emailField = document.getElementById('authEmail');
     const passwordField = document.getElementById('authPassword');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    
+    const email = emailField.value.trim();
+    const password = passwordField.value;
+    const isLoginMode = currentTab === 'login';
 
-    if (!emailField.checkValidity()) {
-        emailField.style.borderColor = 'var(--red)';
-        emailField.focus();
-        return;
-    } else { emailField.style.borderColor = ''; }
-
-    if (!emailEntered) {
-        emailEntered = true;
-        passwordField.style.display = 'block';
-        passwordField.focus();
-        document.getElementById('continueText').textContent = currentTab === 'create' ? 'CREATE ACCOUNT' : 'LOGIN';
+    if (!email || !password) {
+        alert("Bhai, email aur password dono daalna compulsory hai!");
         return;
     }
 
-    if (!passwordField.checkValidity()) {
-        passwordField.style.borderColor = 'var(--red)';
-        passwordField.focus();
+    if (password.length < 6) {
+        alert("Security Reason: Password kam se kam 6 characters ka hona chahiye!");
         return;
-    } else { passwordField.style.borderColor = ''; }
+    }
 
-    document.getElementById('authForm').style.display = 'none';
-    document.getElementById('authSuccess').classList.add('show');
-    setTimeout(() => closeAuth(), 2200);
+    if (authSubmitBtn) authSubmitBtn.disabled = true;
+
+    if (isLoginMode) {
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                console.log("Firebase Email Login Success:", userCredential.user);
+                closeAuth();
+                window.location.reload();
+            })
+            .catch((error) => {
+                console.error("Firebase Login Error:", error.message);
+                alert("Login Failed: " + error.message);
+                if (authSubmitBtn) authSubmitBtn.disabled = false;
+            });
+    } else {
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                console.log("Firebase Account Created:", userCredential.user);
+                
+                document.getElementById('authForm').style.display = 'none';
+                document.getElementById('authSuccess').classList.add('show');
+                
+                setTimeout(() => {
+                    closeAuth();
+                    window.location.reload();
+                }, 2000);
+            })
+            .catch((error) => {
+                console.error("Firebase Signup Error:", error.message);
+                alert("Account Creation Failed: " + error.message);
+                if (authSubmitBtn) authSubmitBtn.disabled = false;
+            });
+    }
 }
 
 // COMPLETE REALTIME DATABASE SYNC ENGINE
@@ -234,10 +313,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('navSearch')?.addEventListener('input', optimizedSearchHandler);
     document.getElementById('heroSearchBtn')?.addEventListener('click', filterPromptsProcessor);
 
-    // Authentication triggers (Fixed target definitions mapping)
+    // Authentication triggers
     document.getElementById('loginBtn')?.addEventListener('click', openAuthModal);
     document.getElementById('authCloseBtn')?.addEventListener('click', closeAuth);
-    document.getElementById('authForm')?.addEventListener('submit', handleAuthValidationSubmit);
+    document.getElementById('authForm')?.addEventListener('submit', handleRealAuthSubmit);
     document.getElementById('googleAuthBtn')?.addEventListener('click', () => {
         if(typeof loginWithGoogle === 'function') loginWithGoogle();
     });
@@ -261,6 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Native Semantic Navigation Categories Observers Bindings
     document.querySelectorAll('.cat-grid .cat-card').forEach(card => {
         card.addEventListener('click', () => {
+            showOnlyFavorites = false; // Reset favorites view mode when switching explicit category tabs
             activeCategory = card.getAttribute('data-cat') || '';
             document.getElementById('clearFilter').style.display = activeCategory ? 'block' : 'none';
             renderCards(getFiltered());
@@ -268,12 +348,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.getElementById('viewAllCats')?.addEventListener('click', () => {
+        showOnlyFavorites = false;
         activeCategory = '';
         document.getElementById('clearFilter').style.display = 'none';
         renderCards(getFiltered());
     });
 
     document.getElementById('clearFilter')?.addEventListener('click', () => {
+        showOnlyFavorites = false;
         activeCategory = '';
         document.getElementById('clearFilter').style.display = 'none';
         renderCards(getFiltered());
@@ -301,9 +383,44 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             document.querySelectorAll('#tagsSubmenu .sub-link').forEach(l => l.classList.remove('active'));
             link.classList.add('active');
+            showOnlyFavorites = false; // Reset favorites view matrix condition scopes
             activeCategory = link.getAttribute('data-cat') || '';
             renderCards(getFiltered());
         });
+    });
+
+    // NEW: Native Sidebar Sidebar Navigation Favorites Sync Handler Implementation Mapping
+    document.querySelectorAll('.sidebar .side-link').forEach(link => {
+        // Targets link that embeds fa-layer-group layout icon definition
+        if (link.querySelector('.fa-layer-group')) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                showOnlyFavorites = true;
+                activeCategory = ''; 
+                activeAi = '';
+                // Resets navigation button states on AI bar filter line
+                document.querySelectorAll('#aiFilterBar .filter-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('#aiFilterBar .filter-btn[data-ai=""]')?.classList.add('active');
+                
+                renderCards(getFiltered());
+            });
+        }
+        // Targets home click observer elements mapping definitions array sequence matrix
+        if (link.querySelector('.fa-home')) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.sidebar .side-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                showOnlyFavorites = false;
+                activeCategory = '';
+                activeAi = '';
+                renderCards(getFiltered());
+            });
+        }
     });
 
     // Modal close hooks (Fixed fallback layouts mappings alignment)
@@ -364,9 +481,14 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
             if (dropdownUserName) dropdownUserName.textContent = nameToShow.toUpperCase();
             if (dropdownUserEmail) dropdownUserEmail.textContent = user.email;
             
+            // Logged-in trigger forces interface to accurately refresh state matching storage favorites data array
+            renderCards(getFiltered());
         } else {
             if (loginBtn) loginBtn.style.display = 'inline-block';
             if (userProfileWrapper) userProfileWrapper.style.display = 'none';
+            
+            showOnlyFavorites = false;
+            renderCards(getFiltered());
         }
     });
 
