@@ -66,7 +66,6 @@ function renderCards(data) {
 }
 
 function getFiltered() {
-    // Array safety validation boundary check
     const dataset = (typeof prompts !== 'undefined') ? prompts : [];
     return dataset.filter(p => {
         const matchCat = !activeCategory || p.category === activeCategory || p.ai.includes(activeCategory) || p.title.toLowerCase().includes(activeCategory.toLowerCase());
@@ -84,7 +83,6 @@ const filterPromptsProcessor = () => {
     renderCards(getFiltered());
 };
 
-// Application of input execution optimization rules
 const optimizedSearchHandler = debounce(filterPromptsProcessor, 250);
 
 // Client UI State Engine Interaction Management
@@ -93,7 +91,6 @@ function openModal(id) {
     const p = dataset.find(x => x.id === id);
     if (!p) return;
     
-    // User Context Validation Verification Check Rule 
     if(!firebase.auth().currentUser && !p.free) {
         alert("Authentication Required! Please login to copy premium prompts.");
         openAuthModal();
@@ -157,7 +154,6 @@ function switchTab(tab) {
     }
 }
 
-// Client-Side Input Validation Boundary Implementation Layer
 function handleAuthValidationSubmit(e) {
     e.preventDefault();
     const emailField = document.getElementById('authEmail');
@@ -183,19 +179,17 @@ function handleAuthValidationSubmit(e) {
         return;
     } else { passwordField.style.borderColor = ''; }
 
-    // Safe Firebase Network Handlers Simulation Fallback Run
     document.getElementById('authForm').style.display = 'none';
     document.getElementById('authSuccess').classList.add('show');
     setTimeout(() => closeAuth(), 2200);
 }
 
-// COMPLETE REALTIME DATABASE SYNC ENGINE (Replaced old Firestore code here)
+// COMPLETE REALTIME DATABASE SYNC ENGINE
 if (typeof firebase !== 'undefined') {
     firebase.database().ref("layout_settings/main_config").on("value", (snapshot) => {
         if(snapshot.exists()) {
             let data = snapshot.val();
             
-            // Safe Sync Data Binding Validations
             if(data.navLogoText) {
                 let logo = document.querySelector(".nav-logo");
                 if(logo) logo.childNodes[0].textContent = data.navLogoText;
@@ -209,7 +203,6 @@ if (typeof firebase !== 'undefined') {
                 if(highlightText) highlightText.innerText = data.heroHighlight;
             }
             
-            // Hardcoded State Disasters Synchronization Mitigation Fixes
             if(data.trustRatingCounter) {
                 document.getElementById('trustRating').innerText = data.trustRatingCounter;
             }
@@ -225,7 +218,6 @@ if (typeof firebase !== 'undefined') {
                 document.getElementById('statCategories').innerText = data.totalCategoriesCounter;
             }
 
-            // Real-Time Component Node Transforms Validation
             let imgX = Number(data.imgLeft) || 0; let imgY = Number(data.imgTop) || 0;
             let profileBox = document.querySelector(".hero-profile-wrapper");
             if(profileBox) profileBox.style.transform = `translate(${imgX}px, ${imgY}px)`;
@@ -235,16 +227,17 @@ if (typeof firebase !== 'undefined') {
     });
 }
 
-// Complete Secure Runtime DOM Event Observers Init Initialization
+// Complete Secure Runtime DOM Event Observers Initialization
 document.addEventListener("DOMContentLoaded", () => {
     // Search bindings
     document.getElementById('heroSearch')?.addEventListener('input', optimizedSearchHandler);
     document.getElementById('navSearch')?.addEventListener('input', optimizedSearchHandler);
     document.getElementById('heroSearchBtn')?.addEventListener('click', filterPromptsProcessor);
 
-    // Authentication triggers
+    // Authentication triggers (Fixed target definitions mapping)
     document.getElementById('loginBtn')?.addEventListener('click', openAuthModal);
     document.getElementById('authCloseBtn')?.addEventListener('click', closeAuth);
+    document.getElementById('modalCloseBtn')?.addEventListener('click', closeAuth); // Layout support
     document.getElementById('authForm')?.addEventListener('submit', handleAuthValidationSubmit);
     document.getElementById('googleAuthBtn')?.addEventListener('click', () => {
         if(typeof loginWithGoogle === 'function') loginWithGoogle();
@@ -314,8 +307,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Modal close hooks
+    // Modal close hooks (Fixed fallback layouts mappings alignment)
     document.getElementById('modalCloseDirectBtn')?.addEventListener('click', () => {
+        document.getElementById('modalOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    });
+    document.getElementById('modalCloseBtn')?.addEventListener('click', () => {
         document.getElementById('modalOverlay').classList.remove('open');
         document.body.style.overflow = '';
     });
@@ -340,14 +337,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Line 343: Initial Engine Boot Hydration Run
-if (typeof prompts !== 'undefined' && prompts) {
-    renderCards(prompts);
-} else if (window.prompts) {
-    renderCards(window.prompts);
-} else {
-    console.warn("AnkitStudioAI Warn: prompts array missing from runtime snapshot.");
-}
+    // Initial Engine Boot Hydration Run
+    if (typeof prompts !== 'undefined' && prompts) {
+        renderCards(prompts);
+    } else if (window.prompts) {
+        renderCards(window.prompts);
+    } else {
+        console.warn("AnkitStudioAI Warn: prompts array missing from runtime snapshot.");
+    }
 });
 
 // Firebase User Instance Auth Status State Pipeline Listener
@@ -360,18 +357,15 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
         const dropdownUserEmail = document.getElementById('dropdownUserEmail');
         
         if (user) {
-            // 1. Login button chhupao aur profile dropdown dikhao
             if (loginBtn) loginBtn.style.display = 'none';
             if (userProfileWrapper) userProfileWrapper.style.display = 'inline-block';
             
-            // 2. Naam aur Email set karo
             const nameToShow = user.displayName || user.email.split('@')[0] || "CREATOR";
             if (userDisplay) userDisplay.textContent = nameToShow.toUpperCase();
             if (dropdownUserName) dropdownUserName.textContent = nameToShow.toUpperCase();
             if (dropdownUserEmail) dropdownUserEmail.textContent = user.email;
             
         } else {
-            // 3. Agar logged out hai toh dropdown chhupao aur login button dikhao
             if (loginBtn) loginBtn.style.display = 'inline-block';
             if (userProfileWrapper) userProfileWrapper.style.display = 'none';
         }
@@ -382,7 +376,7 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
         e.preventDefault();
         firebase.auth().signOut().then(() => {
             console.log("AnkitStudioAI: User Logged Out Successfully.");
-            window.location.reload(); // State reset karne ke liye page reload
+            window.location.reload();
         }).catch((error) => {
             console.error("Logout Error:", error);
         });
