@@ -208,7 +208,7 @@ function renderCards(data) {
                 </div>
                 <div class="prompt-footer" style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">
                     <span class="${p.free ? 'price-free prompt-price' : 'price-paid prompt-price'}">${p.free ? 'FREE' : '₹49'}</span>
-                    <span style="font-size:11px;color:var(--muted); font-weight:600;"><i class="fas fa-download"></i> ${p.downloads}</span>
+                    <span style="font-size:11px;color:var(--muted); font-weight:600;" id="download-count-${p.id}"><i class="fas fa-download"></i> ${p.downloads}</span>
                 </div>
             </div>
         `;
@@ -253,6 +253,31 @@ const filterPromptsProcessor = () => {
 
 const optimizedSearchHandler = debounce(filterPromptsProcessor, 250);
 
+// NEW FEATURE FEATURE 2: Dynamic Copy Tracker Database Trigger Function
+function trackPromptCopyAnalytics(promptId) {
+    if (typeof firebase !== 'undefined' && firebase.database) {
+        // Firebase database reference target for specific prompt dynamic metrics path node
+        const metricsRef = firebase.database().ref(`prompt_analytics/prompt_${promptId}/copyCount`);
+        
+        // Transaction run to safely increment counter without conflict overwrites
+        metricsRef.transaction((currentCount) => {
+            return (currentCount || 0) + 1;
+        }, (error, committed, snapshot) => {
+            if (error) {
+                console.error("Analytics Tracker Transaction Interrupted:", error);
+            } else if (committed) {
+                console.log(`Analytics Matrix: Prompt ${promptId} incremented. New Local Value: ${snapshot.val()}`);
+                
+                // Realtime UI updates for matching local cards inside DOM layout stream ecosystem
+                const countContainer = document.getElementById(`download-count-${promptId}`);
+                if (countContainer) {
+                    countContainer.innerHTML = `<i class="fas fa-download"></i> ${snapshot.val()}`;
+                }
+            }
+        });
+    }
+}
+
 function openModal(id) {
     const dataset = (typeof prompts !== 'undefined') ? prompts : [];
     const p = dataset.find(x => x.id === id);
@@ -268,6 +293,10 @@ function openModal(id) {
     document.getElementById('modalAiTag').className = 'modal-ai-tag ' + p.aiClass;
     document.getElementById('modalTitle').textContent = p.title;
     document.getElementById('modalPrompt').textContent = p.prompt;
+    
+    // Set unique dynamic ID reference hooks inside action modal container trigger
+    document.getElementById('modalCopyBtn').setAttribute('data-active-id', p.id);
+
     document.getElementById('modalMeta').innerHTML = `
         <div class="modal-meta-item"><i class="fas fa-star"></i> ${p.rating} Rating</div>
         <div class="modal-meta-item"><i class="fas fa-download"></i> ${p.downloads} Downloads</div>
@@ -287,6 +316,33 @@ function openAuthModal() {
     document.getElementById('authSuccess').classList.remove('show');
     document.getElementById('authForm').style.display = 'block';
     switchTab(currentTab);
+}
+
+// REALTIME BROADCAST LISTENER: Sync real copies data across any user visiting the ecosystem
+if (typeof firebase !== 'undefined' && firebase.database) {
+    firebase.database().ref("prompt_analytics").on("value", (snapshot) => {
+        if (snapshot.exists()) {
+            const analyticsData = snapshot.val();
+            // Loop over dataset array references to override historical hardcoded counters instantly
+            Object.keys(analyticsData).forEach(key => {
+                const promptId = key.replace('prompt_', '');
+                const liveCount = analyticsData[key].copyCount;
+                
+                // Dynamic mapping matching elements updates logic loop
+                const countContainer = document.getElementById(`download-count-${promptId}`);
+                if (countContainer && liveCount) {
+                    countContainer.innerHTML = `<i class="fas fa-download"></i> ${liveCount}`;
+                }
+                
+                // Update local dataset structure arrays if matching object references exist
+                const internalPrompts = (typeof prompts !== 'undefined') ? prompts : [];
+                const localPromptObj = internalPrompts.find(p => p.id == promptId);
+                if (localPromptObj) {
+                    localPromptObj.downloads = liveCount;
+                }
+            });
+        }
+    });
 }
 
 function closeAuth() {
@@ -543,10 +599,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('modalCopyBtn')?.addEventListener('click', () => {
         const text = document.getElementById('modalPrompt').textContent;
+        const currentPromptId = document.getElementById('modalCopyBtn').getAttribute('data-active-id');
+        
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.getElementById('modalCopyBtn');
             btn.innerHTML = '<i class="fas fa-check"></i> &nbsp; COPIED!';
             btn.classList.add('copied');
+            
+            // Trigger dynamic data updates track event pipeline handler inside transaction flow
+            if (currentPromptId) {
+                trackPromptCopyAnalytics(currentPromptId);
+            }
+
             setTimeout(() => {
                 btn.innerHTML = '<i class="fas fa-copy"></i> &nbsp; COPY PROMPT';
                 btn.classList.remove('copied');
