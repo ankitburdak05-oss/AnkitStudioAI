@@ -255,27 +255,52 @@ const optimizedSearchHandler = debounce(filterPromptsProcessor, 250);
 
 // NEW FEATURE FEATURE 2: Dynamic Copy Tracker Database Trigger Function
 function trackPromptCopyAnalytics(promptId) {
-    if (typeof firebase !== 'undefined' && firebase.database) {
-        // Firebase database reference target for specific prompt dynamic metrics path node
-        const metricsRef = firebase.database().ref(`prompt_analytics/prompt_${promptId}/copyCount`);
-        
-        // Transaction run to safely increment counter without conflict overwrites
-        metricsRef.transaction((currentCount) => {
-            return (currentCount || 0) + 1;
-        }, (error, committed, snapshot) => {
-            if (error) {
-                console.error("Analytics Tracker Transaction Interrupted:", error);
-            } else if (committed) {
-                console.log(`Analytics Matrix: Prompt ${promptId} incremented. New Local Value: ${snapshot.val()}`);
-                
-                // Realtime UI updates for matching local cards inside DOM layout stream ecosystem
-                const countContainer = document.getElementById(`download-count-${promptId}`);
-                if (countContainer) {
-                    countContainer.innerHTML = `<i class="fas fa-download"></i> ${snapshot.val()}`;
-                }
+    if (typeof firebase === 'undefined' || !firebase.database) return;
+
+    const userId = (firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.uid : 'guest';
+    
+    // 1. Browser Memory (LocalStorage) check karo
+    let localRegister = JSON.parse(localStorage.getItem('haziri_register') || '{}');
+    if (localRegister[promptId]) {
+        console.log("Spam Blocked: Bhai tu is prompt ko pehle hi copy kar chuka hai.");
+        return;
+    }
+
+    // 2. Agar GUEST banda hai
+    if (userId === 'guest') {
+        localRegister[promptId] = true;
+        localStorage.setItem('haziri_register', JSON.stringify(localRegister));
+        bumpCounterInDB(promptId);
+    } 
+    // 3. Agar LOGIN hai (Database verification)
+    else {
+        // 👇 Theek kiya hua Backtick (`)
+        const userRef = firebase.database().ref(`prompt_analytics/prompt_${promptId}/users/${userId}`);
+        userRef.once('value', snapshot => {
+            if (!snapshot.exists()) {
+                userRef.set(true);
+                localRegister[promptId] = true;
+                localStorage.setItem('haziri_register', JSON.stringify(localRegister));
+                bumpCounterInDB(promptId);
+            } else {
+                console.log("Spam Blocked: Database me haziri pehle se hai!");
             }
         });
     }
+}
+
+function bumpCounterInDB(promptId) {
+    // 👇 Theek kiya hua Backtick (`)
+    const metricsRef = firebase.database().ref(`prompt_analytics/prompt_${promptId}/copyCount`);
+    metricsRef.transaction((currentCount) => {
+        return (currentCount || 0) + 1;
+    }, (error, committed, snapshot) => {
+        if (committed) {
+            // 👇 Theek kiya hua Backtick (`)
+            const countContainer = document.getElementById(`download-count-${promptId}`);
+            if (countContainer) countContainer.innerHTML = `<i class="fas fa-download"></i> ${snapshot.val()}`;
+        }
+    });
 }
 
 function openModal(id) {
