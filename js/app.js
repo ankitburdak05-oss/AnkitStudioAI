@@ -532,7 +532,7 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Please login to submit your custom prompts to marketplace.");
             openAuthModal();
         } else {
-            alert("Redirection initiated to upload verification console...");
+            document.getElementById('submitPromptModal').style.display = 'block';
         }
     });
 
@@ -771,3 +771,165 @@ window.runFavoritesSmokeTest = async function() {
         console.log('Smoke test cleanup complete. UI restored to original state.');
     }
 };
+
+// 🔥 1. MODAL BAND KARNE KA CODE
+document.getElementById('closeSubmitModal')?.addEventListener('click', () => {
+    document.getElementById('submitPromptModal').style.display = 'none';
+});
+
+// 🔥 2. PROMPT UPLOAD KARNE KA CODE
+document.getElementById('finalSubmitBtn')?.addEventListener('click', async () => {
+    const title = document.getElementById('uploadTitle').value.trim();
+    const text = document.getElementById('uploadText').value.trim();
+    const imageFile = document.getElementById('uploadImage').files[0];
+    
+    const aiTool = document.getElementById('uploadTool').value; 
+    const category = document.getElementById('uploadCategory').value;
+    
+    const user = firebase.auth().currentUser;
+
+    if (!title || !text || !imageFile) {
+        alert("Bhai! Title, Prompt, aur Photo teeno cheezein zaroori hain!");
+        return;
+    }
+
+    const btn = document.getElementById('finalSubmitBtn');
+    btn.innerText = "Uploading... ⏳";
+    btn.disabled = true;
+
+    try {
+        const imgbbApiKey = "5f30b483ae91c03320748137616415d7"; 
+        
+        const formData = new FormData();
+        formData.append("image", imageFile);
+
+        const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: "POST", body: formData });
+        const imgbbData = await imgbbResponse.json();
+        
+        if (!imgbbData.success) throw new Error("ImgBB upload fail!");
+
+        const authorName = user.displayName || user.email.split('@')[0];
+
+        await firebase.database().ref('submitted_prompts').push({
+            title: title,
+            promptText: text,
+            imageUrl: imgbbData.data.url,
+            aiTool: aiTool,
+            category: category,
+            authorId: user.uid,
+            authorName: authorName,
+            authorEmail: user.email,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        });
+
+        alert("Prompt aur Photo submit ho gaye! 🔥");
+        document.getElementById('submitPromptModal').style.display = 'none';
+        document.getElementById('uploadTitle').value = '';
+        document.getElementById('uploadText').value = '';
+        document.getElementById('uploadImage').value = '';
+        
+    } catch (error) {
+        alert("Upload fail! Console check kar.");
+    } finally {
+        btn.innerText = "Submit Kar Do";
+        btn.disabled = false;
+    }
+});
+
+// 🔥 3. DISPLAY WALA CODE (AI Tool Fix aur 4 Cards Layout ke sath)
+function loadCommunityPrompts() {
+    const container = document.getElementById('community-prompts-container');
+    if (!container) return; 
+
+    let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
+
+    firebase.database().ref('submitted_prompts').on('value', (snapshot) => {
+        container.innerHTML = ''; 
+        const data = snapshot.val();
+        if (!data) return;
+
+        const currentUser = firebase.auth().currentUser;
+        const currentUserId = currentUser ? currentUser.uid : null;
+
+        for (let key in data) {
+            const prompt = data[key];
+            const displayAuthor = prompt.authorName || prompt.authorEmail.split('@')[0] || "User";
+            const authorInitial = displayAuthor.charAt(0).toUpperCase();
+            
+            let deleteBtnHTML = '';
+            if (currentUserId === prompt.authorId) {
+                deleteBtnHTML = `<button onclick="deleteMyPrompt('${key}')" style="background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-left: 10px;"><i class="fas fa-trash"></i></button>`;
+            }
+
+            const isFav = myFavorites.includes(key);
+            const heartIcon = isFav ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
+            const heartColor = isFav ? '#ff4444' : 'white';
+
+            // 👇 NAYA FIX: Asli AI Tool ka naam uppercase me
+            const aiToolName = (prompt.aiTool || 'MIDJOURNEY').toUpperCase();
+
+            const card = `
+                <div style="background: #11111a; border-radius: 12px; border: 1px solid #2a2a35; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                    
+                    <div style="position: relative;">
+                        <img src="${prompt.imageUrl}" style="width: 100%; height: 160px; object-fit: cover;">
+                        
+                        <span style="position: absolute; top: 10px; left: 10px; background: #ff00cc; color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; letter-spacing: 1px;">${prompt.category || 'General'}</span>
+                        
+                        <div onclick="toggleLikePrompt('${key}')" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: ${heartColor}; cursor: pointer; transition: 0.3s;">
+                            ${heartIcon}
+                        </div>
+                    </div>
+
+                    <div style="padding: 15px;">
+                        <div style="color: #ff9900; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">${aiToolName}</div>
+                        
+                        <h3 style="color: white; font-size: 16px; margin: 0 0 10px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prompt.title}</h3>
+                        
+                        <div style="background: #1e1e2f; padding: 10px; border-radius: 8px; color: #888; font-family: monospace; font-size: 12px; height: 50px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${prompt.promptText}</div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="background: #ff9900; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">${authorInitial}</div>
+                                <span style="color: #ccc; font-size: 12px;">${displayAuthor}</span>
+                            </div>
+                            <div style="color: #ffcc00; font-size: 12px; font-weight: bold;"><i class="fas fa-star"></i> 5.0</div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #2a2a35; padding-top: 12px;">
+                            <span style="color: #00ffcc; font-weight: bold; font-size: 14px;">FREE</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #666; font-size: 12px;"><i class="fas fa-download"></i> 0</span>
+                                ${deleteBtnHTML}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            // Cards shuru se add honge
+            container.innerHTML = card + container.innerHTML; 
+        }
+    });
+}
+
+// 🔥 4. LIKE / UNLIKE KARNE KA LOGIC
+window.toggleLikePrompt = function(promptKey) {
+    let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
+    if (myFavorites.includes(promptKey)) {
+        myFavorites = myFavorites.filter(id => id !== promptKey);
+    } else {
+        myFavorites.push(promptKey);
+    }
+    localStorage.setItem('community_favs', JSON.stringify(myFavorites));
+    loadCommunityPrompts();
+}
+
+// 🔥 5. DELETE KARNE KA LOGIC
+window.deleteMyPrompt = function(promptKey) {
+    if (confirm("Sach me delete karna hai?")) {
+        firebase.database().ref('submitted_prompts/' + promptKey).remove();
+    }
+}
+
+// 🔥 6. PAGE LOAD HOTE HI DATA DIKHAO
+firebase.auth().onAuthStateChanged(() => { loadCommunityPrompts(); });
