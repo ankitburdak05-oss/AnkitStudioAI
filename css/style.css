@@ -1199,7 +1199,7 @@ footer {
 
 /* PINTEREST STYLE MASONRY LAYOUT */
 .masonry-layout-container {
-    column-count: 4;
+    column-count: 3;
     column-gap: 20px;
     padding: 20px;
     max-width: 1200px;
@@ -1414,4 +1414,126 @@ footer {
     .modal-gallery { flex: none; height: 350px; padding: 20px; }
     .modal-details { flex: none; }
     .gallery-thumbnails { flex-direction: row; top: auto; bottom: 20px; right: auto; left: 50%; transform: translateX(-50%); }
+}
+
+/* =========================================
+   PERFECT CENTERED DOCK (VIDEO MATCH)
+   ========================================= */
+
+/* Sidebar ab desktop par dikhegi, body ko wapas 240px left padding do taaki content uske peeche na chhupe */
+body {
+    padding-left: 240px !important;
+    padding-bottom: 120px !important;
+}
+
+/* Sirf mobile (chhote screens) par left sidebar ko hide karenge kyunki wahan space kam hota hai */
+@media(max-width: 768px) {
+    .sidebar { display: none !important; }
+    body { padding-left: 0 !important; }
+}
+
+.dock-bar {
+    position: fixed !important;
+    bottom: 30px !important;
+    left: 50% !important; /* SCREEN KE AADHE PAR (CENTER) */
+    transform: translateX(-50%) !important; /* THEEK BEECH MEIN LOCK */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(245, 245, 245, 0.95) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    padding: 8px 12px !important;
+    border-radius: 50px !important; /* Bahar se Pura Gol */
+    gap: 6px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08) !important;
+    z-index: 999999 !important;
+    width: auto !important; 
+    margin: 0 !important;
+}
+
+/* style.css - Is part ko update kar taaki bouncy animation aaye */
+/* ICON KO STATIC RAKHO, KOI JUMP NAHI */
+.dock-bar .side-link {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px !important; 
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #111 !important;
+    text-decoration: none !important;
+    position: relative !important;
+    background: transparent !important;
+    padding: 0 !important;
+    transition: background-color 0.2s ease !important; /* Sirf background smoothly aayega */
+}
+
+/* Jab mouse upar ayega (Hover state) */
+.dock-bar .side-link:hover {
+    background: rgba(0,0,0,0.06) !important; /* Sirf background change hoga, icon static rahega */
+}
+
+.dock-bar .side-link i {
+    font-size: 19px !important;
+}
+
+.dock-bar .side-link span {
+    display: none !important;
+}
+
+/* 🔥 TOOLTIP SLIDE UP ANIMATION (Niche se Upar) 🔥 */
+.dock-bar .side-link::after {
+    content: attr(data-title);
+    position: absolute;
+    bottom: 80%; /* Shuru mein icon ke paas (niche) chhupa rahega */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111 !important;
+    color: #fff !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease-out !important; /* Smooth Pop/Slide */
+    pointer-events: none !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
+}
+
+/* 🔥 Tooltip ka Teer (Arrow) 🔥 */
+.dock-bar .side-link::before {
+    content: '';
+    position: absolute;
+    bottom: calc(80% - 5px); /* Shuru mein teer bhi niche chhupa rahega */
+    left: 50%;
+    transform: translateX(-50%);
+    border-top: 6px solid #111 !important;
+    border-left: 6px solid transparent !important;
+    border-right: 6px solid transparent !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease-out !important;
+    pointer-events: none !important;
+}
+
+/* 🔥 HOVER PAR TOOLTIP UPAR KI TARAF (UPWARDS) SLIDE KAREGA 🔥 */
+.dock-bar .side-link:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: calc(100% + 15px); /* Tooltip slide hokar theek upar jayega! */
+}
+
+.dock-bar .side-link:hover::before {
+    opacity: 1;
+    visibility: visible;
+    bottom: calc(100% + 10px); /* Teer bhi slide hokar upar jayega! */
+}
+
+.sidebar {
+    pointer-events: auto !important;
+    z-index: 10000 !important;
 }

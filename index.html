@@ -24,7 +24,7 @@
 <div class="bg-glow2"></div>
 
 <div class="sidebar">
-    <a href="#" class="side-link active">
+    <a href="#" class="side-link active" id="real-home-btn">
         <i class="fas fa-home"></i>
         <span>Home</span>
     </a>
@@ -32,11 +32,11 @@
         <i class="fas fa-search"></i>
         <span>Search</span>
     </a>
-    <a href="#" class="side-link">
-        <i class="fas fa-clock-rotate-left"></i>
+    <a href="#" class="side-link" id="sidebar-history-btn">
+        <i class="fas fa-clock-rotate-left"></i> 
         <span>History</span>
     </a>
-    <a href="#" class="side-link">
+    <a href="#" class="side-link" id="real-fav-btn">
         <i class="fas fa-layer-group"></i>
         <span>Favorites</span>
     </a>
@@ -66,6 +66,7 @@
         <span>Recent Updates</span>
     </a>
 </div>
+
 
 <nav>
     <div class="nav-logo">ANKITSTUDIOAI<span>Prompt Market</span></div>
@@ -102,49 +103,6 @@
     <div class="trust-item"><i class="fas fa-shield-alt"></i> Verified Quality</div>
 </div>
 
-<div class="hero-container">
-    <div class="hero-profile-wrapper">
-        <div class="hero-hex-panel"></div>
-        <div class="hero-glowing-ring"></div>
-        <img class="hero-profile-img" src="myphoto.png" alt="Ankit Burdak Profile" loading="lazy" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%236a7090\'><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'">
-    </div>
-
-    <div class="hero">
-        <div class="hero-badge"><i class="fas fa-fire"></i> India's #1 AI Prompt Library</div>
-        <h1>AI PROMPT<br><span class="highlight">MARKETPLACE</span></h1>
-        <div class="hero-sub">Access 500+ high-quality AI prompts by ANKITSTUDIOAI</div>
-        <div class="hero-tags">
-            <span class="t1">Midjourney</span> ·
-            <span class="t2">ChatGPT</span> ·
-            <span class="t3">Gemini</span> ·
-            <span class="t4">Leonardo</span> ·
-            <span style="color:var(--muted)">& more</span>
-        </div>
-        <div class="hero-search">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search 500+ prompts..." id="heroSearch">
-            <button class="hero-search-btn" id="heroSearchBtn">SEARCH</button>
-        </div>
-        <div class="stats-bar">
-            <div class="stat-item">
-                <div class="stat-num" id="statPrompts">500+</div>
-                <div class="stat-lbl">Prompts</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-num" id="statCategories">12</div>
-                <div class="stat-lbl">Categories</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-num" id="statDownloads">10K+</div>
-                <div class="stat-lbl">Downloads</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-num">FREE</div>
-                <div class="stat-lbl">To Use</div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="divider"></div>
 
@@ -301,6 +259,30 @@
         
         <button id="finalSubmitBtn" style="margin-top: 20px; padding: 12px; width: 100%; background: #ff00cc; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Submit Kar Do</button>
     </div>
+</div>
+
+<div class="dock-bar">
+    <a href="#" class="side-link active" data-title="Home" onclick="document.getElementById('real-home-btn').click(); return false;">
+    <i class="fas fa-home"></i>
+</a>
+    <a href="#" class="side-link" data-title="History">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+    </a>
+    <a href="#" class="side-link" data-title="Favorites" onclick="document.getElementById('real-fav-btn').click(); return false;">
+        <i class="fa-regular fa-heart"></i>
+    </a>
+    <a href="#" class="side-link" data-title="Skills">
+        <i class="fa-regular fa-clone"></i>
+    </a>
+    <a href="#" class="side-link" data-title="Generate Video">
+        <i class="fa-solid fa-clapperboard"></i>
+    </a>
+    <a href="#" class="side-link" data-title="Generate Image">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+    </a>
+    <a href="#" class="side-link" data-title="Profile">
+        <i class="fa-regular fa-user"></i>
+    </a>
 </div>
 </body>
 </html>
