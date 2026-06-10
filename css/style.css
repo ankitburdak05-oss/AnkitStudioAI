@@ -1,19 +1,22 @@
+/* =========================================
+   PREMIUM WHITE THEME CONFIGURATION
+   ========================================= */
 :root {
     --red: #ff2233;
     --red2: #cc0011;
-    --red-glow: rgba(255,34,51,0.35);
-    --gold: #ffd700;
-    --gold2: #ffaa00;
-    --dark: #07090f;
-    --dark2: #0e1220;
-    --dark3: #141828;
-    --glass: rgba(255,255,255,0.03);
-    --glass2: rgba(255,255,255,0.06);
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.12);
-    --text: #e2e4ee;
-    --muted: #6a7090;
-    --green: #00e676;
+    --red-glow: rgba(255,34,51,0.05);
+    --gold: #ffaa00;
+    --gold2: #e69500;
+    --dark: #ffffff;       /* Poori website ka background white */
+    --dark2: #f8f9fa;      /* Cards ke liye cool light gray */
+    --dark3: #e9ecef;
+    --glass: rgba(0,0,0,0.02);
+    --glass2: rgba(0,0,0,0.04);
+    --border: rgba(0,0,0,0.06);
+    --border2: rgba(0,0,0,0.1);
+    --text: #111111;       /* Saara text ab dark black ho jayega */
+    --muted: #6b7280;      /* Chota text gray ho jayega */
+    --green: #00c853;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,7 +55,7 @@ body {
     top: 0;
     bottom: 0;
     width: 240px;
-    background: rgba(7, 9, 15, 0.85);
+    background: rgba(255, 255, 255, 0.95); /* White glass effect */
     backdrop-filter: blur(20px);
     border-right: 1px solid var(--border);
     z-index: 150;
@@ -96,7 +99,7 @@ body {
 
 .side-link:hover {
     color: var(--text);
-    background: rgba(255, 34, 51, 0.08);
+    background: rgba(255, 34, 51, 0.05); /* Light red hover */
 }
 
 .side-link.active {
@@ -159,12 +162,12 @@ body {
 
 .sub-link:hover {
     color: var(--text);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.03); /* Light dark hover */
 }
 
 .sub-link.active {
     color: var(--text);
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.05); /* Light dark active */
     font-weight: 600;
 }
 
@@ -177,10 +180,14 @@ body {
     box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
 }
 
+
+
+/* ===== NAVBAR ===== */
 /* ===== NAVBAR ===== */
 nav {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(7,9,15,0.85);
+    /* Purana: background: rgba(7,9,15,0.85); */
+    background: rgba(255, 255, 255, 0.95); /* 🔥 Naya White Background */
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
     padding: 0 24px;
@@ -192,7 +199,8 @@ nav {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 1.6rem;
     letter-spacing: 4px;
-    background: linear-gradient(135deg, #fff 20%, var(--gold) 80%);
+    /* 🔥 Naya Gradient: Dark Black se Gold ki taraf (White background ke liye perfect) */
+    background: linear-gradient(135deg, #111111 20%, var(--gold) 80%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1187,4 +1195,223 @@ footer {
 .logout-link:hover {
     background-color: rgba(255, 51, 51, 0.12);
     color: #ff5555;
+}
+
+/* PINTEREST STYLE MASONRY LAYOUT */
+.masonry-layout-container {
+    column-count: 4;
+    column-gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+}
+
+@media (max-width: 1024px) {
+    .masonry-layout-container { column-count: 3; }
+}
+@media (max-width: 768px) {
+    .masonry-layout-container { column-count: 2; }
+}
+@media (max-width: 480px) {
+    .masonry-layout-container { column-count: 1; }
+}
+
+/* =========================================
+   NEW ADVANCED SPLIT-SCREEN MODAL (PREMIUM LIGHT THEME)
+   ========================================= */
+.advanced-modal {
+    display: flex;
+    background: #f8f9fa;
+    border-radius: 24px;
+    width: 95%;
+    max-width: 1100px;
+    height: 85vh;
+    overflow: hidden;
+    animation: popIn 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    border: none;
+}
+
+/* Left Side - Image Area */
+.modal-gallery {
+    flex: 1.2;
+    background: #e9ecef; /* Cool light gray background */
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.gallery-controls {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.gallery-btn, .image-counter {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    color: #333;
+    padding: 10px 18px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.gallery-btn { cursor: pointer; transition: 0.2s; }
+.gallery-btn:hover { background: #f1f3f5; transform: translateY(-1px); }
+.close-btn { color: #111; }
+
+#modalMainImage {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 16px;
+    object-fit: contain;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.gallery-thumbnails {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10;
+}
+
+.gallery-thumbnails img {
+    width: 65px;
+    height: 65px;
+    border-radius: 12px;
+    object-fit: cover;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: 0.2s;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.gallery-thumbnails img.active { border-color: #fff; transform: scale(1.05); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+
+/* Right Side - Details Area */
+.modal-details {
+    flex: 0.8;
+    background: #ffffff; /* Pure white details area */
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #e5e7eb;
+}
+
+.details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 30px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.author-info { display: flex; align-items: center; gap: 14px; }
+.author-avatar {
+    width: 42px; height: 42px;
+    background: #f59e0b; /* Nice orange/gold avatar background */
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; color: #fff; font-size: 18px;
+}
+.author-name { font-weight: 800; color: #111; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;}
+.author-handle { color: #6b7280; font-size: 13px; font-weight: 500;}
+
+.modal-ai-tag-new {
+    background: #f3f4f6;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #374151;
+    font-weight: 700;
+    border: 1px solid #e5e7eb;
+}
+
+.prompts-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Prompt Box Design - Light Cream exactly like reference */
+.prompt-box-item {
+    background: #f9f8f6; 
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.prompt-box-header {
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 16px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.prompt-box-text {
+    color: #1f2937; /* Dark text for readability */
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.prompt-box-actions {
+    display: flex;
+    gap: 20px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+}
+.prompt-action-btn {
+    background: none; border: none;
+    color: #6b7280; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: 0.2s;
+}
+.prompt-action-btn:hover { color: #111; }
+
+.details-actions {
+    padding: 24px 30px;
+    display: flex;
+    gap: 16px;
+    background: #fff;
+    border-top: 1px solid #f3f4f6;
+}
+
+.action-btn {
+    flex: 1; padding: 14px; border-radius: 12px;
+    font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 14px; transition: 0.2s; font-family: 'Rajdhani', sans-serif;
+}
+.outline-btn { background: #111; color: #fff; border: none; }
+.outline-btn:hover { background: #333; transform: translateY(-2px); }
+.solid-btn { background: #111; color: #fff; border: none; }
+.solid-btn:hover { background: #333; transform: translateY(-2px); }
+
+@media(max-width: 900px) {
+    .advanced-modal { flex-direction: column; overflow-y: auto; height: 95vh; }
+    .modal-gallery { flex: none; height: 350px; padding: 20px; }
+    .modal-details { flex: none; }
+    .gallery-thumbnails { flex-direction: row; top: auto; bottom: 20px; right: auto; left: 50%; transform: translateX(-50%); }
 }

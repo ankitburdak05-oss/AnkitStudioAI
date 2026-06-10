@@ -1,0 +1,87 @@
+[33m36273f7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: reset: moving to HEAD~2
+[33m5daa4e7[m HEAD@{1}: reset: moving to HEAD~4
+[33m66a4f25[m HEAD@{2}: reset: moving to HEAD~8
+[33m271e36f[m HEAD@{3}: commit: Fixed login button disappearing issue in app.js
+[33mbd53b41[m HEAD@{4}: commit: Fixed smart handles, modal, and real search logic
+[33mc89d310[m HEAD@{5}: commit: Removed extra profile photo from navbar
+[33m7af0646[m HEAD@{6}: commit: Fixed login button ID
+[33mf951b34[m HEAD@{7}: commit: .
+[33m20c3b06[m HEAD@{8}: commit: Fixed login button and added Google Auth
+[33m8ffb3ee[m HEAD@{9}: commit: .
+[33m2097e16[m HEAD@{10}: commit: Fixed script duplicate error and updated Google login
+[33m66a4f25[m HEAD@{11}: commit: Fixed follow/unfollow and profile API routes
+[33m155def6[m HEAD@{12}: commit: Search box working
+[33mf58a158[m HEAD@{13}: commit: Google login linked with profile
+[33md248378[m HEAD@{14}: commit: Live API link added
+[33m5daa4e7[m HEAD@{15}: commit: Backend files ready for live
+[33mffb05ee[m HEAD@{16}: commit: update
+[33m36273f7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{17}: commit: Fixed prompts layout and added AI tool names
+[33m9e33da1[m HEAD@{18}: commit: Fixed backtick error in copy counter
+[33m85906d3[m HEAD@{19}: reset: moving to HEAD~1
+[33m0d49762[m HEAD@{20}: commit: Final Smart Counter with no heavy files
+[33m85906d3[m HEAD@{21}: reset: moving to origin/main
+[33m2a99908[m HEAD@{22}: commit: Removed node_modules from tracking
+[33mb279194[m HEAD@{23}: commit: Added Smart Counter with Spam Blocker
+[33m85906d3[m HEAD@{24}: reset: moving to c48bfcd~1
+[33m4095782[m HEAD@{25}: reset: moving to ef5b114~1
+[33m8733355[m HEAD@{26}: reset: moving to d566319~1
+[33m8733355[m HEAD@{27}: reset: moving to HEAD~2
+[33m9a64fef[m HEAD@{28}: reset: moving to HEAD~1
+[33m0763f43[m HEAD@{29}: reset: moving to 0763f43
+[33mcf04de5[m HEAD@{30}: reset: moving to cf04de5
+[33m307836e[m HEAD@{31}: commit: Fixed Email Login Button
+[33m9afe1fc[m HEAD@{32}: commit: Fixed Google Login Popup Freeze
+[33mcf04de5[m HEAD@{33}: commit: Final dhakka for live website
+[33mc4c8680[m HEAD@{34}: commit: Added Google Login function in app.js
+[33mecea451[m HEAD@{35}: commit: .
+[33m0763f43[m HEAD@{36}: commit: Final clean push as Desktop App (Ignored node_modules)
+[33m9a64fef[m HEAD@{37}: reset: moving to origin/main
+[33mdd11415[m HEAD@{38}: commit: Fix: Removed node_modules from git tracking
+[33m1a98481[m HEAD@{39}: commit: Feat: Converted to Desktop App using Electron, fixed sidebar height, and enabled tags dropdown
+[33m9a64fef[m HEAD@{40}: commit: .
+[33md566319[m HEAD@{41}: commit: .
+[33m8733355[m HEAD@{42}: Branch: renamed refs/heads/main to refs/heads/main
+[33m8733355[m HEAD@{44}: commit: Fix: Removed extra divs, shifted yellow border to dynamic JS logic, and cleaned up filter tags layout
+[33mef5b114[m HEAD@{45}: Branch: renamed refs/heads/main to refs/heads/main
+[33mef5b114[m HEAD@{47}: commit: Fix: Removed extra divs, shifted yellow border to dynamic JS logic, and cleaned up filter tags layout
+[33m4095782[m HEAD@{48}: Branch: renamed refs/heads/main to refs/heads/main
+[33m4095782[m HEAD@{50}: commit: Fix: Removed duplicate admin panel divs, extra closing tags and fully completed all features
+[33m3d51aa6[m HEAD@{51}: Branch: renamed refs/heads/main to refs/heads/main
+[33m3d51aa6[m HEAD@{53}: commit: Feat: All 5 dynamic features and admin dashboard fully completed without errors
+[33mc48bfcd[m[33m ([m[1;32magents/necessary-seahorse[m[33m)[m HEAD@{54}: commit: Added Submit Prompt form, ImgBB photo upload, and Smart Counter
+[33m85906d3[m HEAD@{55}: commit: FEATURE: Implemented fully real-time dynamic copy tracker and transaction-based analytics synchronization engine
+[33m4db27bd[m HEAD@{56}: commit: FIX: Reset display properties to empty string to prevent CSS flexbox layout breaking on back toggle
+[33mcd39c82[m HEAD@{57}: commit: FIX: Changed default coords to null and added safety lock to prevent premature repositioning
+[33mf41f7d2[m HEAD@{58}: commit: FIX: Prevent race conditions in layout reflow by clearing timeout IDs
+[33m821c64e[m HEAD@{59}: commit: FIX: Added setTimeout to profile wrapper repositioning to fix DOM render timing glitch
+[33mb42615e[m HEAD@{60}: commit: FIX: Persist database coordinates and enforce instant profile wrapper repositioning on layout reflow back transitions
+[33m721b72a[m HEAD@{61}: commit: FIX: Implement try/finally cleanup vector inside smoke test function to prevent inconsistent UI states seamlessly
+[33m7ea65d1[m HEAD@{62}: commit: FEAT: Implement advanced in-place UI state management, crash-proof isArray storage validations, and full-screen favorites portal with left back option
+[33m206f3ba[m HEAD@{63}: commit: FIX: Implement robust try-catch for local JSON parsing, enable offline guest bookmarking array schema matrix, and build advanced fallback UI metrics for vacant lists seamlessly
+[33m04afc9c[m HEAD@{64}: commit: .
+[33m1200561[m HEAD@{65}: commit: .
+[33m1119f40[m HEAD@{66}: commit: .
+[33mebd27a0[m HEAD@{67}: commit: .
+[33maa162bc[m HEAD@{68}: commit: .
+[33m0427b1d[m HEAD@{69}: commit: .
+[33mf104b18[m HEAD@{70}: commit: .
+[33mbae232a[m HEAD@{71}: commit: .
+[33m4154314[m HEAD@{72}: commit: Integrated comprehensive updates across style and script engines
+[33m251282f[m HEAD@{73}: commit: Fix syntax errors, remove duplicate close elements, and streamline auth observers in app.js
+[33m9221571[m HEAD@{74}: commit: Fix mobile screen clipping and optimize media query block scopes
+[33m612958e[m HEAD@{75}: commit: Optimize style.css structure and clean up duplicate blocks
+[33md584101[m HEAD@{76}: commit: Resolved style.css linter warnings for line-clamp standard property
+[33m8c6695a[m HEAD@{77}: commit: Polished CSS architecture and secured dropdown stacking context
+[33m7ee4e53[m HEAD@{78}: commit: Successfully implemented profile dropdown toggles and signout handler pipelines
+[33m2aafed1[m HEAD@{79}: commit: Updated auth listener to utilize direct firebase auth instance runtime
+[33m9a36f5b[m HEAD@{80}: commit: Fixed Google auth UI success sync state bindings
+[33m11eb21b[m HEAD@{81}: commit: Successfully activated Google Auth popup provider implementation
+[33m5327ced[m HEAD@{82}: commit: Fixed missing closing bracket on line 351
+[33mf9bfc7b[m HEAD@{83}: commit: Successfully integrated Firebase Realtime Database and fixed encoding
+[33mf74911b[m HEAD@{84}: commit: Fixed character encoding and restored all emojis across the project
+[33m01bf62a[m HEAD@{85}: commit: Fixed CodeRabbit errors with safe display name and firestore handler
+[33m62da01d[m HEAD@{86}: commit: Initial commit with structured folders and new firebase config
+[33m1d9ec2e[m HEAD@{87}: commit: Fixed file paths and removed duplicate firebase config
+[33mff960d0[m HEAD@{88}: commit: Initial commit for AnkitStudioAI
+[33mbcdbe30[m HEAD@{89}: Branch: renamed refs/heads/master to refs/heads/main
+[33mbcdbe30[m HEAD@{91}: commit (initial): AnkitStudioAI upload

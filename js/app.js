@@ -50,7 +50,14 @@ function toggleFavoriteState(promptId) {
         favs.push(promptId);
     }
     localStorage.setItem(key, JSON.stringify(favs));
-    renderCards(getFiltered()); // Core UI hydration refresh
+    
+    // 🔥 UI REFRESH FIX: Purane aur naye dono (Firebase) cards ko refresh karega
+    if (typeof renderCards === 'function') {
+        renderCards(getFiltered());
+    }
+    if (typeof loadCommunityPrompts === 'function') {
+        loadCommunityPrompts();
+    }
 }
 
 // NEW: Automatically migrate local guest records to user account space upon success authentication state pipeline trigger
@@ -93,6 +100,9 @@ function toggleFavoritesPageView(enable) {
     const redirectBox = document.querySelector('.prompt-redirect-box-wrapper')?.parentNode;
     const toolsGrid = document.querySelector('.tools-grid')?.parentNode;
     const sectionHead = document.querySelector('#featured .section-head');
+    
+    // 🔥 NAYI LINE: Jo patli lines (dividers) reh jati hain unhe pakadne ke liye
+    const dividers = document.querySelectorAll('.divider');
 
     if (enable) {
         if (heroContainer) heroContainer.style.display = 'none';
@@ -101,6 +111,9 @@ function toggleFavoritesPageView(enable) {
         if (bannerSection) bannerSection.style.display = 'none';
         if (redirectBox) redirectBox.style.display = 'none';
         if (toolsGrid) toolsGrid.style.display = 'none';
+        
+        // Lines hide karo
+        dividers.forEach(d => d.style.display = 'none');
         
         if (featuredSection) featuredSection.style.paddingTop = '40px';
         if (sectionHead) {
@@ -115,13 +128,15 @@ function toggleFavoritesPageView(enable) {
             });
         }
     } else {
-        // FIX: Remove forced 'block'/'flex' to let original style.css rules take over seamlessly
         if (heroContainer) heroContainer.style.display = '';
         if (trustBar) trustBar.style.display = '';
         if (categoriesSection) categoriesSection.style.display = '';
         if (bannerSection) bannerSection.style.display = '';
         if (redirectBox) redirectBox.style.display = '';
         if (toolsGrid) toolsGrid.style.display = '';
+        
+        // Lines wapas show karo
+        dividers.forEach(d => d.style.display = '');
         
         if (featuredSection) featuredSection.style.paddingTop = '0';
         if (sectionHead) {
@@ -146,7 +161,14 @@ function toggleFavoritesPageView(enable) {
             }
         }, 100);
     }
-    renderCards(getFiltered());
+    
+    // 🔥 MAIN FIX: Ab tere purane cards aur naye Firebase wale cards, DONO turant refresh honge
+    if (typeof renderCards === 'function') {
+        renderCards(getFiltered());
+    }
+    if (typeof loadCommunityPrompts === 'function') {
+        loadCommunityPrompts();
+    }
 }
 
 // Memory-Optimized Document Fragment Rendering Runner Matrix (WITH FALLBACK UI INTERCEPTOR)
@@ -303,37 +325,110 @@ function bumpCounterInDB(promptId) {
     });
 }
 
+// NEW ADVANCED OPEN MODAL FUNCTION
 function openModal(id) {
     const dataset = (typeof prompts !== 'undefined') ? prompts : [];
     const p = dataset.find(x => x.id === id);
     if (!p) return;
     
-    if (typeof firebase !== 'undefined' && firebase.auth && !firebase.auth().currentUser && !p.free) {
-        alert("Authentication Required! Please login to copy premium prompts.");
-        openAuthModal();
-        return;
+    // Yahan hum man ke chal rahe hain ki p.images naam ka array ho sakta hai (agar multiple ho)
+    // Agar nahi hai, toh purana p.imageUrl ya fallback use karega
+    let photoArray = p.images || []; 
+    if (photoArray.length === 0) {
+        // Agar array nahi hai, toh single image use karo (Community prompts ke liye imageUrl)
+        photoArray = [p.imageUrl || 'https://via.placeholder.com/800x600?text=No+Image'];
     }
 
-    document.getElementById('modalAiTag').textContent = p.ai;
-    document.getElementById('modalAiTag').className = 'modal-ai-tag ' + p.aiClass;
-    document.getElementById('modalTitle').textContent = p.title;
-    document.getElementById('modalPrompt').textContent = p.prompt;
-    
-    // Set unique dynamic ID reference hooks inside action modal container trigger
-    document.getElementById('modalCopyBtn').setAttribute('data-active-id', p.id);
+    // 1. DYNAMIC UI ELEMENTS
+    const counterEl = document.getElementById('modalImageCounter');
+    const thumbsEl = document.getElementById('modalThumbnails');
+    const mainImgEl = document.getElementById('modalMainImage');
 
-    document.getElementById('modalMeta').innerHTML = `
-        <div class="modal-meta-item"><i class="fas fa-star"></i> ${p.rating} Rating</div>
-        <div class="modal-meta-item"><i class="fas fa-download"></i> ${p.downloads} Downloads</div>
-        <div class="modal-meta-item"><i class="fas fa-tag"></i> ${p.free ? 'FREE' : '₹49'}</div>
-        <div class="modal-meta-item"><i class="fas fa-user"></i> ${p.author}</div>
-    `;
-    const btn = document.getElementById('modalCopyBtn');
-    btn.innerHTML = '<i class="fas fa-copy"></i> &nbsp; COPY PROMPT';
-    btn.className = 'modal-copy-btn';
+    // 🔴 CONDITIONAL LOGIC (1 Photo vs Multiple Photos)
+    if (photoArray.length > 1) {
+        // Agar 1 se zyada photo hain toh Counter aur Thumbnails dikhao
+        counterEl.style.display = 'block';
+        counterEl.innerText = `1 / ${photoArray.length}`;
+        thumbsEl.style.display = 'flex';
+        thumbsEl.innerHTML = ''; // Purane thumbnails clear karo
+
+        // Thumbnails banao
+        photoArray.forEach((imgSrc, index) => {
+            const img = document.createElement('img');
+            img.src = imgSrc;
+            if(index === 0) img.classList.add('active'); // Pehli photo active
+            
+            // Thumbnail click karne par main image change ho
+            img.onclick = () => {
+                mainImgEl.src = imgSrc;
+                counterEl.innerText = `${index + 1} / ${photoArray.length}`;
+                document.querySelectorAll('.gallery-thumbnails img').forEach(t => t.classList.remove('active'));
+                img.classList.add('active');
+            };
+            thumbsEl.appendChild(img);
+        });
+    } else {
+        // Agar sirf 1 photo hai, toh sab hide kar do (Jaisa tune manga tha)
+        counterEl.style.display = 'none';
+        thumbsEl.style.display = 'none';
+    }
+
+    // Main image pehli wali set karo
+    mainImgEl.src = photoArray[0];
+
+    // 2. AUTHOR & META DETAILS
+    document.getElementById('modalAuthorAvatar').textContent = p.author ? p.author[0].toUpperCase() : 'U';
+    document.getElementById('modalAuthorName').textContent = p.author || 'User';
+    document.getElementById('modalAuthorHandle').textContent = '@' + (p.author ? p.author.toLowerCase().replace(/\s/g, '') : 'user');
+    document.getElementById('modalAiTag').innerHTML = `<i class="fas fa-robot"></i> ${p.ai || 'AI Image'}`;
+    document.getElementById('modalLikeCount').textContent = p.likes || Math.floor(Math.random() * 50) + 10; // Demo count
+
+    // 3. PROMPTS LIST GENERATION
+    const promptsListEl = document.getElementById('modalPromptsList');
+    let promptTextsArray = p.prompts || [p.prompt || p.promptText]; // Support multiple text or single text
+    promptsListEl.innerHTML = '';
+
+    promptTextsArray.forEach((text, index) => {
+        const promptBox = `
+            <div class="prompt-box-item">
+                <div class="prompt-box-header">
+                    <i class="far fa-image"></i> IMAGE - ${index + 1}
+                </div>
+                <div class="prompt-box-text">${text}</div>
+                <div class="prompt-box-actions">
+                    <button class="prompt-action-btn"><i class="fas fa-language"></i> Translate</button>
+                    <button class="prompt-action-btn" onclick="copyModalPromptText('${text.replace(/'/g, "\\'")}', this)">
+                        <i class="far fa-copy"></i> Copy
+                    </button>
+                </div>
+            </div>
+        `;
+        promptsListEl.innerHTML += promptBox;
+    });
+
+    // 4. MODAL OPEN KARO
     document.getElementById('modalOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
+
+// Naya Copy Function sirf is modal ke boxes ke liye
+window.copyModalPromptText = function(text, btnElement) {
+    navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = btnElement.innerHTML;
+        btnElement.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btnElement.style.color = '#00e676';
+        setTimeout(() => {
+            btnElement.innerHTML = originalHtml;
+            btnElement.style.color = '';
+        }, 2000);
+    });
+};
+
+// Modal Close button ka Event Listener (App.js me DOMContentLoaded ke andar hona chahiye, ya end me daal do)
+document.getElementById('modalCloseDirectBtn')?.addEventListener('click', () => {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+});
 
 function openAuthModal() {
     document.getElementById('authOverlay').classList.add('open');
@@ -836,11 +931,13 @@ document.getElementById('finalSubmitBtn')?.addEventListener('click', async () =>
     }
 });
 
-// 🔥 3. DISPLAY WALA CODE (AI Tool Fix aur 4 Cards Layout ke sath)
+
+// 🔥 3. DISPLAY WALA CODE (REAL FIREBASE LIKES KE SATH)
 function loadCommunityPrompts() {
     const container = document.getElementById('community-prompts-container');
     if (!container) return; 
 
+    // Like (Heart) ke liye
     let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
 
     firebase.database().ref('submitted_prompts').on('value', (snapshot) => {
@@ -851,76 +948,145 @@ function loadCommunityPrompts() {
         const currentUser = firebase.auth().currentUser;
         const currentUserId = currentUser ? currentUser.uid : null;
 
+        // 🔥 FIX 1: Bookmark/Favorites tab ke liye list nikalna
+        const favs = getFavoritesFromStorage();
+
+        // 🔥 NAYA FEATURE ADD KIYA: Track karne ke liye ki screen par kitne card dikh rahe hain
+        let visibleCount = 0;
+
         for (let key in data) {
             const prompt = data[key];
-            const displayAuthor = prompt.authorName || prompt.authorEmail.split('@')[0] || "User";
-            const authorInitial = displayAuthor.charAt(0).toUpperCase();
-            
-            let deleteBtnHTML = '';
-            if (currentUserId === prompt.authorId) {
-                deleteBtnHTML = `<button onclick="deleteMyPrompt('${key}')" style="background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-left: 10px;"><i class="fas fa-trash"></i></button>`;
+
+            // 🔥 FIX 2: Agar Favorites tab khula hai aur prompt list me nahi hai, toh isko screen par mat dikhao
+            if (showOnlyFavorites && !favs.includes(key)) {
+                continue;
             }
 
+            visibleCount++; // Card mil gaya jo dikhana hai, toh count +1 kar do
+
+            // 🔥 ASLI LIKES FIREBASE SE READ HO RAHE HAIN
+            const realLikes = prompt.likeCount || 0;
+
+            // Modal ke liye data sync
+            if (typeof prompts !== 'undefined') {
+                let existingPrompt = prompts.find(x => x.id === key);
+                if (!existingPrompt) {
+                    prompts.push({
+                        id: key,
+                        images: [prompt.imageUrl], 
+                        author: prompt.authorName || (prompt.authorEmail ? prompt.authorEmail.split('@')[0] : "User"),
+                        ai: prompt.aiTool || 'AI Image',
+                        prompts: [prompt.promptText], 
+                        likes: realLikes // Modal mein bhi ab real likes dikhenge
+                    });
+                } else {
+                    existingPrompt.likes = realLikes; // Agar data update ho toh modal mein bhi update ho
+                }
+            }
+
+            const displayAuthor = prompt.authorName || (prompt.authorEmail ? prompt.authorEmail.split('@')[0] : "User");
+            const authorInitial = displayAuthor.charAt(0).toUpperCase();
+            
+            // Delete button setup
+            let deleteBtnHTML = '';
+            if (currentUserId === prompt.authorId) {
+                deleteBtnHTML = `<button onclick="event.stopPropagation(); deleteMyPrompt('${key}')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; backdrop-filter: blur(4px);" onmouseover="this.style.background='#ff4444'" onmouseout="this.style.background='rgba(0,0,0,0.5)'" title="Delete"><i class="fas fa-times"></i></button>`;
+            }
+
+            // Heart Icon Setup
             const isFav = myFavorites.includes(key);
             const heartIcon = isFav ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
             const heartColor = isFav ? '#ff4444' : 'white';
 
-            // 👇 NAYA FIX: Asli AI Tool ka naam uppercase me
-            const aiToolName = (prompt.aiTool || 'MIDJOURNEY').toUpperCase();
+            // 🔥 FIX 3: Bookmark Icon Setup (Check karega save hai ya nahi, aur color fix karega)
+            const isBookmarked = favs.includes(key);
+            const bookmarkIcon = isBookmarked ? '<i class="fas fa-bookmark"></i>' : '<i class="far fa-bookmark"></i>';
+            const bookmarkColor = isBookmarked ? '#ffaa00' : 'white';
 
+            // 🔴 HOVER OVERLAY CARD
             const card = `
-                <div style="background: #11111a; border-radius: 12px; border: 1px solid #2a2a35; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                <div class="hover-card-wrapper" onmouseenter="this.querySelector('.hover-overlay').style.opacity='1'" onmouseleave="this.querySelector('.hover-overlay').style.opacity='0'" onclick="openModal('${key}')" style="position: relative; break-inside: avoid; margin-bottom: 24px; display: inline-block; width: 100%; border-radius: 16px; overflow: hidden; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
                     
-                    <div style="position: relative;">
-                        <img src="${prompt.imageUrl}" style="width: 100%; height: 160px; object-fit: cover;">
-                        
-                        <span style="position: absolute; top: 10px; left: 10px; background: #ff00cc; color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; letter-spacing: 1px;">${prompt.category || 'General'}</span>
-                        
-                        <div onclick="toggleLikePrompt('${key}')" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: ${heartColor}; cursor: pointer; transition: 0.3s;">
-                            ${heartIcon}
-                        </div>
-                    </div>
+                    <img src="${prompt.imageUrl}" style="width: 100%; height: auto; display: block; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                    
+                    <button onclick="event.stopPropagation(); toggleFavoriteState('${key}');" style="position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: ${bookmarkColor}; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; backdrop-filter: blur(4px); z-index: 20;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'" title="Save to Favorites">
+                        ${bookmarkIcon}
+                    </button>
 
-                    <div style="padding: 15px;">
-                        <div style="color: #ff9900; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">${aiToolName}</div>
+                    <div class="hover-overlay" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 40px 16px 16px 16px; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); opacity: 0; transition: opacity 0.3s ease; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none;">
                         
-                        <h3 style="color: white; font-size: 16px; margin: 0 0 10px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${prompt.title}</h3>
-                        
-                        <div style="background: #1e1e2f; padding: 10px; border-radius: 8px; color: #888; font-family: monospace; font-size: 12px; height: 50px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${prompt.promptText}</div>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="background: #ff9900; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">${authorInitial}</div>
-                                <span style="color: #ccc; font-size: 12px;">${displayAuthor}</span>
+                        <div style="pointer-events: auto;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                <div style="background: linear-gradient(135deg, #ff9900, #ff00cc); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">${authorInitial}</div>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: white; font-size: 14px; font-weight: 700; line-height: 1.1;">${displayAuthor}</span>
+                                    <span style="color: #ccc; font-size: 11px;">@${prompt.authorName ? prompt.authorName.toLowerCase().replace(/\s/g, '') : 'user'}</span>
+                                </div>
                             </div>
-                            <div style="color: #ffcc00; font-size: 12px; font-weight: bold;"><i class="fas fa-star"></i> 5.0</div>
-                        </div>
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #2a2a35; padding-top: 12px;">
-                            <span style="color: #00ffcc; font-weight: bold; font-size: 14px;">FREE</span>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="color: #666; font-size: 12px;"><i class="fas fa-download"></i> 0</span>
+                                <button onclick="event.stopPropagation(); navigator.clipboard.writeText('${prompt.promptText.replace(/'/g, "\\'")}'); this.innerHTML='<i class=\\'fas fa-check\\'></i> Copied'; this.style.color='#000'; setTimeout(() => { this.innerHTML='<i class=\\'fas fa-retweet\\'></i> Use Idea'; this.style.color='#000'; }, 2000);" style="background: white; border: none; color: black; padding: 8px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" onmouseover="this.style.background='#eee'" onmouseout="this.style.background='white'">
+                                    <i class="fas fa-retweet"></i> Use Idea
+                                </button>
+
+                                <button onclick="event.stopPropagation(); toggleLikePrompt('${key}')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: ${heartColor}; padding: 8px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; backdrop-filter: blur(4px); transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
+                                    ${heartIcon} ${realLikes}
+                                </button>
+
                                 ${deleteBtnHTML}
                             </div>
                         </div>
+
                     </div>
                 </div>
             `;
-            // Cards shuru se add honge
             container.innerHTML = card + container.innerHTML; 
+        }
+
+        // 🔥 NAYA FEATURE ADD KIYA: Agar Favorites tab hai aur ek bhi card nahi mila (0 count)
+        if (showOnlyFavorites && visibleCount === 0) {
+            container.innerHTML = `
+            <div style="text-align: center; padding: 80px 20px; width: 100%; grid-column: 1/-1;">
+                <i class="far fa-bookmark" style="font-size: 4rem; color: #ffaa00; margin-bottom: 20px; display: block;"></i>
+                <h4 style="font-family: 'Orbitron', sans-serif; font-size: 18px; letter-spacing: 2px; color: #fff; margin-bottom: 12px;">NO SAVED PROMPTS</h4>
+                <p style="font-size: 14px; max-width: 400px; margin: 0 auto 24px; line-height: 1.6; color: #6a7090;">Tumne abhi tak koi prompt save nahi kiya hai! Home par jaakar kisi bhi card ke bookmark icon par click karo.</p>
+                <button onclick="toggleFavoritesPageView(false)" style="background: #ff2233; color: white; border: none; padding: 12px 28px; border-radius: 8px; cursor: pointer; font-weight: bold; letter-spacing: 1px; transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">BROWSE PROMPTS</button>
+            </div>`;
         }
     });
 }
 
 // 🔥 4. LIKE / UNLIKE KARNE KA LOGIC
+// 🔥 4. REAL FIREBASE LIKE / UNLIKE LOGIC (Perfected)
 window.toggleLikePrompt = function(promptKey) {
+    // 1. Browser memory se favorites nikalo
     let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
+    
+    // 2. Firebase Database ka direct connection
+    const dbRef = firebase.database().ref('submitted_prompts/' + promptKey + '/likeCount');
+
     if (myFavorites.includes(promptKey)) {
+        // UNLIKE KAR RAHA HAI
         myFavorites = myFavorites.filter(id => id !== promptKey);
+        
+        // Firebase me like -1 karo
+        dbRef.transaction((currentLikes) => {
+            return (currentLikes || 0) > 0 ? currentLikes - 1 : 0;
+        });
     } else {
+        // LIKE KAR RAHA HAI
         myFavorites.push(promptKey);
+        
+        // Firebase me like +1 karo
+        dbRef.transaction((currentLikes) => {
+            return (currentLikes || 0) + 1;
+        });
     }
+
+    // 3. Local memory update kar do taaki dil (heart) turant apna color badle
     localStorage.setItem('community_favs', JSON.stringify(myFavorites));
+
+    // 4. Screen ko turant refresh karo (Tere purane code jaisa fast UI response)
     loadCommunityPrompts();
 }
 
