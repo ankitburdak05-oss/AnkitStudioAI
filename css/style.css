@@ -1543,3 +1543,124 @@ body {
     z-index: 10000 !important;
 }
 
+/* =========================================
+   🔥 INSTAGRAM STYLE PROFILE CSS 🔥
+   ========================================= */
+.ig-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #ffffff;
+    color: #000000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding-bottom: 20px;
+}
+.ig-header-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; font-size: 24px;
+    border-bottom: 1px solid #efefef;
+}
+.ig-username { font-size: 20px; font-weight: 700; display: flex; align-items: center; }
+.ig-profile-info { display: flex; align-items: center; padding: 16px; gap: 20px; }
+.ig-avatar-box { position: relative; width: 85px; height: 85px; flex-shrink: 0; }
+.ig-avatar-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.ig-add-story {
+    position: absolute; bottom: 0; right: 0; background: #0095f6; color: #fff;
+    width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    border: 2px solid #fff; font-size: 12px; cursor: pointer;
+}
+.ig-stats-box { flex: 1; display: flex; justify-content: space-around; text-align: center; }
+.ig-stat strong { display: block; font-size: 18px; }
+.ig-stat span { font-size: 14px; color: #262626; }
+
+.ig-bio-section { padding: 0 16px; font-size: 14px; line-height: 1.4; margin-bottom: 16px; }
+.ig-name { font-weight: 700; }
+.ig-category { color: #8e8e8e; margin-bottom: 2px; }
+.ig-bio-text { white-space: pre-line; }
+
+.ig-dashboard-banner {
+    margin: 0 16px 16px; padding: 12px 14px; background: #fafafa; border-radius: 8px; font-size: 14px;
+}
+.ig-dashboard-banner strong { display: block; margin-bottom: 4px; font-weight: 600;}
+.ig-dashboard-banner span { color: #8e8e8e; font-size: 13px; }
+
+.ig-action-buttons { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 20px; }
+.ig-action-buttons button {
+    flex: 1; padding: 8px 0; border: none; border-radius: 8px; background: #efefef;
+    font-weight: 600; font-size: 14px; cursor: pointer; color: #000; transition: background 0.2s;
+}
+.ig-action-buttons button:hover { background: #dbdbdb; }
+
+.ig-highlights-container { display: flex; gap: 18px; padding: 0 16px 20px; overflow-x: auto; scrollbar-width: none; }
+.ig-highlights-container::-webkit-scrollbar { display: none; }
+.ig-highlight { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+.ig-highlight-img {
+    width: 64px; height: 64px; border-radius: 50%; border: 1px solid #dbdbdb;
+    padding: 3px; display: flex; align-items: center; justify-content: center;
+}
+.ig-highlight-img img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.ig-highlight-img.new-hl { border: 1px solid #262626; font-size: 24px; font-weight: 300; }
+
+.ig-tabs-container { display: flex; border-top: 1px solid #efefef; }
+.ig-tab { flex: 1; text-align: center; padding: 12px 0; color: #8e8e8e; font-size: 20px; cursor: pointer; }
+.ig-tab.active { color: #000; border-top: 1px solid #000; margin-top: -1px; }
+
+.ig-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+.ig-photo-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; transition: opacity 0.2s; }
+.ig-photo-grid img:hover { opacity: 0.8; }
+
+/* =========================================
+   🔥 INSTAGRAM NAV BAR & CLEANUP CSS 🔥
+   ========================================= */
+
+/* Naya Bottom Nav Bar (Instagram Style) */
+.ig-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #ffffff;
+    border-top: 1px solid #dbdbdb;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 0;
+    z-index: 9999999;
+}
+
+.ig-bottom-nav i {
+    font-size: 24px;
+    color: #000;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.ig-bottom-nav i:hover { transform: scale(1.1); }
+
+.ig-nav-profile {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #dbdbdb;
+    cursor: pointer;
+}
+
+/* 🔥 JAB PROFILE ACTIVE HO TOH BAAKI SAB GAYAB 🔥 */
+body.ig-mode {
+    padding-left: 0 !important; /* Sidebar ki jagah khatam */
+    background: #ffffff !important;
+}
+
+body.ig-mode .sidebar,
+body.ig-mode footer,
+body.ig-mode nav,
+body.ig-mode .dock-bar,
+body.ig-mode .hero-container,
+body.ig-mode .trust-bar,
+body.ig-mode .divider,
+body.ig-mode .featured-banner,
+body.ig-mode .prompt-redirect-box-wrapper,
+body.ig-mode .tools-grid,
+body.ig-mode #community-prompts-container {
+    display: none !important; /* Purani saari cheezein hide */
+}

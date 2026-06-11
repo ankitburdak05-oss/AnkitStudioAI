@@ -751,6 +751,12 @@ function applyAuthState(user) {
     const dropdownUserName = document.getElementById('dropdownUserName');
     const dropdownUserEmail = document.getElementById('dropdownUserEmail');
 
+    // 🔥 INSTAGRAM ELEMENTS SELECT KARO 🔥
+    const igUsernameEl = document.querySelector('.ig-username');
+    const igNameEl = document.querySelector('.ig-name');
+    const igAvatarEl = document.querySelector('.ig-avatar-box img');
+    const igNavProfileEl = document.querySelector('.ig-nav-profile'); // Bottom nav ka chhota icon
+
     if (user) {
         if (loginBtn) loginBtn.style.display = 'none';
         if (userProfileWrapper) userProfileWrapper.style.display = 'inline-block';
@@ -760,11 +766,32 @@ function applyAuthState(user) {
         if (dropdownUserName) dropdownUserName.textContent = nameToShow.toUpperCase();
         if (dropdownUserEmail) dropdownUserEmail.textContent = user.email || '';
 
+        // 🔥 GOOGLE/FIREBASE DATA SE INSTAGRAM PROFILE SYNC KARO 🔥
+        // Email ke aage ka hissa username banega (e.g. ankit@gmail.com -> ankit)
+        const googleUsername = user.email ? user.email.split('@')[0].toLowerCase() : 'ankitburdakk';
+        const googleName = user.displayName || nameToShow;
+        const googlePhoto = user.photoURL || 'https://via.placeholder.com/150'; // Google profile photo layega agar available ho
+
+        if (igUsernameEl) {
+            igUsernameEl.innerHTML = `${googleUsername} <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>`;
+        }
+        if (igNameEl) igNameEl.textContent = googleName;
+        if (igAvatarEl) igAvatarEl.src = googlePhoto;
+        if (igNavProfileEl) igNavProfileEl.src = googlePhoto; // Bottom nav wali photo bhi update karega
+
         try { migrateGuestFavoritesToUser(user.uid); } catch (e) { console.error(e); }
     } else {
         if (loginBtn) loginBtn.style.display = 'inline-block';
         if (userProfileWrapper) userProfileWrapper.style.display = 'none';
         if (showOnlyFavorites) toggleFavoritesPageView(false);
+
+        // 🔥 LOGOUT HONE PAR WAPAS DEFAULT SETUP 🔥
+        if (igUsernameEl) {
+            igUsernameEl.innerHTML = `ankitburdakk <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>`;
+        }
+        if (igNameEl) igNameEl.textContent = 'Ankit Burdak';
+        if (igAvatarEl) igAvatarEl.src = 'https://via.placeholder.com/150';
+        if (igNavProfileEl) igNavProfileEl.src = 'https://via.placeholder.com/150';
     }
 
     renderCards(getFiltered());
@@ -1100,3 +1127,27 @@ window.deleteMyPrompt = function(promptKey) {
 // 🔥 6. PAGE LOAD HOTE HI DATA DIKHAO
 firebase.auth().onAuthStateChanged(() => { loadCommunityPrompts(); });
 
+// 🔥 INSTAGRAM PROFILE TOGGLE LOGIC 🔥
+    const dockProfileBtn = document.getElementById('dock-profile-btn');
+    if (dockProfileBtn) {
+        dockProfileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // 1. Body par "ig-mode" lagate hi CSS se baaki sab (Sidebar, Footer, Purana Dock) hide ho jayega!
+            document.body.classList.add('ig-mode');
+            
+            // 2. Profile dikhao
+            document.getElementById('ig-profile-section').style.display = 'block';
+        });
+    }
+
+    // 🔥 NAYE NAV BAR SE WAPAS HOME AANE KA LOGIC 🔥
+    const igHomeBtn = document.getElementById('ig-home-btn');
+    if (igHomeBtn) {
+        igHomeBtn.addEventListener('click', () => {
+            // 1. "ig-mode" hatao jisse wapas purani website (Sidebar, Footer, Dock) dikhne lage
+            document.body.classList.remove('ig-mode');
+            
+            // 2. Profile section wapas hide karo
+            document.getElementById('ig-profile-section').style.display = 'none';
+        });
+    }
