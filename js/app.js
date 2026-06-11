@@ -777,7 +777,10 @@ function applyAuthState(user) {
         }
         if (igNameEl) igNameEl.textContent = googleName;
         if (igAvatarEl) igAvatarEl.src = googlePhoto;
-        if (igNavProfileEl) igNavProfileEl.src = googlePhoto; // Bottom nav wali photo bhi update karega
+        if (igNavProfileEl) igNavProfileEl.src = googlePhoto; 
+
+        // 🔥 NAYI LINE: Login hote hi asli data load karo 🔥
+        fetchRealProfileStats(user);
 
         try { migrateGuestFavoritesToUser(user.uid); } catch (e) { console.error(e); }
     } else {
@@ -785,13 +788,18 @@ function applyAuthState(user) {
         if (userProfileWrapper) userProfileWrapper.style.display = 'none';
         if (showOnlyFavorites) toggleFavoritesPageView(false);
 
-        // 🔥 LOGOUT HONE PAR WAPAS DEFAULT SETUP 🔥
+        // 🔥 LOGOUT HONE PAR WAPAS DEFAULT SETUP AUR ZERO STATS 🔥
         if (igUsernameEl) {
             igUsernameEl.innerHTML = `ankitburdakk <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>`;
         }
         if (igNameEl) igNameEl.textContent = 'Ankit Burdak';
         if (igAvatarEl) igAvatarEl.src = 'https://via.placeholder.com/150';
         if (igNavProfileEl) igNavProfileEl.src = 'https://via.placeholder.com/150';
+        
+        // Zero kar do logout pe
+        if(document.getElementById('igRealPosts')) document.getElementById('igRealPosts').textContent = "0";
+        if(document.getElementById('igRealFollowers')) document.getElementById('igRealFollowers').textContent = "0";
+        if(document.getElementById('igRealFollowing')) document.getElementById('igRealFollowing').textContent = "0";
     }
 
     renderCards(getFiltered());
@@ -1151,3 +1159,38 @@ firebase.auth().onAuthStateChanged(() => { loadCommunityPrompts(); });
             document.getElementById('ig-profile-section').style.display = 'none';
         });
     }
+
+    // 🔥 ASLI INSTAGRAM STATS FIREBASE SE NIKALNE KA CODE 🔥
+function fetchRealProfileStats(user) {
+    if (typeof firebase === 'undefined' || !firebase.database) return;
+    
+    // 1. Asli Posts (Prompts Uploaded) Count Karo
+    firebase.database().ref('submitted_prompts').on('value', (snapshot) => {
+        let myPostsCount = 0;
+        if (snapshot.exists()) {
+            snapshot.forEach((child) => {
+                // Check karo ki prompt is user ne upload kiya hai ya nahi
+                if (child.val().authorId === user.uid) {
+                    myPostsCount++;
+                }
+            });
+        }
+        const postsEl = document.getElementById('igRealPosts');
+        if (postsEl) postsEl.textContent = myPostsCount;
+    });
+
+    // 2. Asli Followers aur Following Count
+    firebase.database().ref('users/' + user.uid + '/stats').on('value', (snapshot) => {
+        let followers = 0;
+        let following = 0;
+        if (snapshot.exists()) {
+            followers = snapshot.val().followers || 0;
+            following = snapshot.val().following || 0;
+        }
+        const followersEl = document.getElementById('igRealFollowers');
+        const followingEl = document.getElementById('igRealFollowing');
+        
+        if (followersEl) followersEl.textContent = followers;
+        if (followingEl) followingEl.textContent = following;
+    });
+}
