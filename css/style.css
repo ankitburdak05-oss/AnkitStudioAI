@@ -786,9 +786,14 @@ nav {
 /* ===== MODAL ===== */
 .modal-overlay {
     display: none;
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
-    align-items: center; justify-content: center; padding: 20px;
+    position: fixed; 
+    inset: 0; 
+    z-index: 9999999 !important; /* 🔥 MAIN FIX: Isko 9999999 kar diya taaki ye Sidebar aur Dock dono ke upar aaye */
+    background: rgba(0,0,0,0.8); 
+    backdrop-filter: blur(8px);
+    align-items: center; 
+    justify-content: center; 
+    padding: 20px;
 }
 .modal-overlay.open { display: flex; }
 
@@ -1537,3 +1542,4 @@ body {
     pointer-events: auto !important;
     z-index: 10000 !important;
 }
+
