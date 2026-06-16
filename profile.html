@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile — AnkitStudioAI</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* Profile page ke liye specific body style taaki sidebar ki jagah na chhute */
+        body { padding-left: 0 !important; background: #ffffff !important; }
+        
+        /* 🔥 Explore grid ki naya CSS 🔥 */
+        .ig-explore-grid {
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 3px; 
+            padding-top: 3px;
+        }
+        .ig-explore-grid img { 
+            width: 100%; 
+            aspect-ratio: 1/1; 
+            object-fit: cover; 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ig-profile-section" style="padding-bottom: 60px;">
+    <div class="ig-container">
+        <div class="ig-header-nav">
+            <i class="fas fa-plus" style="cursor: pointer;"></i>
+            <div class="ig-username" id="top-title">ankitburdakk <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i></div>
+            <i class="fas fa-bars" style="cursor: pointer;"></i>
+        </div>
+
+        <div id="search-content-wrap" style="display: none;">
+            <div style="padding: 10px 16px; border-bottom: 1px solid #efefef;">
+                <div style="background: #efefef; border-radius: 10px; display: flex; align-items: center; padding: 8px 12px;">
+                    <i class="fas fa-search" style="color: #8e8e8e; font-size: 14px;"></i>
+                    <input type="text" id="ig-search-input" placeholder="Search prompts or users..." style="border: none; background: transparent; outline: none; margin-left: 10px; width: 100%; font-size: 14px; color: #000;">
+                </div>
+            </div>
+            <div class="ig-explore-grid">
+                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400">
+                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400">
+                <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400">
+                <img src="https://images.unsplash.com/photo-1506744626753-1fa4433d366a?w=400">
+                <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400">
+                <img src="https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?w=400">
+                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400">
+                <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400">
+                <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400">
+            </div>
+        </div>
+
+        <div id="profile-content-wrap">
+            <div class="ig-profile-info">
+                <div class="ig-avatar-box">
+                    <img src="https://via.placeholder.com/150" alt="Avatar">
+                    <div class="ig-add-story"><i class="fas fa-plus"></i></div>
+                </div>
+                <div class="ig-stats-box">
+                    <div class="ig-stat"><strong id="igRealPosts">0</strong><span>posts</span></div>
+                    <div class="ig-stat"><strong id="igRealFollowers">0</strong><span>followers</span></div>
+                    <div class="ig-stat"><strong id="igRealFollowing">0</strong><span>following</span></div>
+                </div>
+            </div>
+
+            <div class="ig-bio-section">
+                <div class="ig-name">Ankit Burdak</div>
+                <div class="ig-category">Reel creator</div>
+                <div class="ig-bio-text">Welcome to my AI Prompt Studio 🚀<br>DM for collabs</div>
+            </div>
+
+            <div class="ig-dashboard-banner">
+                <strong>Professional dashboard</strong>
+                <span>295 views in the last 30 days.</span>
+            </div>
+
+            <div class="ig-action-buttons">
+                <button>Edit profile</button>
+                <button>Share profile</button>
+            </div>
+
+            <div class="ig-highlights-container">
+                <div class="ig-highlight">
+                    <div class="ig-highlight-img new-hl"><i class="fas fa-plus"></i></div>
+                    <span>New</span>
+                </div>
+                <div class="ig-highlight">
+                    <div class="ig-highlight-img"><img src="https://via.placeholder.com/100?text=HL1"></div>
+                    <span>Highlights</span>
+                </div>
+                <div class="ig-highlight">
+                    <div class="ig-highlight-img"><img src="https://via.placeholder.com/100?text=HL2"></div>
+                    <span>Highlights</span>
+                </div>
+            </div>
+
+            <div class="ig-tabs-container">
+                <div class="ig-tab active"><i class="fas fa-th"></i></div>
+                <div class="ig-tab"><i class="far fa-play-circle"></i></div>
+                <div class="ig-tab"><i class="far fa-user-circle"></i></div>
+            </div>
+
+            <div class="ig-photo-grid">
+                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400">
+                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400">
+                <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400">
+                <img src="https://images.unsplash.com/photo-1506744626753-1fa4433d366a?w=400">
+                <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400">
+                <img src="https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?w=400">
+            </div>
+        </div>
+    </div>
+
+    <div class="ig-bottom-nav">
+        <i class="fas fa-home" onclick="window.location.href='index.html'"></i>
+        
+        <i class="fas fa-search" id="ig-search-btn" style="cursor: pointer;"></i> 
+        
+        <i class="far fa-play-circle"></i>
+        <i class="far fa-plus-square"></i>
+        <i class="far fa-paper-plane"></i>
+        
+        <img src="https://via.placeholder.com/150" alt="Profile" class="ig-nav-profile" id="ig-profile-btn" style="cursor: pointer;">
+    </div>
+</div>
+
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+    // Jab Search 🔍 pe click hoga
+    document.getElementById('ig-search-btn').addEventListener('click', function() {
+        document.getElementById('profile-content-wrap').style.display = 'none'; // Profile chhupa de
+        document.getElementById('search-content-wrap').style.display = 'block'; // Search dikha de
+        
+        document.getElementById('top-title').innerHTML = 'Explore'; // Upar ka naam Explore ho jayega
+        document.getElementById('ig-search-btn').style.color = '#000'; // Search icon dark
+    });
+
+    // Jab wapas Profile ki photo pe click hoga
+    document.getElementById('ig-profile-btn').addEventListener('click', function() {
+        document.getElementById('search-content-wrap').style.display = 'none'; // Search chhupa de
+        document.getElementById('profile-content-wrap').style.display = 'block'; // Profile dikha de
+        
+        document.getElementById('top-title').innerHTML = 'ankitburdakk <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>'; // Wapas naam theek
+    });
+
+</script>
+
+<script>
+// 🔥 ASLI SEARCH LOGIC (FIREBASE SE CONNECTED) 🔥
+document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById('ig-search-input');
+    const exploreGrid = document.querySelector('.ig-explore-grid');
+
+    if (searchInput && exploreGrid) {
+        // Jab bhi tu kuch type karega, ye function chalega
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            // Firebase ke 'submitted_prompts' se data uthao
+            firebase.database().ref('submitted_prompts').once('value', (snapshot) => {
+                exploreGrid.innerHTML = ''; // Purani faaltu photos clear kar do
+                let matchFound = false;
+
+                if (snapshot.exists()) {
+                    snapshot.forEach((child) => {
+                        const data = child.val();
+                        
+                        // Naam, Email, ya Title mein search karo
+                        const authorName = (data.authorName || '').toLowerCase();
+                        const authorEmail = (data.authorEmail || '').toLowerCase();
+                        const promptTitle = (data.title || '').toLowerCase();
+
+                        // Agar search match hota hai (ya box khali hai to sab dikhao)
+                        if (searchTerm === '' || authorName.includes(searchTerm) || authorEmail.includes(searchTerm) || promptTitle.includes(searchTerm)) {
+                            
+                            // Match milne par grid mein uski photo daal do
+                            exploreGrid.innerHTML += `
+                                <img src="${data.imageUrl}" 
+                                     alt="${data.title}" 
+                                     onclick="alert('Prompt: ${data.title}\\nAuthor: ${data.authorName || data.authorEmail}')"
+                                     style="width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer;">
+                            `;
+                            matchFound = true;
+                        }
+                    });
+                }
+
+                // Agar koi user nahi mila
+                if (!matchFound && searchTerm !== '') {
+                    exploreGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #8e8e8e; padding: 40px 10px; font-weight: 600;">Bhai, is ID se koi user ya prompt nahi mila! 🚫</div>`;
+                }
+            });
+        });
+    }
+});
+</script>
+
+</body>
+</html>

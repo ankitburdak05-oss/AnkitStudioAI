@@ -1645,22 +1645,3 @@ body {
     cursor: pointer;
 }
 
-/* 🔥 JAB PROFILE ACTIVE HO TOH BAAKI SAB GAYAB 🔥 */
-body.ig-mode {
-    padding-left: 0 !important; /* Sidebar ki jagah khatam */
-    background: #ffffff !important;
-}
-
-body.ig-mode .sidebar,
-body.ig-mode footer,
-body.ig-mode nav,
-body.ig-mode .dock-bar,
-body.ig-mode .hero-container,
-body.ig-mode .trust-bar,
-body.ig-mode .divider,
-body.ig-mode .featured-banner,
-body.ig-mode .prompt-redirect-box-wrapper,
-body.ig-mode .tools-grid,
-body.ig-mode #community-prompts-container {
-    display: none !important; /* Purani saari cheezein hide */
-}
