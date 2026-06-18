@@ -122,71 +122,70 @@
 <script src="js/app.js"></script>
 
 <script>
-    // 🔥 PROFILE & SEARCH TOGGLE LOGIC 🔥
-    document.getElementById('ig-search-btn').addEventListener('click', function() {
-        document.getElementById('profile-content-wrap').style.display = 'none'; 
-        document.getElementById('search-content-wrap').style.display = 'block'; 
-        
-        document.getElementById('top-title').innerHTML = 'Explore'; 
-        document.getElementById('ig-search-btn').style.color = '#000'; 
-        document.getElementById('top-left-icon').style.display = 'none';
-        document.getElementById('top-right-icon').style.display = 'none';
-    });
-
-    // Jab khud ki profile par wapas aaye
-    document.getElementById('ig-profile-btn').addEventListener('click', function() {
-        document.getElementById('search-content-wrap').style.display = 'none'; 
-        document.getElementById('profile-content-wrap').style.display = 'block'; 
-        
-        document.getElementById('top-title').innerHTML = 'ankitburdakk <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>'; 
-        document.getElementById('top-left-icon').style.display = 'block';
-        document.getElementById('top-right-icon').style.display = 'block';
-        document.getElementById('pro-dashboard').style.display = 'block';
-        
-        // Wapas Edit button set kar do
-        document.getElementById('dynamic-action-buttons').innerHTML = `
-            <button>Edit profile</button>
-            <button>Share profile</button>
-        `;
-        document.getElementById('bottom-nav-bar').style.display = 'flex'; // Nav wapas aa jayega
-    });
-
-</script>
-
-<script>
-    // 🔥 ASLI SEARCH, FOLLOW & HIDE NAV LOGIC 🔥
     document.addEventListener("DOMContentLoaded", () => {
         const searchInput = document.getElementById('ig-search-input');
         const exploreGrid = document.querySelector('.ig-explore-grid');
-        const bottomNav = document.getElementById('bottom-nav-bar');
+        const bottomNav = document.querySelector('.ig-bottom-nav'); // Class se pakda hai taaki 100% hide ho
 
-        // 1. SEARCH FUNCTION (INSTA WALI LIST)
-        if (searchInput && exploreGrid) {
-            // Nayi list banayenge jo search karne par dikhegi
-            let searchResultsList = document.createElement('div');
-            searchResultsList.id = 'ig-search-results-list';
+        // Nayi list ka container
+        let searchResultsList = document.createElement('div');
+        searchResultsList.id = 'ig-search-results-list';
+        searchResultsList.style.display = 'none';
+        searchResultsList.style.padding = '0 16px';
+        if(exploreGrid) exploreGrid.parentNode.insertBefore(searchResultsList, exploreGrid.nextSibling);
+
+        // 🔥 1. EXPLORE PAGE ME ASLI PHOTOS LOAD KARNA 🔥
+        function loadRealExplorePhotos() {
+            if(!exploreGrid) return;
+            firebase.database().ref('submitted_prompts').limitToLast(15).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    exploreGrid.innerHTML = ''; // Purani dummy photo hata do
+                    snapshot.forEach((child) => {
+                        const data = child.val();
+                        // Asli photo click karne par uski profile khulegi
+                        exploreGrid.innerHTML += `<img src="${data.imageUrl}" onclick="openUserProfile('${data.authorId}', '${data.authorName || 'User'}')" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer;">`;
+                    });
+                }
+            });
+        }
+
+        // 🔥 2. SEARCH BOTTOM ICON CLICK (Photos dikhao) 🔥
+        document.getElementById('ig-search-btn').addEventListener('click', function() {
+            document.getElementById('profile-content-wrap').style.display = 'none'; 
+            document.getElementById('search-content-wrap').style.display = 'block'; 
+            
+            document.getElementById('top-title').innerHTML = 'Explore'; 
+            document.getElementById('ig-search-btn').style.color = '#000'; 
+            document.getElementById('top-left-icon').style.display = 'none';
+            document.getElementById('top-right-icon').style.display = 'none';
+
+            // Asli photo load karo grid mein
+            loadRealExplorePhotos();
+            exploreGrid.style.display = 'grid';
             searchResultsList.style.display = 'none';
-            searchResultsList.style.padding = '0 16px';
-            exploreGrid.parentNode.insertBefore(searchResultsList, exploreGrid.nextSibling);
+            searchInput.value = ''; // Search box khali kar do
+        });
 
+        // 🔥 3. ASLI USER SEARCH KARNA (List dikhao, Photo hide karo) 🔥
+        if (searchInput && exploreGrid) {
             searchInput.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase().trim();
                 
-                // Agar search box khali hai, toh wapas photo grid dikhao
+                // Agar Box khali hai -> Photos dikhao
                 if (searchTerm === '') {
                     exploreGrid.style.display = 'grid';
                     searchResultsList.style.display = 'none';
                     return;
                 }
 
-                // Agar type kiya hai, toh photo grid gayab aur user list shuru
+                // Agar Type kiya -> Photos hide karo, List dikhao
                 exploreGrid.style.display = 'none';
                 searchResultsList.style.display = 'block';
                 
                 firebase.database().ref('submitted_prompts').once('value', (snapshot) => {
                     searchResultsList.innerHTML = ''; 
                     let matchFound = false;
-                    let uniqueUsers = new Set(); // Ek user baar-baar na aaye
+                    let uniqueUsers = new Set(); 
 
                     if (snapshot.exists()) {
                         snapshot.forEach((child) => {
@@ -200,16 +199,16 @@
                                     uniqueUsers.add(authorId);
                                     matchFound = true;
                                     
-                                    const username = (data.authorName || 'user').split(' ')[0].toLowerCase() + Math.floor(Math.random() * 100);
+                                    // ASLI ID (Email ke aage ka hissa, no math.random)
+                                    const realUsername = authorEmail ? authorEmail.split('@')[0].toLowerCase() : authorName.replace(/\s+/g, '');
 
-                                    // 🔥 INSTAGRAM LIST UI 🔥
                                     searchResultsList.innerHTML += `
-                                        <div onclick="openUserProfile('${authorId}', '${data.authorName || data.authorEmail}')" style="display: flex; align-items: center; padding: 10px 0; gap: 14px; cursor: pointer;">
+                                        <div onclick="openUserProfile('${authorId}', '${data.authorName || 'User'}')" style="display: flex; align-items: center; padding: 10px 0; gap: 14px; cursor: pointer;">
                                             <div style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid #dbdbdb; padding: 2px; flex-shrink: 0;">
-                                                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                                <img src="https://via.placeholder.com/150" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                                             </div>
                                             <div style="flex: 1; border-bottom: 1px solid #efefef; padding-bottom: 10px; display: flex; flex-direction: column; justify-content: center;">
-                                                <div style="font-size: 14px; font-weight: 600; color: #000;">${username}</div>
+                                                <div style="font-size: 14px; font-weight: 600; color: #000;">${realUsername}</div>
                                                 <div style="font-size: 13px; color: #8e8e8e;">${data.authorName || 'User'}</div>
                                             </div>
                                         </div>
@@ -219,13 +218,13 @@
                         });
                     }
                     if (!matchFound) {
-                        searchResultsList.innerHTML = `<div style="text-align: center; color: #8e8e8e; padding: 40px 10px; font-size: 14px;">No results found.</div>`;
+                        searchResultsList.innerHTML = `<div style="text-align: center; color: #8e8e8e; padding: 40px 10px; font-size: 14px;">Bhai, is ID se koi user nahi mila.</div>`;
                     }
                 });
             });
         }
 
-        // 2. KISI AUR KI PROFILE OPEN KARNE KA LOGIC
+        // 🔥 4. PROFILE OPEN KARNA & BOTTOM NAV HIDE KARNA 🔥
         window.openUserProfile = function(authorId, authorName) {
             const currentUser = firebase.auth().currentUser;
             if(!currentUser) { alert("Pehle login kar bhai!"); return; }
@@ -235,31 +234,29 @@
 
             const btnContainer = document.getElementById('dynamic-action-buttons');
 
-            // 🔥 AGAR KHUD KI PROFILE HAI
+            // Agar khud ki profile hai
             if (authorId === currentUser.uid) {
-                document.getElementById('ig-profile-btn').click(); // Direct apna profile load
+                document.getElementById('ig-profile-btn').click(); 
             } 
-            // 🔥 AGAR DUSRE KI PROFILE HAI
+            // Agar doosre user ki profile hai
             else {
-                // Bottom Nav Hide, Dashboard Hide
-                bottomNav.style.display = 'none'; 
-                document.getElementById('pro-dashboard').style.display = 'none';
+                // YAHAN 100% BOTTOM NAV HIDE HOGA!
+                if(bottomNav) bottomNav.style.display = 'none'; 
                 
-                // Top pe Back Arrow laga diya jisse wapas Search par ja sake
+                const proDash = document.getElementById('pro-dashboard');
+                if(proDash) proDash.style.display = 'none';
+                
                 document.getElementById('top-title').innerHTML = `<i class="fas fa-arrow-left" onclick="goBackToSearch()" style="margin-right: 15px; cursor: pointer;"></i> ${authorName}`; 
                 document.getElementById('main-profile-name').innerHTML = authorName;
 
-                // Follow/Following Logic Check
                 const followRef = firebase.database().ref('users/' + currentUser.uid + '/following/' + authorId);
                 followRef.on('value', (snapshot) => {
                     if (snapshot.exists()) {
-                        // Following
                         btnContainer.innerHTML = `
                             <button onclick="toggleFollow('${authorId}', true)" style="background: #efefef; color: #000;">Following <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>
                             <button>Message</button>
                         `;
                     } else {
-                        // Follow
                         btnContainer.innerHTML = `
                             <button onclick="toggleFollow('${authorId}', false)" style="background: #0095f6; color: white;">Follow</button>
                             <button>Message</button>
@@ -269,15 +266,36 @@
             }
         };
 
-        // 3. BACK TO SEARCH LOGIC (Arrow dabaane par)
+        // 🔥 5. BACK BUTTON (WAPAS SEARCH PAR AANA) 🔥
         window.goBackToSearch = function() {
             document.getElementById('profile-content-wrap').style.display = 'none'; 
             document.getElementById('search-content-wrap').style.display = 'block'; 
             document.getElementById('top-title').innerHTML = 'Explore'; 
-            bottomNav.style.display = 'flex'; // Nav wapas le aao
+            
+            // YAHAN BOTTOM NAV WAPAS AAYEGA!
+            if(bottomNav) bottomNav.style.display = 'flex'; 
         };
 
-        // 4. FOLLOW / UNFOLLOW FIREBASE LOGIC
+        // 🔥 6. KHUD KI PROFILE BOTTOM ICON CLICK 🔥
+        document.getElementById('ig-profile-btn').addEventListener('click', function() {
+            document.getElementById('search-content-wrap').style.display = 'none'; 
+            document.getElementById('profile-content-wrap').style.display = 'block'; 
+            
+            document.getElementById('top-title').innerHTML = 'ankitburdakk <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>'; 
+            document.getElementById('top-left-icon').style.display = 'block';
+            document.getElementById('top-right-icon').style.display = 'block';
+            
+            const proDash = document.getElementById('pro-dashboard');
+            if(proDash) proDash.style.display = 'block';
+            
+            document.getElementById('dynamic-action-buttons').innerHTML = `
+                <button>Edit profile</button>
+                <button>Share profile</button>
+            `;
+            if(bottomNav) bottomNav.style.display = 'flex'; 
+        });
+
+        // 🔥 7. FOLLOW / UNFOLLOW LOGIC 🔥
         window.toggleFollow = function(targetUserId, isFollowing) {
             const currentUser = firebase.auth().currentUser;
             if(!currentUser) return;
