@@ -743,6 +743,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+
 // Helper to apply authentication state changes in-place (no full reload)
 function applyAuthState(user) {
     const loginBtn = document.getElementById('loginBtn');
@@ -767,10 +768,9 @@ function applyAuthState(user) {
         if (dropdownUserEmail) dropdownUserEmail.textContent = user.email || '';
 
         // 🔥 GOOGLE/FIREBASE DATA SE INSTAGRAM PROFILE SYNC KARO 🔥
-        // Email ke aage ka hissa username banega (e.g. ankit@gmail.com -> ankit)
         const googleUsername = user.email ? user.email.split('@')[0].toLowerCase() : 'ankitburdakk';
         const googleName = user.displayName || nameToShow;
-        const googlePhoto = user.photoURL || 'https://via.placeholder.com/150'; // Google profile photo layega agar available ho
+        const googlePhoto = user.photoURL || 'https://via.placeholder.com/150'; 
 
         if (igUsernameEl) {
             igUsernameEl.innerHTML = `${googleUsername} <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>`;
@@ -779,8 +779,7 @@ function applyAuthState(user) {
         if (igAvatarEl) igAvatarEl.src = googlePhoto;
         if (igNavProfileEl) igNavProfileEl.src = googlePhoto; 
 
-        // 🔥 NAYI LINE: Login hote hi asli data load karo 🔥
-        fetchRealProfileStats(user);
+        // ❌ YAHAN SE 'fetchRealProfileStats' HATA DIYA GAYA HAI ❌
 
         try { migrateGuestFavoritesToUser(user.uid); } catch (e) { console.error(e); }
     } else {
@@ -788,18 +787,19 @@ function applyAuthState(user) {
         if (userProfileWrapper) userProfileWrapper.style.display = 'none';
         if (showOnlyFavorites) toggleFavoritesPageView(false);
 
-        // 🔥 LOGOUT HONE PAR WAPAS DEFAULT SETUP AUR ZERO STATS 🔥
+        // 🔥 LOGOUT HONE PAR WAPAS DEFAULT SETUP 🔥
         if (igUsernameEl) {
-            igUsernameEl.innerHTML = `ankitburdakk <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>`;
+            igUsernameEl.innerHTML = `guest <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>`;
         }
-        if (igNameEl) igNameEl.textContent = 'Ankit Burdak';
-        if (igAvatarEl) igAvatarEl.src = 'https://via.placeholder.com/150';
-        if (igNavProfileEl) igNavProfileEl.src = 'https://via.placeholder.com/150';
+        // 🔥 LOGOUT HONE PAR WAPAS DEFAULT SETUP 🔥
+        if (igUsernameEl) {
+            igUsernameEl.innerHTML = `guest <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>`;
+        }
+        if (igNameEl) igNameEl.textContent = 'Guest';
+        if (igAvatarEl) igAvatarEl.src = '';
+        if (igNavProfileEl) igNavProfileEl.src = '';
         
-        // Zero kar do logout pe
-        if(document.getElementById('igRealPosts')) document.getElementById('igRealPosts').textContent = "0";
-        if(document.getElementById('igRealFollowers')) document.getElementById('igRealFollowers').textContent = "0";
-        if(document.getElementById('igRealFollowing')) document.getElementById('igRealFollowing').textContent = "0";
+        // ❌ YAHAN SE 'ZERO' KARNE WALA CODE BHI HATA DIYA GAYA HAI ❌
     }
 
     renderCards(getFiltered());
@@ -1091,39 +1091,46 @@ function loadCommunityPrompts() {
     });
 }
 
-// 🔥 4. LIKE / UNLIKE KARNE KA LOGIC
-// 🔥 4. REAL FIREBASE LIKE / UNLIKE LOGIC (Perfected)
+// 🔥 4. REAL FIREBASE LIKE / UNLIKE LOGIC (With Notifications)
 window.toggleLikePrompt = function(promptKey) {
-    // 1. Browser memory se favorites nikalo
     let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
-    
-    // 2. Firebase Database ka direct connection
     const dbRef = firebase.database().ref('submitted_prompts/' + promptKey + '/likeCount');
+    const currentUser = firebase.auth().currentUser;
 
     if (myFavorites.includes(promptKey)) {
         // UNLIKE KAR RAHA HAI
         myFavorites = myFavorites.filter(id => id !== promptKey);
-        
-        // Firebase me like -1 karo
-        dbRef.transaction((currentLikes) => {
-            return (currentLikes || 0) > 0 ? currentLikes - 1 : 0;
-        });
+        dbRef.transaction(currentLikes => (currentLikes || 0) > 0 ? currentLikes - 1 : 0);
     } else {
         // LIKE KAR RAHA HAI
         myFavorites.push(promptKey);
-        
-        // Firebase me like +1 karo
-        dbRef.transaction((currentLikes) => {
-            return (currentLikes || 0) + 1;
-        });
+        dbRef.transaction(currentLikes => (currentLikes || 0) + 1);
+
+        // 🔥 NOTIFICATION BHEJNE KA LOGIC 🔥
+        if (currentUser) {
+            firebase.database().ref('submitted_prompts/' + promptKey).once('value', snap => {
+                let pData = snap.val();
+                // Khud ke post par like ka notification nahi jayega
+                if (pData && pData.authorId && pData.authorId !== currentUser.uid) {
+                    firebase.database().ref('users/' + pData.authorId + '/notifications').push({
+                        type: 'like',
+                        promptId: promptKey,
+                        fromUid: currentUser.uid,
+                        fromName: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User'),
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        read: false
+                    });
+                }
+            });
+        }
     }
 
     // 3. Local memory update kar do taaki dil (heart) turant apna color badle
     localStorage.setItem('community_favs', JSON.stringify(myFavorites));
-
-    // 4. Screen ko turant refresh karo (Tere purane code jaisa fast UI response)
+    
+    // 4. Screen ko turant refresh karo
     loadCommunityPrompts();
-}
+};
 
 // 🔥 5. DELETE KARNE KA LOGIC
 window.deleteMyPrompt = function(promptKey) {
@@ -1135,3 +1142,125 @@ window.deleteMyPrompt = function(promptKey) {
 // 🔥 6. PAGE LOAD HOTE HI DATA DIKHAO
 firebase.auth().onAuthStateChanged(() => { loadCommunityPrompts(); });
 
+// ==========================================
+// 🔥 FULL PAGE NOTIFICATION SYSTEM 🔥
+// ==========================================
+
+window.toggleNotificationsPageView = function(enable) {
+    const heroContainer = document.querySelector('.hero-container');
+    const trustBar = document.querySelector('.trust-bar');
+    const categoriesSection = document.getElementById('categories');
+    const featuredSection = document.getElementById('featured');
+    const bannerSection = document.querySelector('.featured-banner')?.parentNode;
+    const redirectBox = document.querySelector('.prompt-redirect-box-wrapper')?.parentNode;
+    const toolsGrid = document.querySelector('.tools-grid')?.parentNode;
+    const dividers = document.querySelectorAll('.divider');
+    const communityContainer = document.getElementById('community-prompts-container');
+    const notifPage = document.getElementById('full-notifications-page');
+
+    if (enable) {
+        // Sab kuch hide kar do
+        if (heroContainer) heroContainer.style.display = 'none';
+        if (trustBar) trustBar.style.display = 'none';
+        if (categoriesSection) categoriesSection.style.display = 'none';
+        if (bannerSection) bannerSection.style.display = 'none';
+        if (redirectBox) redirectBox.style.display = 'none';
+        if (toolsGrid) toolsGrid.style.display = 'none';
+        if (featuredSection) featuredSection.style.display = 'none';
+        if (communityContainer) communityContainer.style.display = 'none';
+        dividers.forEach(d => d.style.display = 'none');
+        
+        // Sirf Notification page dikhao
+        if (notifPage) notifPage.style.display = 'block';
+        window.scrollTo(0, 0);
+    } else {
+        // Wapas sab show kar do
+        if (heroContainer) heroContainer.style.display = '';
+        if (trustBar) trustBar.style.display = '';
+        if (categoriesSection) categoriesSection.style.display = '';
+        if (bannerSection) bannerSection.style.display = '';
+        if (redirectBox) redirectBox.style.display = '';
+        if (toolsGrid) toolsGrid.style.display = '';
+        if (featuredSection) featuredSection.style.display = '';
+        if (communityContainer) communityContainer.style.display = '';
+        dividers.forEach(d => d.style.display = '');
+        
+        // Notification page hide kar do
+        if (notifPage) notifPage.style.display = 'none';
+    }
+};
+
+function listenForNotifications(uid) {
+    const notifRef = firebase.database().ref('users/' + uid + '/notifications');
+    notifRef.limitToLast(50).on('value', snap => {
+        const notifList = document.getElementById('fullNotifList');
+        const badge = document.getElementById('notifBadge');
+        if (!notifList || !badge) return;
+
+        if (!snap.exists()) {
+            notifList.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: var(--muted);"><i class="far fa-heart" style="font-size: 40px; margin-bottom: 16px; color: var(--border2);"></i><br><span style="font-size:15px; font-weight:600;">No new notifications</span><br><span style="font-size:13px; color:#888;">When someone likes your prompt or follows you, it will show up here.</span></div>';
+            badge.style.display = 'none';
+            return;
+        }
+
+        let html = '';
+        let unreadCount = 0;
+        let notifs = [];
+        snap.forEach(child => { notifs.push({ key: child.key, ...child.val() }); });
+        notifs.reverse(); 
+
+        notifs.forEach(n => {
+            if (!n.read) unreadCount++;
+            let isLike = n.type === 'like';
+            let icon = isLike ? '<i class="fas fa-heart" style="color:#ff2233"></i>' : '<i class="fas fa-user-plus" style="color:#0095f6"></i>';
+            let text = isLike ? 'liked your prompt.' : 'started following you.';
+            
+            html += `
+                <div style="display:flex; align-items:center; gap:16px; padding:16px 20px; border-bottom:1px solid var(--border); background: ${n.read ? 'transparent' : 'rgba(255,34,51,0.04)'}; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='var(--glass2)'" onmouseout="this.style.background='${n.read ? 'transparent' : 'rgba(255,34,51,0.04)'}'">
+                    <div style="width:44px; height:44px; border-radius:50%; background: linear-gradient(135deg, #f09433, #bc1888); color: white; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:bold; flex-shrink:0;">
+                        ${n.fromName ? n.fromName.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div style="flex:1; font-size:15px; color:var(--text); line-height:1.4;">
+                        <strong style="color:var(--text); font-weight:700;">${n.fromName || 'Someone'}</strong> ${text}
+                    </div>
+                    <div style="font-size:20px; width:24px; text-align:center; flex-shrink:0;">${icon}</div>
+                </div>
+            `;
+        });
+
+        notifList.innerHTML = html;
+        if (unreadCount > 0) {
+            badge.innerText = unreadCount;
+            badge.style.display = 'flex'; 
+        } else {
+            badge.style.display = 'none';
+        }
+    });
+}
+
+window.markNotificationsRead = function() {
+    const user = firebase.auth().currentUser;
+    if(!user) return;
+    firebase.database().ref('users/' + user.uid + '/notifications').once('value', snap => {
+        if(snap.exists()){
+            let updates = {};
+            snap.forEach(child => {
+                if(!child.val().read) updates[child.key + '/read'] = true;
+            });
+            if(Object.keys(updates).length > 0) {
+                firebase.database().ref('users/' + user.uid + '/notifications').update(updates);
+            }
+        }
+    });
+};
+
+// Login hone par icon dikhao
+firebase.auth().onAuthStateChanged(user => {
+    const notifWrap = document.getElementById('notificationWrapper');
+    if (user) {
+        if(notifWrap) notifWrap.style.display = 'inline-block';
+        listenForNotifications(user.uid);
+    } else {
+        if(notifWrap) notifWrap.style.display = 'none';
+    }
+});

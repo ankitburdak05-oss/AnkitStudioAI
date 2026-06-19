@@ -3,430 +3,775 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile — AnkitStudioAI</title>
-    
+    <title>My Profile - AnkitStudioAI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="stylesheet" href="css/style.css">
-    
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
-        body { padding-left: 0 !important; background: #ffffff !important; }
-        
-        .ig-explore-grid {
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 3px; 
-            padding-top: 3px;
+        /* ===== FULL PAGE RESET ===== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body { padding: 0 !important; background: #fff !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+        /* ===== CONTAINER — FULL PAGE ===== */
+        #ig-profile-section { min-height: 100vh; background: #fff; }
+        .ig-container { max-width: 100%; background: #fff; color: #000; padding-bottom: 70px; }
+
+        /* ===== TOP NAV ===== */
+        .ig-header-nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #efefef; position: sticky; top: 0; background: #fff; z-index: 100; }
+        .ig-username { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+
+        /* ===== PROFILE INFO — STATS ON TOP ===== */
+        .ig-profile-info { display: flex; align-items: center; padding: 16px; gap: 20px; }
+        .ig-avatar-box { position: relative; width: 86px; height: 86px; flex-shrink: 0; }
+        .ig-avatar-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #dbdbdb; }
+        .ig-add-story { position: absolute; bottom: 0; right: 0; background: #0095f6; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; font-size: 12px; cursor: pointer; }
+
+        /* STATS GRID — POSTS | FOLLOWERS | FOLLOWING */
+        .ig-stats-box { flex: 1; display: flex; justify-content: space-around; text-align: center; }
+        .ig-stat { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 6px 8px; border-radius: 8px; transition: background 0.15s; -webkit-tap-highlight-color: transparent; }
+        .ig-stat:active { background: #f0f0f0; }
+        .ig-stat strong { display: block; font-size: 17px; font-weight: 700; color: #000; }
+        .ig-stat span { font-size: 13px; color: #262626; }
+
+        /* ===== BIO ===== */
+        .ig-bio-section { padding: 4px 16px 14px; font-size: 14px; line-height: 1.5; }
+        .ig-name { font-weight: 700; font-size: 15px; }
+        .ig-category { color: #8e8e8e; font-size: 13px; margin-bottom: 3px; }
+        .ig-bio-text { white-space: pre-line; color: #262626; }
+
+        /* ===== DASHBOARD BANNER ===== */
+        .ig-dashboard-banner { margin: 0 16px 14px; padding: 10px 14px; background: #fafafa; border-radius: 8px; font-size: 14px; border: 1px solid #efefef; }
+        .ig-dashboard-banner strong { display: block; font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+        .ig-dashboard-banner span { color: #8e8e8e; font-size: 13px; }
+
+        /* ===== ACTION BUTTONS ===== */
+        .ig-action-buttons { display: flex; gap: 8px; padding: 0 16px 16px; }
+        .ig-action-buttons button { flex: 1; padding: 7px 0; border: none; border-radius: 8px; background: #efefef; font-weight: 600; font-size: 14px; cursor: pointer; color: #000; }
+
+        /* ===== HIGHLIGHTS ===== */
+        .ig-highlights-container { display: flex; gap: 18px; padding: 0 16px 16px; overflow-x: auto; scrollbar-width: none; }
+        .ig-highlights-container::-webkit-scrollbar { display: none; }
+        .ig-highlight { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+        .ig-highlight-img { width: 64px; height: 64px; border-radius: 50%; border: 1px solid #dbdbdb; padding: 3px; display: flex; align-items: center; justify-content: center; }
+        .ig-highlight-img img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .ig-highlight-img.new-hl { font-size: 24px; }
+
+        /* ===== TABS + GRID ===== */
+        .ig-tabs-container { display: flex; border-top: 1px solid #efefef; border-bottom: 1px solid #efefef; }
+        .ig-tab { flex: 1; text-align: center; padding: 12px 0; color: #8e8e8e; font-size: 20px; cursor: pointer; }
+        .ig-tab.active { color: #000; border-top: 2px solid #000; }
+        .ig-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        .ig-photo-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; }
+
+        /* ===== BOTTOM NAV ===== */
+        .ig-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; border-top: 1px solid #dbdbdb; display: flex; justify-content: space-around; align-items: center; padding: 10px 0 12px; z-index: 9999; }
+        .ig-bottom-nav i { font-size: 24px; color: #000; cursor: pointer; }
+        .ig-nav-profile { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid #000; cursor: pointer; }
+
+        /* ===== SEARCH / EXPLORE ===== */
+        .ig-explore-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding-top: 2px; }
+        .ig-explore-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; }
+
+        /* ===== FOLLOW LIST MODAL — OPENS FROM TOP ===== */
+        #followListModal {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 99999;
+            background: #fff;
+            display: none;
         }
-        .ig-explore-grid img { 
-            width: 100%; 
-            aspect-ratio: 1/1; 
-            object-fit: cover; 
-            cursor: pointer;
+        #followListModal.open { display: flex; flex-direction: column; }
+        .follow-sheet {
+            background: #fff;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            animation: fFadeIn 0.15s ease;
         }
+        @keyframes fFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .follow-sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #efefef; flex-shrink: 0; }
+        .follow-sheet-header .ftitle { font-size: 16px; font-weight: 700; color: #000; flex: 1; text-align: center; }
+        .follow-sheet-header .fclose { background: none; border: none; font-size: 24px; cursor: pointer; color: #000; width: 28px; line-height: 1; }
+        .follow-tabs { display: flex; gap: 8px; padding: 10px 16px 6px; flex-shrink: 0; border-bottom: 1px solid #efefef; }
+        .follow-tab { padding: 6px 20px; border: none; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+        .follow-tab.active { background: #000; color: #fff; }
+        .follow-tab.inactive { background: #efefef; color: #000; }
+        .follow-list-body { overflow-y: auto; flex: 1; padding-bottom: 24px; }
+        .follow-user-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.15s; }
+        .follow-user-row:last-child { border-bottom: none; }
+        .follow-user-row:active { background: #f5f5f5; }
+        .follow-user-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg,#f09433,#dc2743,#bc1888); color: #fff; font-size: 19px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .follow-user-info { flex: 1; }
+        .follow-user-info .uname { font-size: 14px; font-weight: 600; color: #000; }
+        .follow-user-info .rname { font-size: 13px; color: #8e8e8e; margin-top: 1px; }
+        .follow-empty { text-align: center; padding: 80px 16px; color: #8e8e8e; font-size: 14px; line-height: 1.6; }
+        .follow-empty i { font-size: 44px; display: block; margin-bottom: 14px; }
     </style>
+
 </head>
 <body>
 
-<div id="ig-profile-section" style="padding-bottom: 60px;">
+<div id="ig-profile-section">
     <div class="ig-container">
+
+        <!-- TOP NAV -->
         <div class="ig-header-nav">
-            <i class="fas fa-plus" style="cursor: pointer;" id="top-left-icon"></i>
-            <div class="ig-username" id="top-title">ankitburdakk <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i></div>
-            <i class="fas fa-bars" style="cursor: pointer;" id="top-right-icon"></i>
+            <i class="fas fa-plus" style="cursor:pointer;font-size:22px;" id="top-left-icon"></i>
+            <div class="ig-username" id="top-title">
+                ankitburdakk <i class="fas fa-chevron-down" style="font-size:12px;"></i>
+            </div>
+            <i class="fas fa-bars" style="cursor:pointer;font-size:22px;" id="top-right-icon"></i>
         </div>
 
-        <div id="search-content-wrap" style="display: none;">
-            <div style="padding: 10px 16px; border-bottom: 1px solid #efefef;">
-                <div style="background: #efefef; border-radius: 10px; display: flex; align-items: center; padding: 8px 12px;">
-                    <i class="fas fa-search" style="color: #8e8e8e; font-size: 14px;"></i>
-                    <input type="text" id="ig-search-input" placeholder="Search prompts or users..." style="border: none; background: transparent; outline: none; margin-left: 10px; width: 100%; font-size: 14px; color: #000;">
+        <!-- SEARCH / EXPLORE VIEW -->
+        <div id="search-content-wrap" style="display:none;">
+            <div style="padding:10px 16px; border-bottom:1px solid #efefef;">
+                <div style="background:#efefef; border-radius:10px; display:flex; align-items:center; padding:8px 12px;">
+                    <i class="fas fa-search" style="color:#8e8e8e; font-size:14px;"></i>
+                    <input type="text" id="ig-search-input" placeholder="Search users..." style="border:none; background:transparent; outline:none; margin-left:10px; width:100%; font-size:14px; color:#000;">
                 </div>
             </div>
-            <div class="ig-explore-grid">
-                </div>
+            <div class="ig-explore-grid"></div>
         </div>
 
+        <!-- PROFILE VIEW -->
         <div id="profile-content-wrap">
+
+            <!-- AVATAR + STATS -->
             <div class="ig-profile-info">
                 <div class="ig-avatar-box">
-                    <img src="https://via.placeholder.com/150" alt="Avatar" id="main-profile-pic">
+                    <img src="" alt="Avatar" id="main-profile-pic">
                     <div class="ig-add-story"><i class="fas fa-plus"></i></div>
                 </div>
                 <div class="ig-stats-box">
-                    <div class="ig-stat"><strong id="igRealPosts">0</strong><span>posts</span></div>
-                    <div class="ig-stat"><strong id="igRealFollowers">0</strong><span>followers</span></div>
-                    <div class="ig-stat"><strong id="igRealFollowing">0</strong><span>following</span></div>
+                    <div class="ig-stat" id="stat-posts">
+                        <strong id="igRealPosts">0</strong>
+                        <span>posts</span>
+                    </div>
+                    <div class="ig-stat" id="stat-followers" onclick="openFollowModal('followers')">
+                        <strong id="igRealFollowers">0</strong>
+                        <span>followers</span>
+                    </div>
+                    <div class="ig-stat" id="stat-following" onclick="openFollowModal('following')">
+                        <strong id="igRealFollowing">0</strong>
+                        <span>following</span>
+                    </div>
                 </div>
             </div>
 
+            <!-- BIO -->
             <div class="ig-bio-section">
                 <div class="ig-name" id="main-profile-name">Ankit Burdak</div>
-                <div class="ig-category">Reel creator</div>
-                <div class="ig-bio-text">Welcome to my AI Prompt Studio 🚀<br>DM for collabs</div>
+                <div class="ig-category" id="main-profile-category">Reel creator</div>
+                <div class="ig-bio-text">Welcome to my AI Prompt Studio<br>DM for collabs</div>
             </div>
 
+            <!-- PRO DASHBOARD (only for own profile) -->
             <div class="ig-dashboard-banner" id="pro-dashboard">
                 <strong>Professional dashboard</strong>
                 <span>295 views in the last 30 days.</span>
             </div>
 
+            <!-- ACTION BUTTONS -->
             <div class="ig-action-buttons" id="dynamic-action-buttons">
-    <button>Edit profile</button>
-    <button>Share profile</button>
-</div>
+                <button>Edit profile</button>
+                <button>Share profile</button>
+            </div>
 
+            <!-- HIGHLIGHTS -->
             <div class="ig-highlights-container">
                 <div class="ig-highlight">
                     <div class="ig-highlight-img new-hl"><i class="fas fa-plus"></i></div>
                     <span>New</span>
                 </div>
                 <div class="ig-highlight">
-                    <div class="ig-highlight-img"><img src="https://via.placeholder.com/100?text=HL1"></div>
+                    <div class="ig-highlight-img"><img src="" alt="Highlight"></div>
                     <span>Highlights</span>
                 </div>
             </div>
 
+            <!-- TABS -->
             <div class="ig-tabs-container">
                 <div class="ig-tab active"><i class="fas fa-th"></i></div>
                 <div class="ig-tab"><i class="far fa-play-circle"></i></div>
                 <div class="ig-tab"><i class="far fa-user-circle"></i></div>
             </div>
 
+            <!-- PHOTO GRID -->
             <div class="ig-photo-grid" id="profile-photo-grid">
                 <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400">
                 <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400">
                 <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400">
             </div>
         </div>
-    </div>
 
+    </div><!-- /.ig-container -->
+
+    <!-- BOTTOM NAV -->
     <div class="ig-bottom-nav" id="bottom-nav-bar">
         <i class="fas fa-home" onclick="window.location.href='index.html'"></i>
-        <i class="fas fa-search" id="ig-search-btn" style="cursor: pointer;"></i> 
+        <i class="fas fa-search" id="ig-search-btn" style="cursor:pointer;"></i>
         <i class="far fa-play-circle"></i>
         <i class="far fa-plus-square"></i>
         <i class="far fa-paper-plane"></i>
-        <img src="https://via.placeholder.com/150" alt="Profile" class="ig-nav-profile" id="ig-profile-btn" style="cursor: pointer;">
+        <img src="" alt="Profile" class="ig-nav-profile" id="ig-profile-btn">
+    </div>
+</div>
+
+<!-- ===== FOLLOW LIST MODAL (TOP) ===== -->
+<div id="followListModal" onclick="if(event.target===this)closeFollowModal()">
+    <div class="follow-sheet">
+        <div class="follow-sheet-header">
+            <div style="width:28px;"></div>
+            <span class="ftitle" id="followModalTitle">Followers</span>
+            <button class="fclose" onclick="closeFollowModal()">&times;</button>
+        </div>
+        <div class="follow-tabs">
+            <button class="follow-tab active" id="ftab-followers" onclick="switchFollowTab('followers')">Followers</button>
+            <button class="follow-tab inactive" id="ftab-following" onclick="switchFollowTab('following')">Following</button>
+        </div>
+        <div class="follow-list-body" id="followModalBody">
+            <div class="follow-empty">
+                <i class="fas fa-circle-notch fa-spin" style="color:#0095f6;"></i>
+                Loading...
+            </div>
+        </div>
     </div>
 </div>
 
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js"></script>
 
-
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
+    // ============================================================
+    //  GLOBAL STATE
+    // ============================================================
+    let _activeProfileUid = null;
+    let _userCacheMap = {};
+    
+    let _refFollowersCount = null;
+    let _refFollowingCount = null;
+    let _refPosts = null;
+    let _refFollowButton = null;
+    
+    // ============================================================
+    //  FOLLOW MODAL — open / close / tab switch
+    // ============================================================
+    window.openFollowModal = function(type) {
+        if (!_activeProfileUid) return;
+        document.getElementById('followModalTitle').textContent = type === 'followers' ? 'Followers' : 'Following';
+        document.getElementById('ftab-followers').className = 'follow-tab ' + (type === 'followers' ? 'active' : 'inactive');
+        document.getElementById('ftab-following').className = 'follow-tab ' + (type === 'following' ? 'active' : 'inactive');
+        document.getElementById('followListModal').classList.add('open');
+        _loadFollowList(_activeProfileUid, type);
+    };
+    
+    window.switchFollowTab = function(type) {
+        openFollowModal(type);
+    };
+    
+    window.closeFollowModal = function() {
+        document.getElementById('followListModal').classList.remove('open');
+    };
+    
+    window.goToUserProfileFromModal = function(uid, name) {
+        closeFollowModal();
+        setTimeout(function() {
+            if (typeof window.openUserProfile === 'function') {
+                window.openUserProfile(uid, name);
+            } else {
+                alert('Error: profile function load nahi hua. Page refresh karo.');
+            }
+        }, 150);
+    };
+    
+    window._loadFollowList = async function(uid, type) {
+        const body = document.getElementById('followModalBody');
+        body.innerHTML = '<div class="follow-empty"><i class="fas fa-circle-notch fa-spin" style="color:#0095f6;font-size:32px;"></i><br><br>Loading...</div>';
+        try {
+            const snap = await firebase.database().ref('users/' + uid + '/' + type).once('value');
+            const data = snap.val() || {};
+            const uids = Object.keys(data);
+            if (uids.length === 0) {
+                const msg = type === 'followers'
+                    ? 'Abhi tak koi follower nahi hai.'
+                    : 'Tumne abhi tak kisi ko follow nahi kiya.';
+                body.innerHTML = '<div class="follow-empty"><i class="far fa-user"></i>' + msg + '</div>';
+                return;
+            }
+            let html = '';
+            for (const tUid of uids) {
+                let name = 'User';
+                let username = 'user';
+                try {
+                    const uSnap = await firebase.database().ref('users/' + tUid).once('value');
+                    const uData = uSnap.val();
+                    if (uData && (uData.displayName || uData.name)) {
+                        name = uData.displayName || uData.name;
+                        username = uData.username || (uData.email ? uData.email.split('@')[0] : name.replace(/\s+/g, '').toLowerCase());
+                    }
+                } catch (e) {}
+                if (name === 'User' && _userCacheMap[tUid]) {
+                    const c = _userCacheMap[tUid];
+                    name = c.name || 'User';
+                    username = c.email ? c.email.split('@')[0] : name.replace(/\s+/g, '').toLowerCase();
+                }
+                const initial = name.charAt(0).toUpperCase();
+                html += '<div class="follow-user-row" onclick=\'goToUserProfileFromModal(' + JSON.stringify(tUid) + ',' + JSON.stringify(name) + ')\'>'
+                    + '<div class="follow-user-avatar">' + initial + '</div>'
+                    + '<div class="follow-user-info">'
+                    + '<div class="uname">' + username + '</div>'
+                    + '<div class="rname">' + name + '</div>'
+                    + '</div></div>';
+            }
+            body.innerHTML = html;
+        } catch (e) {
+            console.error('loadFollowList:', e);
+            body.innerHTML = '<div class="follow-empty" style="color:#ed4956;"><i class="fas fa-exclamation-circle"></i>Error loading. Try again.</div>';
+        }
+    };
+    
+    // ============================================================
+    //  REAL-TIME PROFILE STATS (isolated per viewed profile)
+    // ============================================================
+    function clearProfileStatsListeners() {
+        if (_refFollowersCount) {
+            _refFollowersCount.off();
+            _refFollowersCount = null;
+        }
+        if (_refFollowingCount) {
+            _refFollowingCount.off();
+            _refFollowingCount = null;
+        }
+    }
+    
+    function attachProfileStatsListener(uid) {
+        if (!uid) return;
+        clearProfileStatsListeners();
+        _activeProfileUid = uid;
+    
+        _refFollowersCount = firebase.database().ref('users/' + uid + '/stats/followersCount');
+        _refFollowersCount.on('value', function(snap) {
+            const el = document.getElementById('igRealFollowers');
+            if (el) el.textContent = snap.val() || 0;
+        });
+    
+        _refFollowingCount = firebase.database().ref('users/' + uid + '/stats/followingCount');
+        _refFollowingCount.on('value', function(snap) {
+            const el = document.getElementById('igRealFollowing');
+            if (el) el.textContent = snap.val() || 0;
+        });
+    }
+    window.attachProfileStatsListener = attachProfileStatsListener;
+    
+    function clearPostsListener() {
+        if (_refPosts) {
+            _refPosts.off();
+            _refPosts = null;
+        }
+    }
+    
+    function attachPostsListener(uid) {
+        clearPostsListener();
+        _refPosts = firebase.database().ref('submitted_prompts');
+        _refPosts.on('value', function(snap) {
+            let cnt = 0;
+            let photosHtml = '';
+
+            // 🔥 FIX: Modal ko data dene ke liye global array setup karo
+            if (typeof window.prompts === 'undefined') {
+                window.prompts = [];
+            }
+
+            if (snap.exists()) {
+                let allPosts = [];
+                snap.forEach(function(child) {
+                    if (child.val().authorId === uid) {
+                        cnt++;
+                        allPosts.unshift({ key: child.key, data: child.val() }); 
+
+                        // 🔥 FIX: Popup (Modal) ko photo ka data yahan se milega
+                        let existing = window.prompts.find(p => p.id === child.key);
+                        if (!existing) {
+                            window.prompts.push({
+                                id: child.key,
+                                images: [child.val().imageUrl],
+                                author: child.val().authorName || (child.val().authorEmail ? child.val().authorEmail.split('@')[0] : 'User'),
+                                ai: child.val().aiTool || 'AI Image',
+                                prompts: [child.val().promptText],
+                                likes: child.val().likeCount || 0
+                            });
+                        } else {
+                            existing.likes = child.val().likeCount || 0;
+                        }
+                    }
+                });
+
+                allPosts.forEach(post => {
+                    let safeUrl = post.data.imageUrl ? post.data.imageUrl.replace(/"/g, '&quot;') : '';
+                    // Click lagaya: "openModal('id')"
+                    photosHtml += `<img src="${safeUrl}" onclick="openModal('${post.key}')" alt="Post">`;
+                });
+            }
+
+            const el = document.getElementById('igRealPosts');
+            if (el) el.textContent = cnt;
+
+            const grid = document.getElementById('profile-photo-grid');
+            if (grid) {
+                if (cnt === 0) {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px 20px; color: #8e8e8e; font-size: 14px;"><i class="fas fa-camera" style="font-size: 30px; margin-bottom: 10px;"></i><br>Abhi tak koi prompt upload nahi kiya hai.</div>';
+                } else {
+                    grid.innerHTML = photosHtml;
+                }
+            }
+        });
+    }
+    
+    function clearFollowButtonListener() {
+        if (_refFollowButton) {
+            _refFollowButton.off();
+            _refFollowButton = null;
+        }
+    }
+    
+    function attachFollowButtonListener(myUid, targetUid) {
+        clearFollowButtonListener();
+        _refFollowButton = firebase.database().ref('users/' + myUid + '/following/' + targetUid);
+        _refFollowButton.on('value', function(snap) {
+            renderFollowButton(targetUid, snap.exists());
+        });
+    }
+    
+    function clearAllProfileListeners() {
+        clearProfileStatsListeners();
+        clearPostsListener();
+        clearFollowButtonListener();
+    }
+    
+    // ============================================================
+    //  FOLLOW / UNFOLLOW
+    // ============================================================
+    window.renderFollowButton = function(targetId, isFollowing) {
+        const c = document.getElementById('dynamic-action-buttons');
+        if (!c) return;
+        if (isFollowing) {
+            c.innerHTML =
+                '<button type="button" data-follow-target="' + targetId + '" data-follow-action="show-unfollow"'
+                + ' style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">'
+                + 'Following <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>'
+                + '<button type="button" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
+        } else {
+            c.innerHTML =
+                '<button type="button" data-follow-target="' + targetId + '" data-follow-action="follow"'
+                + ' style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#0095f6;font-weight:600;font-size:14px;cursor:pointer;color:#fff;">Follow</button>'
+                + '<button type="button" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
+        }
+    };
+    
+    function renderUnfollowButton(targetId) {
+        const c = document.getElementById('dynamic-action-buttons');
+        if (!c) return;
+        c.innerHTML =
+            '<button type="button" data-follow-target="' + targetId + '" data-follow-action="unfollow"'
+            + ' style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#ed4956;">Unfollow</button>'
+            + '<button type="button" data-follow-target="' + targetId + '" data-follow-action="show-following"'
+            + ' style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Cancel</button>';
+    }
+    
+    window.toggleFollow = function(targetUserId, isFollowing) {
+        const me = firebase.auth().currentUser;
+        if (!me || !targetUserId || targetUserId === me.uid) return;
+    
+        const myUid = me.uid;
+        const myFollowingRef = firebase.database().ref('users/' + myUid + '/following/' + targetUserId);
+        const theirFollowerRef = firebase.database().ref('users/' + targetUserId + '/followers/' + myUid);
+        const myFollowingCountRef = firebase.database().ref('users/' + myUid + '/stats/followingCount');
+        const theirFollowersCountRef = firebase.database().ref('users/' + targetUserId + '/stats/followersCount');
+        
+        // Notification ka path
+        const targetNotifRef = firebase.database().ref('users/' + targetUserId + '/notifications').push();
+    
+        renderFollowButton(targetUserId, !isFollowing);
+        const btn = document.querySelector('[data-follow-target="' + targetUserId + '"]');
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    
+        let promise;
+        if (isFollowing) {
+            promise = Promise.all([
+                myFollowingRef.remove(),
+                theirFollowerRef.remove(),
+                myFollowingCountRef.transaction(function(v) { return Math.max((v || 1) - 1, 0); }),
+                theirFollowersCountRef.transaction(function(v) { return Math.max((v || 1) - 1, 0); })
+            ]);
+        } else {
+            const ts = firebase.database.ServerValue.TIMESTAMP;
+            promise = Promise.all([
+                myFollowingRef.set({ createdAt: ts }),
+                theirFollowerRef.set({ createdAt: ts }),
+                myFollowingCountRef.transaction(function(v) { return (v || 0) + 1; }),
+                theirFollowersCountRef.transaction(function(v) { return (v || 0) + 1; }),
+                // 🔥 NAYA: NOTIFICATION ENTRY 🔥
+                targetNotifRef.set({
+                    type: 'follow',
+                    fromUid: myUid,
+                    fromName: me.displayName || (me.email ? me.email.split('@')[0] : 'User'),
+                    timestamp: ts,
+                    read: false
+                })
+            ]);
+        }
+    
+        promise.catch(function(err) {
+            console.error('toggleFollow error:', err);
+            renderFollowButton(targetUserId, isFollowing);
+        }).finally(function() {
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        });
+    };
+    
+    // ============================================================
+    //  MAIN SCRIPT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+    
         const searchInput = document.getElementById('ig-search-input');
         const exploreGrid = document.querySelector('.ig-explore-grid');
-        const bottomNav = document.getElementById('bottom-nav-bar') || document.querySelector('.ig-bottom-nav');
+        const bottomNav = document.getElementById('bottom-nav-bar');
         const proDashboard = document.getElementById('pro-dashboard');
         const topTitle = document.getElementById('top-title');
         const mainProfileName = document.getElementById('main-profile-name');
         const topLeftIcon = document.getElementById('top-left-icon');
         const topRightIcon = document.getElementById('top-right-icon');
-        let btnContainer = document.getElementById('dynamic-action-buttons');
-
-        // 🔥 LISTENERS TRACKER
-        let currentStatsFollowersRef = null;
-        let currentStatsFollowingRef = null;
-        let currentStatsPostsRef = null;
-        let currentFollowButtonRef = null;
-
-        let searchResultsList = document.getElementById('ig-search-results-list');
-        if (!searchResultsList && exploreGrid) {
-            searchResultsList = document.createElement('div');
-            searchResultsList.id = 'ig-search-results-list';
-            searchResultsList.style.display = 'none';
-            searchResultsList.style.padding = '0 16px';
-            exploreGrid.parentNode.insertBefore(searchResultsList, exploreGrid.nextSibling);
+    
+        let searchResultsList = document.createElement('div');
+        searchResultsList.id = 'ig-search-results-list';
+        searchResultsList.style.cssText = 'display:none; padding:0 16px;';
+        if (exploreGrid) exploreGrid.parentNode.insertBefore(searchResultsList, exploreGrid.nextSibling);
+    
+        function esc(v) {
+            return String(v || '').replace(/[&<>"']/g, function(c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
         }
-
-        let userCacheMap = {};
-        firebase.database().ref('submitted_prompts').on('value', snap => {
-            if (snap.exists()) {
-                snap.forEach(child => {
-                    const d = child.val();
-                    if (d.authorId) {
-                        userCacheMap[d.authorId] = {
-                            name: d.authorName || 'User',
-                            email: d.authorEmail || ''
-                        };
-                    }
-                });
-            }
+    
+        firebase.database().ref('submitted_prompts').on('value', function(snap) {
+            if (!snap.exists()) return;
+            snap.forEach(function(child) {
+                const d = child.val();
+                if (d.authorId) {
+                    _userCacheMap[d.authorId] = { name: d.authorName || 'User', email: d.authorEmail || '' };
+                }
+            });
         });
-
-        function clearActiveListeners() {
-            if (currentStatsFollowersRef) currentStatsFollowersRef.off();
-            if (currentStatsFollowingRef) currentStatsFollowingRef.off();
-            if (currentStatsPostsRef) currentStatsPostsRef.off();
-            if (currentFollowButtonRef) currentFollowButtonRef.off();
-        }
-
-        function attachProfileStatsListener(uid) {
-            clearActiveListeners();
-
-            currentStatsFollowersRef = firebase.database().ref('users/' + uid + '/followers');
-            currentStatsFollowersRef.on('value', (snap) => {
-                const countEl = document.getElementById('igRealFollowers');
-                if (countEl) countEl.innerText = snap.exists() ? snap.numChildren() : 0;
-            });
-
-            currentStatsFollowingRef = firebase.database().ref('users/' + uid + '/following');
-            currentStatsFollowingRef.on('value', (snap) => {
-                const countEl = document.getElementById('igRealFollowing');
-                if (countEl) countEl.innerText = snap.exists() ? snap.numChildren() : 0;
-            });
-
-            currentStatsPostsRef = firebase.database().ref('submitted_prompts');
-            currentStatsPostsRef.on('value', (snap) => {
-                let count = 0;
-                if (snap.exists()) {
-                    snap.forEach(child => {
-                        if (child.val().authorId === uid) count++;
-                    });
-                }
-                const countEl = document.getElementById('igRealPosts');
-                if (countEl) countEl.innerText = count;
-            });
-        }
-
-        function loadExploreGridPhotos() {
+    
+        function loadExplore() {
             if (!exploreGrid) return;
-            firebase.database().ref('submitted_prompts').limitToLast(15).once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    exploreGrid.innerHTML = '';
-                    snapshot.forEach((child) => {
-                        const data = child.val();
-                        exploreGrid.innerHTML += `
-                            <img src="${data.imageUrl}" onclick="openUserProfile('${data.authorId}', '${data.authorName || 'User'}')" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer;">
-                        `;
-                    });
-                }
+            firebase.database().ref('submitted_prompts').limitToLast(15).once('value', function(snap) {
+                if (!snap.exists()) return;
+                exploreGrid.innerHTML = '';
+                snap.forEach(function(child) {
+                    const d = child.val();
+                    const url = d.imageUrl || 'https://via.placeholder.com/400?text=AI';
+                    exploreGrid.innerHTML += '<img src="' + esc(url) + '" onclick=\'openUserProfile(' + JSON.stringify(d.authorId || '') + ',' + JSON.stringify(d.authorName || 'User') + ')\' style="width:100%;aspect-ratio:1/1;object-fit:cover;cursor:pointer;">';
+                });
             });
         }
-
+    
         if (document.getElementById('ig-search-btn')) {
             document.getElementById('ig-search-btn').addEventListener('click', function() {
-                document.getElementById('profile-content-wrap').style.display = 'none'; 
-                document.getElementById('search-content-wrap').style.display = 'block'; 
-                
-                if (topTitle) topTitle.innerHTML = 'Explore'; 
-                document.getElementById('ig-search-btn').style.color = '#000'; 
+                document.getElementById('profile-content-wrap').style.display = 'none';
+                document.getElementById('search-content-wrap').style.display = 'block';
+                if (topTitle) topTitle.innerHTML = 'Explore';
                 if (topLeftIcon) topLeftIcon.style.display = 'none';
                 if (topRightIcon) topRightIcon.style.display = 'none';
-
-                loadExploreGridPhotos();
-                exploreGrid.style.display = 'grid';
-                if (searchResultsList) searchResultsList.style.display = 'none';
-                if (searchInput) searchInput.value = ''; 
+                loadExplore();
+                if (exploreGrid) exploreGrid.style.display = 'grid';
+                searchResultsList.style.display = 'none';
+                if (searchInput) searchInput.value = '';
             });
         }
-
-        if (searchInput && exploreGrid) {
-            searchInput.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase().trim();
-                
-                if (searchTerm === '') {
+    
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const q = e.target.value.toLowerCase().trim();
+                if (!q) {
                     exploreGrid.style.display = 'grid';
                     searchResultsList.style.display = 'none';
                     return;
                 }
-
                 exploreGrid.style.display = 'none';
                 searchResultsList.style.display = 'block';
-                searchResultsList.innerHTML = ''; 
-                
-                let matchFound = false;
-                let uniqueUsers = new Set(); 
-
-                Object.keys(userCacheMap).forEach(uid => {
-                    const user = userCacheMap[uid];
-                    const uName = user.name.toLowerCase();
-                    const uEmail = user.email.toLowerCase();
-
-                    if (uName.includes(searchTerm) || uEmail.includes(searchTerm)) {
-                        if (!uniqueUsers.has(uid)) {
-                            uniqueUsers.add(uid);
-                            matchFound = true;
-                            
-                            const username = uEmail ? uEmail.split('@')[0].toLowerCase() : uName.replace(/\s+/g, '');
-
-                            searchResultsList.innerHTML += `
-                                <div onclick="openUserProfile('${uid}', '${user.name}')" style="display: flex; align-items: center; padding: 10px 0; gap: 14px; cursor: pointer;">
-                                    <div style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid #dbdbdb; padding: 2px; flex-shrink: 0;">
-                                        <img src="https://via.placeholder.com/150" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                    </div>
-                                    <div style="flex: 1; border-bottom: 1px solid #efefef; padding-bottom: 10px; display: flex; flex-direction: column; justify-content: center;">
-                                        <div style="font-size: 14px; font-weight: 600; color: #000;">${username}</div>
-                                        <div style="font-size: 13px; color: #8e8e8e;">${user.name}</div>
-                                    </div>
-                                </div>
-                            `;
-                        }
+                searchResultsList.innerHTML = '';
+                let found = false;
+                const seen = new Set();
+                Object.keys(_userCacheMap).forEach(function(uid) {
+                    const u = _userCacheMap[uid];
+                    if ((u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) && !seen.has(uid)) {
+                        seen.add(uid);
+                        found = true;
+                        const uname = u.email ? u.email.split('@')[0] : u.name.replace(/\s+/g, '').toLowerCase();
+                        searchResultsList.innerHTML += '<div onclick=\'openUserProfile(' + JSON.stringify(uid) + ',' + JSON.stringify(u.name) + ')\' style="display:flex;align-items:center;padding:10px 0;gap:14px;cursor:pointer;">'
+                            + '<div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+                            + esc(u.name.charAt(0).toUpperCase()) + '</div>'
+                            + '<div style="flex:1;border-bottom:1px solid #efefef;padding-bottom:10px;">'
+                            + '<div style="font-size:14px;font-weight:600;color:#000;">' + esc(uname) + '</div>'
+                            + '<div style="font-size:13px;color:#8e8e8e;">' + esc(u.name) + '</div>'
+                            + '</div></div>';
                     }
                 });
-
-                if (!matchFound) {
-                    searchResultsList.innerHTML = `<div style="text-align: center; color: #8e8e8e; padding: 40px 10px; font-size: 14px;">Bhai, is ID se koi user nahi mila.</div>`;
+                if (!found) {
+                    searchResultsList.innerHTML = '<div style="text-align:center;color:#8e8e8e;padding:40px;font-size:14px;">Koi user nahi mila.</div>';
                 }
             });
         }
-
-        // 🔥 NAYA: Button render karne ka alag function taaki turant update ho sake
-        window.renderFollowButton = function(targetId, isFollowing) {
-            let container = document.getElementById('dynamic-action-buttons') || document.querySelector('.ig-action-buttons');
-            if (!container) return;
-
-            if (isFollowing) {
-                container.innerHTML = `
-                    <button onclick="toggleFollow('${targetId}', true)" style="background: #efefef; color: #000; border: none; padding: 6px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-right: 5px;">Following <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>
-                    <button style="background: #efefef; color: #000; border: none; padding: 6px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Message</button>
-                `;
-            } else {
-                container.innerHTML = `
-                    <button onclick="toggleFollow('${targetId}', false)" style="background: #0095f6; color: white; border: none; padding: 6px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-right: 5px;">Follow</button>
-                    <button style="background: #efefef; color: #000; border: none; padding: 6px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Message</button>
-                `;
-            }
-        };
-
-        window.openUserProfile = function(authorId, authorName) {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) { alert("Pehle login kar bhai!"); return; }
-
-            attachProfileStatsListener(authorId);
-
-            if (authorId === currentUser.uid) {
-                document.getElementById('ig-profile-btn').click(); 
+    
+        document.getElementById('dynamic-action-buttons').addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-follow-target]');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const tid = btn.dataset.followTarget;
+            const act = btn.dataset.followAction;
+            if (act === 'show-unfollow') {
+                renderUnfollowButton(tid);
                 return;
-            } 
-
-            document.getElementById('search-content-wrap').style.display = 'none'; 
+            }
+            if (act === 'show-following') {
+                renderFollowButton(tid, true);
+                return;
+            }
+            toggleFollow(tid, act === 'unfollow');
+        });
+    
+        window.openUserProfile = function(authorId, authorName) {
+            const me = firebase.auth().currentUser;
+            if (!me) {
+                alert('Pehle login karo!');
+                return;
+            }
+            if (authorId === me.uid) {
+                document.getElementById('ig-profile-btn').click();
+                return;
+            }
+    
+            document.getElementById('search-content-wrap').style.display = 'none';
             document.getElementById('profile-content-wrap').style.display = 'block';
-
-            if (bottomNav) bottomNav.style.display = 'none'; 
+            if (bottomNav) bottomNav.style.display = 'none';
             if (proDashboard) proDashboard.style.display = 'none';
             if (topLeftIcon) topLeftIcon.style.display = 'none';
             if (topRightIcon) topRightIcon.style.display = 'none';
-            
-            const cleanUsername = authorName ? authorName.replace(/\s+/g, '').toLowerCase() : 'user';
-            if (topTitle) topTitle.innerHTML = `<i class="fas fa-arrow-left" onclick="goBackToSearch()" style="margin-right: 15px; cursor: pointer;"></i> ${cleanUsername}`; 
-            if (mainProfileName) mainProfileName.innerHTML = authorName;
-
-            // Pehle Default button daal do
-            renderFollowButton(authorId, false);
-
-            // Firebase check karega original state ke liye
-            currentFollowButtonRef = firebase.database().ref('users/' + currentUser.uid + '/following/' + authorId);
-            currentFollowButtonRef.on('value', (snapshot) => {
-                renderFollowButton(authorId, snapshot.exists());
-            });
-        };
-
-        window.goBackToSearch = function() {
-            clearActiveListeners();
-            document.getElementById('profile-content-wrap').style.display = 'none'; 
-            document.getElementById('search-content-wrap').style.display = 'block'; 
-            if (topTitle) topTitle.innerHTML = 'Explore'; 
-            if (bottomNav) bottomNav.style.display = 'flex'; 
-        };
-
-        if (document.getElementById('ig-profile-btn')) {
-            document.getElementById('ig-profile-btn').addEventListener('click', function() {
-                const currentUser = firebase.auth().currentUser;
-                
-                document.getElementById('search-content-wrap').style.display = 'none'; 
-                document.getElementById('profile-content-wrap').style.display = 'block'; 
-                
-                if (topTitle) topTitle.innerHTML = 'ankitburdakk <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>'; 
-                if (mainProfileName) mainProfileName.innerHTML = 'Ankit Burdak'; 
-                if (topLeftIcon) topLeftIcon.style.display = 'block';
-                if (topRightIcon) topRightIcon.style.display = 'block';
-                if (proDashboard) proDashboard.style.display = 'block';
-                if (bottomNav) bottomNav.style.display = 'flex'; 
-
-                if (currentUser) {
-                    attachProfileStatsListener(currentUser.uid);
-                }
-
-                let container = document.getElementById('dynamic-action-buttons') || document.querySelector('.ig-action-buttons');
-                if (container) {
-                    container.innerHTML = `
-                        <button style="background: #efefef; color: #000; border: none; padding: 6px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-right: 5px;">Edit profile</button>
-                        <button style="background: #efefef; color: #000; border: none; padding: 6px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Share profile</button>
-                    `;
-                }
-            });
+    
+            let cleanName = 'user';
+        if (_userCacheMap[authorId] && _userCacheMap[authorId].email) {
+            cleanName = _userCacheMap[authorId].email.split('@')[0].toLowerCase();
+        } else {
+            cleanName = (authorName || 'user').replace(/\s+/g, '').toLowerCase();
         }
-
-        // 🔥 1. STATS UPDATER (Firebase stats node se read karega)
-        window.attachProfileStatsListener = function(uid) {
-            // Followers count reader
-            firebase.database().ref('users/' + uid + '/stats/followersCount').on('value', (snap) => {
-                const count = snap.val() || 0;
-                console.log("Followers count updated to:", count);
-                const el = document.getElementById('igRealFollowers');
-                if (el) el.innerText = count;
-            });
-            
-            // Following count reader
-            firebase.database().ref('users/' + uid + '/stats/followingCount').on('value', (snap) => {
-                const count = snap.val() || 0;
-                console.log("Following count updated to:", count);
-                const el = document.getElementById('igRealFollowing');
-                if (el) el.innerText = count;
-            });
-        };
-
-        // 🔥 2. INSTANT FOLLOW / UNFOLLOW (Transaction increment fix)
-        window.toggleFollow = function(targetUserId, isFollowing) {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) return;
-
-            const myFollowingRef = firebase.database().ref('users/' + currentUser.uid + '/following/' + targetUserId);
-            const targetFollowerRef = firebase.database().ref('users/' + targetUserId + '/followers/' + currentUser.uid);
-
-            const myFollowingCountRef = firebase.database().ref('users/' + currentUser.uid + '/stats/followingCount');
-            const targetFollowersCountRef = firebase.database().ref('users/' + targetUserId + '/stats/followersCount');
-
-            if (isFollowing) {
-                // UNFOLLOW
-                myFollowingRef.remove();
-                targetFollowerRef.remove();
-                // Decrement (-1)
-                myFollowingCountRef.transaction(c => (c || 1) - 1);
-                targetFollowersCountRef.transaction(c => (c || 1) - 1);
-                renderFollowButton(targetUserId, false);
-            } else {
-                // FOLLOW
-                myFollowingRef.set(true);
-                targetFollowerRef.set(true);
-                // Increment (+1)
-                myFollowingCountRef.transaction(c => (c || 0) + 1);
-                targetFollowersCountRef.transaction(c => (c || 0) + 1);
-                renderFollowButton(targetUserId, true);
+            if (topTitle) {
+                topTitle.innerHTML = '<i class="fas fa-arrow-left" onclick="goBackToSearch()" style="margin-right:14px;cursor:pointer;"></i>' + esc(cleanName);
             }
+            if (mainProfileName) mainProfileName.textContent = authorName || 'User';
+    
+            attachProfileStatsListener(authorId);
+            attachPostsListener(authorId);
+            renderFollowButton(authorId, false);
+            attachFollowButtonListener(me.uid, authorId);
         };
-
-        firebase.auth().onAuthStateChanged(user => {
-            if (user && document.getElementById('profile-content-wrap').style.display !== 'none') {
-                const currentTitle = topTitle ? topTitle.innerText : '';
-                if (!currentTitle.includes('Explore') && currentTitle.trim().startsWith('ankitburdakk')) {
-                    attachProfileStatsListener(user.uid);
+    
+        window.goBackToSearch = function() {
+            clearAllProfileListeners();
+            document.getElementById('profile-content-wrap').style.display = 'none';
+            document.getElementById('search-content-wrap').style.display = 'block';
+            if (topTitle) topTitle.innerHTML = 'Explore';
+            if (bottomNav) bottomNav.style.display = 'flex';
+        };
+    
+        document.getElementById('ig-profile-btn').addEventListener('click', function() {
+            const me = firebase.auth().currentUser;
+            document.getElementById('search-content-wrap').style.display = 'none';
+            document.getElementById('profile-content-wrap').style.display = 'block';
+            if (topTitle) {
+                let myUname = me && me.email ? me.email.split('@')[0].toLowerCase() : 'ankitburdakk';
+                topTitle.innerHTML = myUname + ' <i class="fas fa-chevron-down" style="font-size:12px;margin-left:4px;cursor:pointer;"></i>';
+            }
+            if (mainProfileName) mainProfileName.textContent = 'Ankit Burdak';
+            if (topLeftIcon) topLeftIcon.style.display = 'block';
+            if (topRightIcon) topRightIcon.style.display = 'block';
+            if (proDashboard) proDashboard.style.display = 'block';
+            if (bottomNav) bottomNav.style.display = 'flex';
+            clearFollowButtonListener();
+            if (me) {
+                attachProfileStatsListener(me.uid);
+                attachPostsListener(me.uid);
+            }
+            const c = document.getElementById('dynamic-action-buttons');
+            if (c) {
+                c.innerHTML =
+                    '<button style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;margin-right:8px;">Edit profile</button>'
+                    + '<button style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Share profile</button>';
+            }
+        });
+    
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                attachProfileStatsListener(user.uid);
+                attachPostsListener(user.uid);
+                if (user.photoURL) {
+                    ['main-profile-pic', 'ig-profile-btn'].forEach(function(id) {
+                        const el = document.getElementById(id);
+                        if (el) el.src = user.photoURL;
+                    });
+                }
+                if (user.displayName) {
+                    const el = document.getElementById('main-profile-name');
+                    if (el) el.textContent = user.displayName;
+                    const tt = document.getElementById('top-title');
+                    if (tt) {
+                        let myUname = user.email ? user.email.split('@')[0].toLowerCase() : user.displayName.replace(/\s+/g, '').toLowerCase();
+                        tt.innerHTML = esc(myUname) + ' <i class="fas fa-chevron-down" style="font-size:12px;margin-left:4px;cursor:pointer;"></i>';
+                    }
                 }
             }
         });
+    
     });
-</script>
-
+    </script>
+<div class="modal-overlay" id="modalOverlay">
+    <div class="advanced-modal" id="modal">
+        <div class="modal-gallery">
+            <div class="gallery-controls">
+                <div class="image-counter" id="modalImageCounter" style="display: none;">1 / 4</div>
+                <button class="gallery-btn"><i class="far fa-heart"></i> <span id="modalLikeCount">0</span></button>
+                <button class="gallery-btn close-btn" id="modalCloseDirectBtn" onclick="document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow = '';">esc &nbsp;<i class="fas fa-times"></i></button>
+            </div>
+            <img id="modalMainImage" src="" alt="Prompt Image">
+            <div class="gallery-thumbnails" id="modalThumbnails" style="display: none;"></div>
+        </div>
+        <div class="modal-details">
+            <div class="details-header">
+                <div class="author-info">
+                    <div class="author-avatar" id="modalAuthorAvatar">U</div>
+                    <div>
+                        <div class="author-name" id="modalAuthorName">User</div>
+                        <div class="author-handle" id="modalAuthorHandle">@user</div>
+                    </div>
+                </div>
+                <div class="modal-ai-tag-new" id="modalAiTag"><i class="fas fa-robot"></i> AI Image</div>
+            </div>
+            <div class="prompts-list" id="modalPromptsList"></div>
+            <div class="details-actions">
+                <button class="action-btn outline-btn"><i class="fas fa-retweet"></i> Use as Prompt</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
