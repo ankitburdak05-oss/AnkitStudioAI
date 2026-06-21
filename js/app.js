@@ -1182,6 +1182,8 @@ window.submitComment = function(promptKey) {
 
     const authorName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
 
+    console.log('🔥 [COMMENT] Submitting comment on prompt:', promptKey, 'by user:', user.uid);
+
     firebase.database().ref('submitted_prompts/' + promptKey + '/comments').push({
         text: text,
         authorId: user.uid,
@@ -1190,12 +1192,19 @@ window.submitComment = function(promptKey) {
         timestamp: firebase.database.ServerValue.TIMESTAMP
     }).then(() => {
         input.value = '';
+        console.log('🔥 [COMMENT] Comment saved successfully!');
 
         // 🔥 NOTIFICATION: Prompt author ko notify karo
         firebase.database().ref('submitted_prompts/' + promptKey).once('value', snap => {
             const pData = snap.val();
+            console.log('🔥 [NOTIF] Prompt data:', pData ? { authorId: pData.authorId, title: pData.title } : 'NULL');
+            console.log('🔥 [NOTIF] Commenter UID:', user.uid, '| Prompt Author UID:', pData?.authorId);
+            
             if (pData && pData.authorId && pData.authorId !== user.uid) {
-                firebase.database().ref('users/' + pData.authorId + '/notifications').push({
+                console.log('🔥 [NOTIF] Sending notification to:', pData.authorId);
+                
+                const notifRef = firebase.database().ref('users/' + pData.authorId + '/notifications');
+                notifRef.push({
                     type: 'comment',
                     promptId: promptKey,
                     fromUid: user.uid,
@@ -1203,15 +1212,27 @@ window.submitComment = function(promptKey) {
                     commentText: text.substring(0, 60),
                     timestamp: firebase.database.ServerValue.TIMESTAMP,
                     read: false
+                }).then(() => {
+                    console.log('🔥 [NOTIF] ✅ Notification SENT successfully to:', pData.authorId);
+                }).catch(err => {
+                    console.error('🔥 [NOTIF] ❌ Notification FAILED to send:', err);
+                    console.error('🔥 [NOTIF] This is likely a Firebase Security Rules issue!');
+                    console.error('🔥 [NOTIF] Check: Firebase Console > Realtime Database > Rules');
                 });
+            } else if (pData && pData.authorId === user.uid) {
+                console.log('🔥 [NOTIF] ⚠️ Self-comment — no notification sent (same user)');
+            } else {
+                console.log('🔥 [NOTIF] ⚠️ No authorId found on prompt — cannot send notification');
             }
+        }).catch(err => {
+            console.error('🔥 [NOTIF] ❌ Failed to read prompt data:', err);
         });
 
         // 🔥 UPDATE COMMENT COUNT on the prompt
         firebase.database().ref('submitted_prompts/' + promptKey + '/commentCount').transaction(count => (count || 0) + 1);
 
     }).catch(err => {
-        console.error('Comment submit error:', err);
+        console.error('🔥 [COMMENT] Submit error:', err);
         alert('Comment post nahi hua. Try again!');
     }).finally(() => {
         if (sendBtn) {
@@ -1456,13 +1477,31 @@ window.toggleNotificationsPageView = function(enable) {
     }
 };
 
+// 🔥 NOTIFICATION LISTENER — with debug logging + duplicate protection
+let _notifListenerAttached = false;
+
 function listenForNotifications(uid) {
+    if (_notifListenerAttached) {
+        console.log('🔥 [NOTIF-LISTEN] Already attached, skipping duplicate for UID:', uid);
+        return;
+    }
+    _notifListenerAttached = true;
+
+    console.log('🔥 [NOTIF-LISTEN] Attaching listener for UID:', uid);
+    
     const notifRef = firebase.database().ref('users/' + uid + '/notifications');
     notifRef.limitToLast(50).on('value', snap => {
         const notifList = document.getElementById('fullNotifList');
-        if (!notifList) return;
+        
+        console.log('🔥 [NOTIF-LISTEN] Firebase callback fired. Data exists:', snap.exists(), '| Element found:', !!notifList);
+        
+        if (!notifList) {
+            console.log('🔥 [NOTIF-LISTEN] ⚠️ fullNotifList element NOT found in DOM!');
+            return;
+        }
 
         if (!snap.exists()) {
+            console.log('🔥 [NOTIF-LISTEN] No notifications in database for this user');
             notifList.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: var(--muted);"><i class="far fa-bell" style="font-size: 40px; margin-bottom: 16px; color: var(--border2);"></i><br><span style="font-size:15px; font-weight:600;">No new notifications</span><br><span style="font-size:13px; color:#888;">When someone likes your prompt, comments, or follows you — it will show here.</span></div>';
             return;
         }
@@ -1472,6 +1511,8 @@ function listenForNotifications(uid) {
         let notifs = [];
         snap.forEach(child => { notifs.push({ key: child.key, ...child.val() }); });
         notifs.reverse();
+
+        console.log('🔥 [NOTIF-LISTEN] ✅ Found', notifs.length, 'notifications! Unread:', notifs.filter(n => !n.read).length);
 
         notifs.forEach(n => {
             if (!n.read) unreadCount++;
@@ -1528,6 +1569,9 @@ function listenForNotifications(uid) {
         });
 
         notifList.innerHTML = html;
+    }, (error) => {
+        console.error('🔥 [NOTIF-LISTEN] ❌ Firebase listener ERROR:', error);
+        console.error('🔥 [NOTIF-LISTEN] This is likely a Firebase Security Rules issue!');
     });
 }
 
@@ -1552,6 +1596,59 @@ window.goToUserProfileFromNotif = function(uid, name) {
     if (!uid) return;
     if (typeof toggleNotificationsPageView === 'function') toggleNotificationsPageView(false);
     window.location.href = 'profile.html?viewUid=' + encodeURIComponent(uid) + '&viewName=' + encodeURIComponent(name || 'User');
+};
+
+// ==========================================
+// 🔥 TEST NOTIFICATION — Debug Tool 🔥
+// ==========================================
+// Browser console mein run karo: testNotification()
+// Yeh manually ek test notification bhejega currently logged-in user ko
+window.testNotification = function() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        console.error('🔥 [TEST] Pehle login karo!');
+        alert('Pehle login karo!');
+        return;
+    }
+    
+    console.log('🔥 [TEST] Sending test notification to:', user.uid);
+    
+    firebase.database().ref('users/' + user.uid + '/notifications').push({
+        type: 'comment',
+        promptId: 'test-prompt',
+        fromUid: 'test-uid-123',
+        fromName: 'Test User',
+        commentText: 'Yeh ek test notification hai!',
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        read: false
+    }).then(() => {
+        console.log('🔥 [TEST] ✅ Test notification SENT!');
+        alert('✅ Test notification bhej diya! Notification page check karo.');
+    }).catch(err => {
+        console.error('🔥 [TEST] ❌ Test notification FAILED:', err);
+        alert('❌ Notification nahi gaya! Error: ' + err.message + '\n\nFirebase Security Rules check karo!');
+    });
+};
+
+// 🔥 DEBUG: Check current user's notifications count
+window.debugNotifs = function() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        console.error('🔥 [DEBUG] Not logged in!');
+        return;
+    }
+    console.log('🔥 [DEBUG] Current UID:', user.uid);
+    firebase.database().ref('users/' + user.uid + '/notifications').once('value', snap => {
+        if (snap.exists()) {
+            console.log('🔥 [DEBUG] ✅ Notifications found:', snap.numChildren());
+            snap.forEach(child => {
+                console.log('  →', child.key, ':', JSON.stringify(child.val()));
+            });
+        } else {
+            console.log('🔥 [DEBUG] ❌ No notifications at path: users/' + user.uid + '/notifications');
+            console.log('🔥 [DEBUG] Check: Firebase Console > Realtime Database > users/' + user.uid);
+        }
+    });
 };
 
 // Login hone par notifications load karo
@@ -1580,6 +1677,7 @@ window.toggleLikePrompt = function(promptKey) {
         if (currentUser) {
             firebase.database().ref('submitted_prompts/' + promptKey).once('value', snap => {
                 let pData = snap.val();
+                console.log('🔥 [LIKE-NOTIF] Prompt authorId:', pData?.authorId, '| Liker UID:', currentUser.uid);
                 // Khud ke post par like ka notification nahi jayega
                 if (pData && pData.authorId && pData.authorId !== currentUser.uid) {
                     firebase.database().ref('users/' + pData.authorId + '/notifications').push({
@@ -1589,7 +1687,13 @@ window.toggleLikePrompt = function(promptKey) {
                         fromName: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User'),
                         timestamp: firebase.database.ServerValue.TIMESTAMP,
                         read: false
+                    }).then(() => {
+                        console.log('🔥 [LIKE-NOTIF] ✅ Like notification sent!');
+                    }).catch(err => {
+                        console.error('🔥 [LIKE-NOTIF] ❌ Failed:', err);
                     });
+                } else if (pData && pData.authorId === currentUser.uid) {
+                    console.log('🔥 [LIKE-NOTIF] ⚠️ Self-like — no notification');
                 }
             });
         }
