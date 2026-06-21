@@ -296,7 +296,6 @@ function trackPromptCopyAnalytics(promptId) {
     } 
     // 3. Agar LOGIN hai (Database verification)
     else {
-        // 👇 Theek kiya hua Backtick (`)
         const userRef = firebase.database().ref(`prompt_analytics/prompt_${promptId}/users/${userId}`);
         userRef.once('value', snapshot => {
             if (!snapshot.exists()) {
@@ -312,13 +311,11 @@ function trackPromptCopyAnalytics(promptId) {
 }
 
 function bumpCounterInDB(promptId) {
-    // 👇 Theek kiya hua Backtick (`)
     const metricsRef = firebase.database().ref(`prompt_analytics/prompt_${promptId}/copyCount`);
     metricsRef.transaction((currentCount) => {
         return (currentCount || 0) + 1;
     }, (error, committed, snapshot) => {
         if (committed) {
-            // 👇 Theek kiya hua Backtick (`)
             const countContainer = document.getElementById(`download-count-${promptId}`);
             if (countContainer) countContainer.innerHTML = `<i class="fas fa-download"></i> ${snapshot.val()}`;
         }
@@ -331,11 +328,8 @@ function openModal(id) {
     const p = dataset.find(x => x.id === id);
     if (!p) return;
     
-    // Yahan hum man ke chal rahe hain ki p.images naam ka array ho sakta hai (agar multiple ho)
-    // Agar nahi hai, toh purana p.imageUrl ya fallback use karega
     let photoArray = p.images || []; 
     if (photoArray.length === 0) {
-        // Agar array nahi hai, toh single image use karo (Community prompts ke liye imageUrl)
         photoArray = [p.imageUrl || 'https://via.placeholder.com/800x600?text=No+Image'];
     }
 
@@ -346,19 +340,16 @@ function openModal(id) {
 
     // 🔴 CONDITIONAL LOGIC (1 Photo vs Multiple Photos)
     if (photoArray.length > 1) {
-        // Agar 1 se zyada photo hain toh Counter aur Thumbnails dikhao
         counterEl.style.display = 'block';
         counterEl.innerText = `1 / ${photoArray.length}`;
         thumbsEl.style.display = 'flex';
-        thumbsEl.innerHTML = ''; // Purane thumbnails clear karo
+        thumbsEl.innerHTML = '';
 
-        // Thumbnails banao
         photoArray.forEach((imgSrc, index) => {
             const img = document.createElement('img');
             img.src = imgSrc;
-            if(index === 0) img.classList.add('active'); // Pehli photo active
+            if(index === 0) img.classList.add('active');
             
-            // Thumbnail click karne par main image change ho
             img.onclick = () => {
                 mainImgEl.src = imgSrc;
                 counterEl.innerText = `${index + 1} / ${photoArray.length}`;
@@ -368,7 +359,6 @@ function openModal(id) {
             thumbsEl.appendChild(img);
         });
     } else {
-        // Agar sirf 1 photo hai, toh sab hide kar do (Jaisa tune manga tha)
         counterEl.style.display = 'none';
         thumbsEl.style.display = 'none';
     }
@@ -381,11 +371,11 @@ function openModal(id) {
     document.getElementById('modalAuthorName').textContent = p.author || 'User';
     document.getElementById('modalAuthorHandle').textContent = '@' + (p.author ? p.author.toLowerCase().replace(/\s/g, '') : 'user');
     document.getElementById('modalAiTag').innerHTML = `<i class="fas fa-robot"></i> ${p.ai || 'AI Image'}`;
-    document.getElementById('modalLikeCount').textContent = p.likes || Math.floor(Math.random() * 50) + 10; // Demo count
+    document.getElementById('modalLikeCount').textContent = p.likes || Math.floor(Math.random() * 50) + 10;
 
     // 3. PROMPTS LIST GENERATION
     const promptsListEl = document.getElementById('modalPromptsList');
-    let promptTextsArray = p.prompts || [p.prompt || p.promptText]; // Support multiple text or single text
+    let promptTextsArray = p.prompts || [p.prompt || p.promptText];
     promptsListEl.innerHTML = '';
 
     promptTextsArray.forEach((text, index) => {
@@ -424,7 +414,7 @@ window.copyModalPromptText = function(text, btnElement) {
     });
 };
 
-// Modal Close button ka Event Listener (App.js me DOMContentLoaded ke andar hona chahiye, ya end me daal do)
+// Modal Close button ka Event Listener
 document.getElementById('modalCloseDirectBtn')?.addEventListener('click', () => {
     document.getElementById('modalOverlay').classList.remove('open');
     document.body.style.overflow = '';
@@ -443,18 +433,15 @@ if (typeof firebase !== 'undefined' && firebase.database) {
     firebase.database().ref("prompt_analytics").on("value", (snapshot) => {
         if (snapshot.exists()) {
             const analyticsData = snapshot.val();
-            // Loop over dataset array references to override historical hardcoded counters instantly
             Object.keys(analyticsData).forEach(key => {
                 const promptId = key.replace('prompt_', '');
                 const liveCount = analyticsData[key].copyCount;
                 
-                // Dynamic mapping matching elements updates logic loop
                 const countContainer = document.getElementById(`download-count-${promptId}`);
                 if (countContainer && liveCount) {
                     countContainer.innerHTML = `<i class="fas fa-download"></i> ${liveCount}`;
                 }
                 
-                // Update local dataset structure arrays if matching object references exist
                 const internalPrompts = (typeof prompts !== 'undefined') ? prompts : [];
                 const localPromptObj = internalPrompts.find(p => p.id == promptId);
                 if (localPromptObj) {
@@ -533,7 +520,7 @@ function handleRealAuthSubmit(e) {
         firebase.auth().signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 console.log("Firebase Email Login Success:", userCredential.user);
-                migrateGuestFavoritesToUser(userCredential.user.uid); // Trigger auto storage sync migration
+                migrateGuestFavoritesToUser(userCredential.user.uid);
                 closeAuth();
                 applyAuthState(userCredential.user);
             })
@@ -546,7 +533,7 @@ function handleRealAuthSubmit(e) {
         firebase.auth().createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 console.log("Firebase Account Created:", userCredential.user);
-                migrateGuestFavoritesToUser(userCredential.user.uid); // Trigger auto storage sync migration
+                migrateGuestFavoritesToUser(userCredential.user.uid);
                 document.getElementById('authForm').style.display = 'none';
                 document.getElementById('authSuccess').classList.add('show');
                 setTimeout(() => {
@@ -726,7 +713,6 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.innerHTML = '<i class="fas fa-check"></i> &nbsp; COPIED!';
             btn.classList.add('copied');
             
-            // Trigger dynamic data updates track event pipeline handler inside transaction flow
             if (currentPromptId) {
                 trackPromptCopyAnalytics(currentPromptId);
             }
@@ -756,7 +742,7 @@ function applyAuthState(user) {
     const igUsernameEl = document.querySelector('.ig-username');
     const igNameEl = document.querySelector('.ig-name');
     const igAvatarEl = document.querySelector('.ig-avatar-box img');
-    const igNavProfileEl = document.querySelector('.ig-nav-profile'); // Bottom nav ka chhota icon
+    const igNavProfileEl = document.querySelector('.ig-nav-profile');
 
     if (user) {
         if (loginBtn) loginBtn.style.display = 'none';
@@ -779,8 +765,6 @@ function applyAuthState(user) {
         if (igAvatarEl) igAvatarEl.src = googlePhoto;
         if (igNavProfileEl) igNavProfileEl.src = googlePhoto; 
 
-        // ❌ YAHAN SE 'fetchRealProfileStats' HATA DIYA GAYA HAI ❌
-
         try { migrateGuestFavoritesToUser(user.uid); } catch (e) { console.error(e); }
     } else {
         if (loginBtn) loginBtn.style.display = 'inline-block';
@@ -791,15 +775,9 @@ function applyAuthState(user) {
         if (igUsernameEl) {
             igUsernameEl.innerHTML = `guest <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>`;
         }
-        // 🔥 LOGOUT HONE PAR WAPAS DEFAULT SETUP 🔥
-        if (igUsernameEl) {
-            igUsernameEl.innerHTML = `guest <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 4px; cursor: pointer;"></i>`;
-        }
         if (igNameEl) igNameEl.textContent = 'Guest';
         if (igAvatarEl) igAvatarEl.src = '';
         if (igNavProfileEl) igNavProfileEl.src = '';
-        
-        // ❌ YAHAN SE 'ZERO' KARNE WALA CODE BHI HATA DIYA GAYA HAI ❌
     }
 
     renderCards(getFiltered());
@@ -860,7 +838,6 @@ window.runFavoritesSmokeTest = async function() {
         const testId = promptsArr[0].id;
         cleanupTempKeys();
 
-        // Ensure guest flow: clear test data and set guest favorite
         localStorage.removeItem('fav_prompts_guest');
         if (!originalUser) {
             toggleFavoriteState(testId);
@@ -870,17 +847,14 @@ window.runFavoritesSmokeTest = async function() {
         const guestFavs = JSON.parse(localStorage.getItem('fav_prompts_guest') || '[]');
         console.log('Guest favs after toggle:', guestFavs);
 
-        // Enter favorites portal (guest)
         toggleFavoritesPageView(true);
         await new Promise(r => setTimeout(r, 150));
         console.log('Favorites portal (guest) dataset count:', getFiltered().length);
 
-        // Migrate guest to simulated user
         migrateGuestFavoritesToUser('TEST_UID');
         const userFavs = JSON.parse(localStorage.getItem('fav_prompts_TEST_UID') || '[]');
         console.log('User favs after migration:', userFavs);
 
-        // Simulate auth state apply
         applyAuthState({ uid: 'TEST_UID', email: 'test@example.com', displayName: 'Tester' });
         console.log('applyAuthState simulated — UI should show logged-in state.');
 
@@ -967,12 +941,11 @@ document.getElementById('finalSubmitBtn')?.addEventListener('click', async () =>
 });
 
 
-// 🔥 3. DISPLAY WALA CODE (REAL FIREBASE LIKES KE SATH)
-function loadCommunityPrompts() {
+// 🔥 3. DISPLAY WALA CODE (REAL FIREBASE LIKES KE SATH) — Original fallback version
+function loadCommunityPromptsOriginal() {
     const container = document.getElementById('community-prompts-container');
     if (!container) return; 
 
-    // Like (Heart) ke liye
     let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
 
     firebase.database().ref('submitted_prompts').on('value', (snapshot) => {
@@ -982,27 +955,17 @@ function loadCommunityPrompts() {
 
         const currentUser = firebase.auth().currentUser;
         const currentUserId = currentUser ? currentUser.uid : null;
-
-        // 🔥 FIX 1: Bookmark/Favorites tab ke liye list nikalna
         const favs = getFavoritesFromStorage();
-
-        // 🔥 NAYA FEATURE ADD KIYA: Track karne ke liye ki screen par kitne card dikh rahe hain
         let visibleCount = 0;
 
         for (let key in data) {
             const prompt = data[key];
 
-            // 🔥 FIX 2: Agar Favorites tab khula hai aur prompt list me nahi hai, toh isko screen par mat dikhao
-            if (showOnlyFavorites && !favs.includes(key)) {
-                continue;
-            }
+            if (showOnlyFavorites && !favs.includes(key)) continue;
+            visibleCount++;
 
-            visibleCount++; // Card mil gaya jo dikhana hai, toh count +1 kar do
-
-            // 🔥 ASLI LIKES FIREBASE SE READ HO RAHE HAIN
             const realLikes = prompt.likeCount || 0;
 
-            // Modal ke liye data sync
             if (typeof prompts !== 'undefined') {
                 let existingPrompt = prompts.find(x => x.id === key);
                 if (!existingPrompt) {
@@ -1012,33 +975,29 @@ function loadCommunityPrompts() {
                         author: prompt.authorName || (prompt.authorEmail ? prompt.authorEmail.split('@')[0] : "User"),
                         ai: prompt.aiTool || 'AI Image',
                         prompts: [prompt.promptText], 
-                        likes: realLikes // Modal mein bhi ab real likes dikhenge
+                        likes: realLikes
                     });
                 } else {
-                    existingPrompt.likes = realLikes; // Agar data update ho toh modal mein bhi update ho
+                    existingPrompt.likes = realLikes;
                 }
             }
 
             const displayAuthor = prompt.authorName || (prompt.authorEmail ? prompt.authorEmail.split('@')[0] : "User");
             const authorInitial = displayAuthor.charAt(0).toUpperCase();
             
-            // Delete button setup
             let deleteBtnHTML = '';
             if (currentUserId === prompt.authorId) {
                 deleteBtnHTML = `<button onclick="event.stopPropagation(); deleteMyPrompt('${key}')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; backdrop-filter: blur(4px);" onmouseover="this.style.background='#ff4444'" onmouseout="this.style.background='rgba(0,0,0,0.5)'" title="Delete"><i class="fas fa-times"></i></button>`;
             }
 
-            // Heart Icon Setup
             const isFav = myFavorites.includes(key);
             const heartIcon = isFav ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
             const heartColor = isFav ? '#ff4444' : 'white';
 
-            // 🔥 FIX 3: Bookmark Icon Setup (Check karega save hai ya nahi, aur color fix karega)
             const isBookmarked = favs.includes(key);
             const bookmarkIcon = isBookmarked ? '<i class="fas fa-bookmark"></i>' : '<i class="far fa-bookmark"></i>';
             const bookmarkColor = isBookmarked ? '#ffaa00' : 'white';
 
-            // 🔴 HOVER OVERLAY CARD
             const card = `
                 <div class="hover-card-wrapper" onmouseenter="this.querySelector('.hover-overlay').style.opacity='1'" onmouseleave="this.querySelector('.hover-overlay').style.opacity='0'" onclick="openModal('${key}')" style="position: relative; break-inside: avoid; margin-bottom: 24px; display: inline-block; width: 100%; border-radius: 16px; overflow: hidden; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
                     
@@ -1078,7 +1037,6 @@ function loadCommunityPrompts() {
             container.innerHTML = card + container.innerHTML; 
         }
 
-        // 🔥 NAYA FEATURE ADD KIYA: Agar Favorites tab hai aur ek bhi card nahi mila (0 count)
         if (showOnlyFavorites && visibleCount === 0) {
             container.innerHTML = `
             <div style="text-align: center; padding: 80px 20px; width: 100%; grid-column: 1/-1;">
@@ -1090,7 +1048,6 @@ function loadCommunityPrompts() {
         }
     });
 }
-
 
 
 // 🔥 5. DELETE KARNE KA LOGIC
@@ -1130,7 +1087,6 @@ function formatCommentTime(timestamp) {
     if (minutes < 60) return minutes + 'm ago';
     if (hours < 24) return hours + 'h ago';
     if (days < 7) return days + 'd ago';
-    // Show date for older comments
     const d = new Date(timestamp);
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
@@ -1148,7 +1104,6 @@ function detachCommentsListener() {
 function loadCommentsForPrompt(promptKey) {
     if (!promptKey) return;
 
-    // Detach previous listener
     detachCommentsListener();
     _currentCommentPromptKey = promptKey;
 
@@ -1173,7 +1128,6 @@ function loadCommentsForPrompt(promptKey) {
             comments.push({ key: child.key, ...child.val() });
         });
 
-        // Newest first
         comments.reverse();
         countEl.textContent = comments.length;
 
@@ -1199,8 +1153,6 @@ function loadCommentsForPrompt(promptKey) {
         });
 
         listEl.innerHTML = html;
-
-        // Auto-scroll to bottom (newest comment)
         listEl.scrollTop = listEl.scrollHeight;
     });
 }
@@ -1274,7 +1226,6 @@ window.deleteComment = function(promptKey, commentKey) {
     if (!confirm('Yeh comment delete karna hai?')) return;
 
     firebase.database().ref('submitted_prompts/' + promptKey + '/comments/' + commentKey).remove().then(() => {
-        // Decrease comment count
         firebase.database().ref('submitted_prompts/' + promptKey + '/commentCount').transaction(count => (count || 1) - 1);
     }).catch(err => {
         console.error('Comment delete error:', err);
@@ -1296,19 +1247,12 @@ function updateCommentInputAvatar() {
 }
 
 // --- 8. HOOK INTO EXISTING openModal() FUNCTION ---
-// Patch openModal to also load comments when a modal opens
 const _originalOpenModal = window.openModal || openModal;
 window.openModal = function(id) {
-    // Call original modal logic
     _originalOpenModal(id);
-
-    // Load comments for this prompt
     loadCommentsForPrompt(id);
-
-    // Update avatar in comment input
     updateCommentInputAvatar();
 
-    // Hook Enter key on comment input (only once)
     const commentInput = document.getElementById('modalCommentInput');
     if (commentInput && !commentInput._commentEnterHooked) {
         commentInput._commentEnterHooked = true;
@@ -1320,7 +1264,6 @@ window.openModal = function(id) {
         });
     }
 
-    // Hook send button (only once)
     const sendBtn = document.getElementById('modalCommentSendBtn');
     if (sendBtn && !sendBtn._commentSendHooked) {
         sendBtn._commentSendHooked = true;
@@ -1335,13 +1278,11 @@ const _origCloseModal = function() {
     document.getElementById('modalOverlay').classList.remove('open');
     document.body.style.overflow = '';
 };
-// Override the existing close logic
 document.getElementById('modalCloseDirectBtn')?.removeEventListener('click', _origCloseModal);
 document.getElementById('modalCloseDirectBtn')?.addEventListener('click', () => {
     detachCommentsListener();
 });
 
-// Also detach when clicking overlay background
 document.getElementById('modalOverlay')?.addEventListener('click', (e) => {
     if (e.target === document.getElementById('modalOverlay')) {
         detachCommentsListener();
@@ -1354,8 +1295,8 @@ firebase.auth().onAuthStateChanged(() => {
 });
 
 // --- 11. SHOW COMMENT COUNT ON COMMUNITY CARDS ---
-// Patch into loadCommunityPrompts to add comment count display
-const _originalLoadCommunityPrompts = loadCommunityPrompts;
+// Patched loadCommunityPrompts with comment count display
+const _originalLoadCommunityPrompts = loadCommunityPromptsOriginal;
 loadCommunityPrompts = function() {
     const container = document.getElementById('community-prompts-container');
     if (!container) return;
@@ -1488,7 +1429,6 @@ window.toggleNotificationsPageView = function(enable) {
     const notifPage = document.getElementById('full-notifications-page');
 
     if (enable) {
-        // Sab kuch hide kar do
         if (heroContainer) heroContainer.style.display = 'none';
         if (trustBar) trustBar.style.display = 'none';
         if (categoriesSection) categoriesSection.style.display = 'none';
@@ -1499,11 +1439,9 @@ window.toggleNotificationsPageView = function(enable) {
         if (communityContainer) communityContainer.style.display = 'none';
         dividers.forEach(d => d.style.display = 'none');
         
-        // Sirf Notification page dikhao
         if (notifPage) notifPage.style.display = 'block';
         window.scrollTo(0, 0);
     } else {
-        // Wapas sab show kar do
         if (heroContainer) heroContainer.style.display = '';
         if (trustBar) trustBar.style.display = '';
         if (categoriesSection) categoriesSection.style.display = '';
@@ -1514,7 +1452,6 @@ window.toggleNotificationsPageView = function(enable) {
         if (communityContainer) communityContainer.style.display = '';
         dividers.forEach(d => d.style.display = '');
         
-        // Notification page hide kar do
         if (notifPage) notifPage.style.display = 'none';
     }
 };
@@ -1523,12 +1460,10 @@ function listenForNotifications(uid) {
     const notifRef = firebase.database().ref('users/' + uid + '/notifications');
     notifRef.limitToLast(50).on('value', snap => {
         const notifList = document.getElementById('fullNotifList');
-        const badge = document.getElementById('notifBadge');
-        if (!notifList || !badge) return;
+        if (!notifList) return;
 
         if (!snap.exists()) {
-            notifList.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: var(--muted);"><i class="far fa-heart" style="font-size: 40px; margin-bottom: 16px; color: var(--border2);"></i><br><span style="font-size:15px; font-weight:600;">No new notifications</span><br><span style="font-size:13px; color:#888;">When someone likes your prompt or follows you, it will show up here.</span></div>';
-            badge.style.display = 'none';
+            notifList.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: var(--muted);"><i class="far fa-bell" style="font-size: 40px; margin-bottom: 16px; color: var(--border2);"></i><br><span style="font-size:15px; font-weight:600;">No new notifications</span><br><span style="font-size:13px; color:#888;">When someone likes your prompt, comments, or follows you — it will show here.</span></div>';
             return;
         }
 
@@ -1536,7 +1471,7 @@ function listenForNotifications(uid) {
         let unreadCount = 0;
         let notifs = [];
         snap.forEach(child => { notifs.push({ key: child.key, ...child.val() }); });
-        notifs.reverse(); 
+        notifs.reverse();
 
         notifs.forEach(n => {
             if (!n.read) unreadCount++;
@@ -1545,32 +1480,54 @@ function listenForNotifications(uid) {
             let isFollow = n.type === 'follow';
             let icon = isLike ? '<i class="fas fa-heart" style="color:#ff2233"></i>' : isComment ? '<i class="fas fa-comment" style="color:#4285f4"></i>' : '<i class="fas fa-user-plus" style="color:#0095f6"></i>';
             let text = isLike ? 'liked your prompt.' : isComment ? 'commented on your prompt.' : 'started following you.';
+            
+            // 🔥 Comment preview with styled box
             let preview = '';
             if (isComment && n.commentText) {
-                preview = `<div style="font-size:12px; color:#6b7280; margin-top:3px; font-style:italic;">"${escHTML(n.commentText)}${n.commentText.length >= 60 ? '...' : ''}"</div>`;
+                preview = '<div style="font-size:12px; color:#6b7280; margin-top:4px; font-style:italic; background:rgba(0,0,0,0.03); padding:6px 10px; border-radius:8px; border-left:3px solid #4285f4;">"' + escHTML(n.commentText) + (n.commentText.length >= 60 ? '...' : '') + '"</div>';
             }
-            
-            html += `
-                <div style="display:flex; align-items:center; gap:16px; padding:16px 20px; border-bottom:1px solid var(--border); background: ${n.read ? 'transparent' : 'rgba(255,34,51,0.04)'}; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='var(--glass2)'" onmouseout="this.style.background='${n.read ? 'transparent' : 'rgba(255,34,51,0.04)'}'">
-                    <div style="width:44px; height:44px; border-radius:50%; background: linear-gradient(135deg, #f09433, #bc1888); color: white; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:bold; flex-shrink:0;">
-                        ${n.fromName ? n.fromName.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                    <div style="flex:1; font-size:15px; color:var(--text); line-height:1.4;">
-                        <strong style="color:var(--text); font-weight:700;">${n.fromName || 'Someone'}</strong> ${text}
-                        ${preview}
-                    </div>
-                    <div style="font-size:20px; width:24px; text-align:center; flex-shrink:0;">${icon}</div>
-                </div>
-            `;
+
+            // 🔥 User handle extract karo
+            let fromHandle = '@user';
+            if (n.fromName) {
+                fromHandle = '@' + n.fromName.toLowerCase().replace(/\s+/g, '');
+            } else if (n.fromUid) {
+                fromHandle = '@' + n.fromUid.substring(0, 8);
+            }
+
+            // 🔥 Click to go to user profile
+            let clickAction = '';
+            if (n.fromUid) {
+                clickAction = ' onclick="goToUserProfileFromNotif(\'' + escHTML(n.fromUid) + '\', \'' + escHTML(n.fromName || 'User') + '\')"';
+            }
+
+            // 🔥 Follow notification ke liye UID display
+            let uidDisplay = '';
+            if (isFollow && n.fromUid) {
+                uidDisplay = '<div style="font-size:11px; color:#9ca3af; font-family:monospace; margin-top:2px;">ID: ' + escHTML(n.fromUid.substring(0, 12)) + '...</div>';
+            }
+
+            html += '<div style="display:flex; align-items:center; gap:16px; padding:16px 20px; border-bottom:1px solid var(--border); background:' + (n.read ? 'transparent' : 'rgba(255,34,51,0.04)') + '; transition:all 0.2s; cursor:pointer; position:relative;"' + clickAction + ' onmouseover="this.style.background=\'var(--glass2)\'" onmouseout="this.style.background=\'' + (n.read ? 'transparent' : 'rgba(255,34,51,0.04)') + '\'">'
+                + '<div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#f09433,#bc1888); color:white; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:bold; flex-shrink:0;">'
+                + (n.fromName ? n.fromName.charAt(0).toUpperCase() : 'U')
+                + '</div>'
+                + '<div style="flex:1; font-size:15px; color:var(--text); line-height:1.4; min-width:0;">'
+                + '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">'
+                + '<strong style="color:var(--text); font-weight:700;">' + (n.fromName || 'Someone') + '</strong>'
+                + '<span style="font-size:11px; color:#9ca3af; font-weight:500;">' + escHTML(fromHandle) + '</span>'
+                + '</div>'
+                + '<div style="margin-top:2px;">' + text + '</div>'
+                + preview
+                + uidDisplay
+                + '<div style="font-size:11px; color:var(--red); font-weight:600; margin-top:5px; display:flex; align-items:center; gap:4px;">'
+                + '<i class="fas fa-external-link-alt" style="font-size:9px;"></i> View Profile'
+                + '</div>'
+                + '</div>'
+                + '<div style="font-size:20px; width:24px; text-align:center; flex-shrink:0; opacity:0.6;">' + icon + '</div>'
+                + '</div>';
         });
 
         notifList.innerHTML = html;
-        if (unreadCount > 0) {
-            badge.innerText = unreadCount;
-            badge.style.display = 'flex'; 
-        } else {
-            badge.style.display = 'none';
-        }
     });
 }
 
@@ -1590,14 +1547,17 @@ window.markNotificationsRead = function() {
     });
 };
 
-// Login hone par icon dikhao
+// 🔥 Notification click se user profile pe jao
+window.goToUserProfileFromNotif = function(uid, name) {
+    if (!uid) return;
+    if (typeof toggleNotificationsPageView === 'function') toggleNotificationsPageView(false);
+    window.location.href = 'profile.html?viewUid=' + encodeURIComponent(uid) + '&viewName=' + encodeURIComponent(name || 'User');
+};
+
+// Login hone par notifications load karo
 firebase.auth().onAuthStateChanged(user => {
-    const notifWrap = document.getElementById('notificationWrapper');
     if (user) {
-        if(notifWrap) notifWrap.style.display = 'inline-block';
         listenForNotifications(user.uid);
-    } else {
-        if(notifWrap) notifWrap.style.display = 'none';
     }
 });
 
