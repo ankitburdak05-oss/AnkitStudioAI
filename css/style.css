@@ -1645,3 +1645,265 @@ body {
     cursor: pointer;
 }
 
+/* =========================================
+   🔥 COMMENTS SYSTEM CSS 🔥
+   ========================================= */
+
+.comments-section {
+    flex-shrink: 0;
+    max-height: 320px;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #f3f4f6;
+}
+
+.comments-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 30px 10px;
+}
+
+.comments-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #111;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comments-title i {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.comments-count {
+    background: #f3f4f6;
+    color: #374151;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.comments-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 30px 12px;
+    min-height: 40px;
+    max-height: 200px;
+}
+
+.comments-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.comments-empty {
+    text-align: center;
+    padding: 24px 10px;
+    color: #9ca3af;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.comments-empty i {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 8px;
+    color: #d1d5db;
+}
+
+/* Single Comment */
+.comment-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+    animation: commentSlideIn 0.3s ease;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+@keyframes commentSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    flex-shrink: 0;
+}
+
+.comment-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 3px;
+}
+
+.comment-author {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111;
+}
+
+.comment-time {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.comment-text {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.comment-delete-btn {
+    background: none;
+    border: none;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.comment-delete-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+/* Comment Input Area */
+.comments-input-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 30px 16px;
+    border-top: 1px solid #f3f4f6;
+    background: #fff;
+}
+
+.comment-input-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+#modalCommentInput {
+    flex: 1;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #111;
+    background: #f9fafb;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#modalCommentInput::placeholder {
+    color: #9ca3af;
+}
+
+#modalCommentInput:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(255, 34, 51, 0.08);
+    background: #fff;
+}
+
+.comment-send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--red);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.comment-send-btn:hover {
+    background: #ff4455;
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(255, 34, 51, 0.25);
+}
+
+.comment-send-btn:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Comment count badge on community cards */
+.card-comment-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: white;
+    font-weight: 600;
+}
+
+/* Mobile responsive comments */
+@media (max-width: 900px) {
+    .comments-section {
+        max-height: 260px;
+    }
+    .comments-list {
+        max-height: 150px;
+    }
+    .comments-input-area {
+        padding: 10px 20px 14px;
+    }
+    .comments-header {
+        padding: 12px 20px 8px;
+    }
+    .comments-list {
+        padding: 0 20px 10px;
+    }
+}
+

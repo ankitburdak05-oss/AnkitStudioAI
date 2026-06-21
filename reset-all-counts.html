@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Count Reset Tool</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, sans-serif; max-width: 600px; margin: 20px auto; padding: 16px; background:#fff; color:#000; }
+  h2 { color: #000; margin-bottom: 10px; }
+  p { line-height: 1.5; color: #333; }
+  button { background: #0095f6; color: #fff; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight:600; cursor: pointer; display:block; width:100%; margin: 16px 0; }
+  button:disabled { background: #ccc; cursor: not-allowed; }
+  #loginBtn { background: #34a853; }
+  #status { padding: 12px; border-radius: 8px; background: #f0f0f0; margin-bottom: 10px; font-size: 14px; }
+  #log { margin-top: 16px; padding: 16px; background: #f5f5f5; border-radius: 8px; font-size: 13px; white-space: pre-wrap; max-height: 400px; overflow-y: auto; border:1px solid #ddd; }
+</style>
+</head>
+<body>
+
+  <h2>🔧 Followers/Following Count Reset</h2>
+  <p>Yeh tool sabhi users ke followers/following count ko asli data se theek karega.</p>
+
+  <div id="status">⏳ Firebase load ho raha hai...</div>
+
+  <button id="loginBtn" style="display:none;">Google Se Login Karo</button>
+  <button id="runBtn" style="display:none;">Reset Karo</button>
+
+  <div id="log">Log yahan dikhega...</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script>
+function log(msg) {
+  var el = document.getElementById('log');
+  el.textContent += '\n' + msg;
+  el.scrollTop = el.scrollHeight;
+}
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+try {
+  var firebaseConfig = {
+    apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
+    authDomain: "ankitstudioai.firebaseapp.com",
+    projectId: "ankitstudioai",
+    storageBucket: "ankitstudioai.firebasestorage.app",
+    messagingSenderId: "450755070024",
+    appId: "1:450755070024:web:4bf14bc4da4caf1200b07d"
+  };
+  firebase.initializeApp(firebaseConfig);
+  setStatus('✅ Firebase ready. Login karo neeche button se.');
+  document.getElementById('loginBtn').style.display = 'block';
+} catch (e) {
+  setStatus('❌ Firebase load error: ' + e.message);
+  log('Error: ' + e.message);
+}
+
+document.getElementById('loginBtn').addEventListener('click', function() {
+  var provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider).then(function(result) {
+    setStatus('✅ Logged in as: ' + result.user.email);
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('runBtn').style.display = 'block';
+    log('Login successful: ' + result.user.email);
+  }).catch(function(err) {
+    setStatus('❌ Login failed.');
+    log('Login error: ' + err.message);
+  });
+});
+
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    setStatus('✅ Logged in as: ' + (user.email || user.uid));
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('runBtn').style.display = 'block';
+  }
+});
+
+document.getElementById('runBtn').addEventListener('click', function() {
+  var btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  log('\n--- Reset shuru ---');
+
+  firebase.database().ref('users').once('value').then(function(usersSnap) {
+    if (!usersSnap.exists()) {
+      log('Koi users nahi mile.');
+      btn.disabled = false;
+      return;
+    }
+
+    var count = 0;
+    var updates = {};
+
+    usersSnap.forEach(function(userChild) {
+      var uid = userChild.key;
+      var data = userChild.val();
+
+      var followersCount = data.followers ? Object.keys(data.followers).length : 0;
+      var followingCount = data.following ? Object.keys(data.following).length : 0;
+
+      updates['users/' + uid + '/stats/followersCount'] = followersCount;
+      updates['users/' + uid + '/stats/followingCount'] = followingCount;
+
+      count++;
+      log(uid + ' -> followers: ' + followersCount + ', following: ' + followingCount);
+    });
+
+    return firebase.database().ref().update(updates).then(function() {
+      log('\nDONE! ' + count + ' users ke counts reset ho gaye.');
+      btn.disabled = false;
+    });
+  }).catch(function(e) {
+    log('Error: ' + e.message);
+    btn.disabled = false;
+  });
+});
+</script>
+
+</body>
+</html>

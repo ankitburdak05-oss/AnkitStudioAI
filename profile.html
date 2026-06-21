@@ -220,8 +220,23 @@
         <i class="fas fa-search" id="ig-search-btn" style="cursor:pointer;"></i>
         <i class="far fa-play-circle"></i>
         <i class="far fa-plus-square"></i>
-        <i class="far fa-paper-plane"></i>
+        <div style="position:relative; display:inline-block;">
+            <i class="far fa-heart" id="ig-notif-btn" style="cursor:pointer;"></i>
+            <span id="ig-notif-badge" style="display:none; position:absolute; top:-6px; right:-8px; background:#ed4956; color:#fff; font-size:10px; font-weight:700; min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px;">0</span>
+        </div>
         <img src="" alt="Profile" class="ig-nav-profile" id="ig-profile-btn">
+    </div>
+</div>
+
+<!-- ===== NOTIFICATIONS PANEL (NEW FEATURE) ===== -->
+<div id="notifPanel" style="position:fixed; inset:0; z-index:99998; background:#fff; display:none; flex-direction:column;">
+    <div class="follow-sheet-header">
+        <div style="width:28px;"></div>
+        <span class="ftitle">Notifications</span>
+        <button class="fclose" onclick="document.getElementById('notifPanel').style.display='none';">&times;</button>
+    </div>
+    <div id="notifPanelBody" style="overflow-y:auto; flex:1; padding-bottom:24px;">
+        <div class="follow-empty"><i class="far fa-bell"></i>Koi notification nahi hai.</div>
     </div>
 </div>
 
@@ -357,16 +372,24 @@
         clearProfileStatsListeners();
         _activeProfileUid = uid;
     
-        _refFollowersCount = firebase.database().ref('users/' + uid + '/stats/followersCount');
+        // 🔥 FIX: Ab count asli 'followers' node ke length se aata hai, fake/corrupt
+        // stats/followersCount pe bharosa nahi karte. Yeh khud-ba-khud purane galat
+        // counts ko sahi value se overwrite/reset kar deta hai.
+        _refFollowersCount = firebase.database().ref('users/' + uid + '/followers');
         _refFollowersCount.on('value', function(snap) {
+            const realCount = snap.exists() ? snap.numChildren() : 0;
             const el = document.getElementById('igRealFollowers');
-            if (el) el.textContent = snap.val() || 0;
+            if (el) el.textContent = realCount;
+            firebase.database().ref('users/' + uid + '/stats/followersCount').set(realCount);
         });
     
-        _refFollowingCount = firebase.database().ref('users/' + uid + '/stats/followingCount');
+        // 🔥 FIX: Same logic — 'following' node ke length se asli count
+        _refFollowingCount = firebase.database().ref('users/' + uid + '/following');
         _refFollowingCount.on('value', function(snap) {
+            const realCount = snap.exists() ? snap.numChildren() : 0;
             const el = document.getElementById('igRealFollowing');
-            if (el) el.textContent = snap.val() || 0;
+            if (el) el.textContent = realCount;
+            firebase.database().ref('users/' + uid + '/stats/followingCount').set(realCount);
         });
     }
     window.attachProfileStatsListener = attachProfileStatsListener;
@@ -456,84 +479,152 @@
         clearFollowButtonListener();
     }
     
-    // ============================================================
-    //  FOLLOW / UNFOLLOW
-    // ============================================================
+   // ==========================================
+    // 🔥 FINAL INSTANT FOLLOW SYSTEM (NO GLITCH)
+    // ==========================================
+
+    // 1. RENDER BUTTONS
     window.renderFollowButton = function(targetId, isFollowing) {
         const c = document.getElementById('dynamic-action-buttons');
         if (!c) return;
         if (isFollowing) {
-            c.innerHTML =
-                '<button type="button" data-follow-target="' + targetId + '" data-follow-action="show-unfollow"'
-                + ' style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">'
-                + 'Following <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>'
-                + '<button type="button" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
+            c.innerHTML = '<button type="button" data-follow-target="'+targetId+'" data-follow-action="show-unfollow" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Following <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>'
+                        + '<button style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
         } else {
-            c.innerHTML =
-                '<button type="button" data-follow-target="' + targetId + '" data-follow-action="follow"'
-                + ' style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#0095f6;font-weight:600;font-size:14px;cursor:pointer;color:#fff;">Follow</button>'
-                + '<button type="button" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
+            c.innerHTML = '<button type="button" data-follow-target="'+targetId+'" data-follow-action="follow" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#0095f6;font-weight:600;font-size:14px;cursor:pointer;color:#fff;">Follow</button>'
+                        + '<button style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
         }
     };
-    
-    function renderUnfollowButton(targetId) {
+
+    // 2. RENDER UNFOLLOW & CANCEL (Popup style)
+    window.renderUnfollowButton = function(targetId) {
         const c = document.getElementById('dynamic-action-buttons');
         if (!c) return;
-        c.innerHTML =
-            '<button type="button" data-follow-target="' + targetId + '" data-follow-action="unfollow"'
-            + ' style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#ed4956;">Unfollow</button>'
-            + '<button type="button" data-follow-target="' + targetId + '" data-follow-action="show-following"'
-            + ' style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Cancel</button>';
+        c.innerHTML = '<button type="button" data-follow-target="'+targetId+'" data-follow-action="unfollow" style="flex:1;padding:7px 0;border:1px solid #ed4956;border-radius:8px;background:#fff;font-weight:600;font-size:14px;cursor:pointer;color:#ed4956;">Unfollow</button>'
+                    + '<button type="button" data-follow-target="'+targetId+'" data-follow-action="show-following" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Cancel</button>';
+    };
+
+    // 3. SINGLE CLICK LISTENER
+    const actionBtnsContainer = document.getElementById('dynamic-action-buttons');
+    if (actionBtnsContainer) {
+        // Purane event listeners clear karne ke liye
+        let newContainer = actionBtnsContainer.cloneNode(true);
+        actionBtnsContainer.parentNode.replaceChild(newContainer, actionBtnsContainer);
+        
+        newContainer.addEventListener('click', e => {
+            const btn = e.target.closest('[data-follow-target]');
+            if (!btn || btn.disabled) return;
+            
+            e.preventDefault(); e.stopPropagation();
+            const tid = btn.dataset.followTarget;
+            const act = btn.dataset.followAction;
+            
+            if (act === 'show-unfollow') { window.renderUnfollowButton(tid); return; }
+            if (act === 'show-following') { window.renderFollowButton(tid, true); return; }
+            
+            // Execute Database logic
+            window.toggleFollow(tid);
+        });
     }
-    
-    window.toggleFollow = function(targetUserId, isFollowing) {
+
+    // 4. INSTANT DATABASE SYNC — 🔥 FIXED: Ab Firebase transaction se ASLI sach check hota hai
+    // Pehle yahan parameter (isFollowingAction) pe seedha bharosa tha jisse double-click se
+    // double-follow ya count corrupt ho sakta tha. Ab atomic transaction use hota hai.
+    window.toggleFollow = async function(targetUserId) {
         const me = firebase.auth().currentUser;
         if (!me || !targetUserId || targetUserId === me.uid) return;
-    
+
+        document.querySelectorAll('[data-follow-target="'+targetUserId+'"]').forEach(b => {
+            b.disabled = true; b.style.opacity = '0.6';
+        });
+
         const myUid = me.uid;
-        const myFollowingRef = firebase.database().ref('users/' + myUid + '/following/' + targetUserId);
-        const theirFollowerRef = firebase.database().ref('users/' + targetUserId + '/followers/' + myUid);
-        const myFollowingCountRef = firebase.database().ref('users/' + myUid + '/stats/followingCount');
-        const theirFollowersCountRef = firebase.database().ref('users/' + targetUserId + '/stats/followersCount');
-        
-        // Notification ka path
-        const targetNotifRef = firebase.database().ref('users/' + targetUserId + '/notifications').push();
-    
-        renderFollowButton(targetUserId, !isFollowing);
-        const btn = document.querySelector('[data-follow-target="' + targetUserId + '"]');
-        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
-    
-        let promise;
-        if (isFollowing) {
-            promise = Promise.all([
-                myFollowingRef.remove(),
-                theirFollowerRef.remove(),
-                myFollowingCountRef.transaction(function(v) { return Math.max((v || 1) - 1, 0); }),
-                theirFollowersCountRef.transaction(function(v) { return Math.max((v || 1) - 1, 0); })
-            ]);
-        } else {
-            const ts = firebase.database.ServerValue.TIMESTAMP;
-            promise = Promise.all([
-                myFollowingRef.set({ createdAt: ts }),
-                theirFollowerRef.set({ createdAt: ts }),
-                myFollowingCountRef.transaction(function(v) { return (v || 0) + 1; }),
-                theirFollowersCountRef.transaction(function(v) { return (v || 0) + 1; }),
-                // 🔥 NAYA: NOTIFICATION ENTRY 🔥
-                targetNotifRef.set({
+        const myFollowingRef = firebase.database().ref('users/'+myUid+'/following/'+targetUserId);
+        const theirFollowerRef = firebase.database().ref('users/'+targetUserId+'/followers/'+myUid);
+        const ts = firebase.database.ServerValue.TIMESTAMP;
+
+        try {
+            // ===== ATOMIC: server pe ek hi baar mein check + set/remove =====
+            const result = await myFollowingRef.transaction(currentVal => {
+                if (currentVal === null) {
+                    return { createdAt: ts, __pending: true }; // FOLLOW
+                } else {
+                    return null; // UNFOLLOW
+                }
+            });
+
+            const isNowFollowing = result.committed && result.snapshot.exists();
+            window.renderFollowButton(targetUserId, isNowFollowing);
+
+            if (isNowFollowing) {
+                await theirFollowerRef.set({ createdAt: ts });
+                let uName = me.email ? me.email.split('@')[0].toLowerCase() : (me.displayName || 'user');
+                firebase.database().ref('users/'+targetUserId+'/notifications').push().set({
                     type: 'follow',
                     fromUid: myUid,
-                    fromName: me.displayName || (me.email ? me.email.split('@')[0] : 'User'),
+                    fromName: uName,
                     timestamp: ts,
                     read: false
-                })
-            ]);
-        }
-    
-        promise.catch(function(err) {
+                });
+            } else {
+                await theirFollowerRef.remove();
+            }
+        } catch (err) {
             console.error('toggleFollow error:', err);
-            renderFollowButton(targetUserId, isFollowing);
-        }).finally(function() {
-            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        } finally {
+            document.querySelectorAll('[data-follow-target="'+targetUserId+'"]').forEach(b => {
+                b.disabled = false; b.style.opacity = '1';
+            });
+        }
+    };
+
+    // 5. OPEN PROFILE
+    window.openUserProfile = function(authorId, authorName) {
+        const me = firebase.auth().currentUser;
+        if (!me) { alert('Pehle login karo!'); return; }
+
+        if (authorId === me.uid) {
+            const profileBtn = document.getElementById('ig-profile-btn');
+            if (profileBtn) profileBtn.click();
+            return;
+        }
+
+        document.getElementById('search-content-wrap').style.display = 'none';
+        document.getElementById('profile-content-wrap').style.display = 'block';
+        
+        const bottomNav = document.getElementById('bottom-nav-bar');
+        const proDashboard = document.getElementById('pro-dashboard');
+        const topLeftIcon = document.getElementById('top-left-icon');
+        const topRightIcon = document.getElementById('top-right-icon');
+        const topTitle = document.getElementById('top-title');
+        const mainProfileName = document.getElementById('main-profile-name');
+
+        if (bottomNav) bottomNav.style.display = 'none';
+        if (proDashboard) proDashboard.style.display = 'none';
+        if (topLeftIcon) topLeftIcon.style.display = 'none';
+        if (topRightIcon) topRightIcon.style.display = 'none';
+
+        let cleanName = 'user';
+        if (typeof _userCacheMap !== 'undefined' && _userCacheMap[authorId] && _userCacheMap[authorId].email) {
+            cleanName = _userCacheMap[authorId].email.split('@')[0].toLowerCase();
+        } else {
+            cleanName = (authorName || 'user').replace(/\s+/g,'').toLowerCase();
+        }
+
+        if (topTitle) topTitle.innerHTML = '<i class="fas fa-arrow-left" onclick="goBackToSearch()" style="margin-right:14px;cursor:pointer;"></i>' + cleanName;
+        if (mainProfileName) mainProfileName.textContent = authorName || 'User';
+
+        if (typeof attachProfileStatsListener === 'function') attachProfileStatsListener(authorId);
+        else if (typeof attachStats === 'function') attachStats(authorId);
+        if (typeof attachPostsListener === 'function') attachPostsListener(authorId);
+
+        window.renderFollowButton(authorId, false);
+
+        // 🔥 YAHAN THI ASLI BIMARI 🔥
+        // .on() (live) ko hata kar .once() kar diya gaya hai. Ab click karte hi refresh ki zaroorat nahi padegi!
+        if (window.refFollowButton) window.refFollowButton.off();
+        firebase.database().ref('users/'+me.uid+'/following/'+authorId).once('value', s => {
+            window.renderFollowButton(authorId, s.exists());
         });
     };
     
@@ -633,58 +724,10 @@
             });
         }
     
-        document.getElementById('dynamic-action-buttons').addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-follow-target]');
-            if (!btn) return;
-            e.preventDefault();
-            e.stopPropagation();
-            const tid = btn.dataset.followTarget;
-            const act = btn.dataset.followAction;
-            if (act === 'show-unfollow') {
-                renderUnfollowButton(tid);
-                return;
-            }
-            if (act === 'show-following') {
-                renderFollowButton(tid, true);
-                return;
-            }
-            toggleFollow(tid, act === 'unfollow');
-        });
-    
-        window.openUserProfile = function(authorId, authorName) {
-            const me = firebase.auth().currentUser;
-            if (!me) {
-                alert('Pehle login karo!');
-                return;
-            }
-            if (authorId === me.uid) {
-                document.getElementById('ig-profile-btn').click();
-                return;
-            }
-    
-            document.getElementById('search-content-wrap').style.display = 'none';
-            document.getElementById('profile-content-wrap').style.display = 'block';
-            if (bottomNav) bottomNav.style.display = 'none';
-            if (proDashboard) proDashboard.style.display = 'none';
-            if (topLeftIcon) topLeftIcon.style.display = 'none';
-            if (topRightIcon) topRightIcon.style.display = 'none';
-    
-            let cleanName = 'user';
-        if (_userCacheMap[authorId] && _userCacheMap[authorId].email) {
-            cleanName = _userCacheMap[authorId].email.split('@')[0].toLowerCase();
-        } else {
-            cleanName = (authorName || 'user').replace(/\s+/g, '').toLowerCase();
-        }
-            if (topTitle) {
-                topTitle.innerHTML = '<i class="fas fa-arrow-left" onclick="goBackToSearch()" style="margin-right:14px;cursor:pointer;"></i>' + esc(cleanName);
-            }
-            if (mainProfileName) mainProfileName.textContent = authorName || 'User';
-    
-            attachProfileStatsListener(authorId);
-            attachPostsListener(authorId);
-            renderFollowButton(authorId, false);
-            attachFollowButtonListener(me.uid, authorId);
-        };
+        // NOTE: openUserProfile yahan duplicate tha (purana .on() live-listener version
+        // jo "asli bimari" wala tha) — usse hata diya gaya hai. Asli working version
+        // upar global scope mein already define hai (line ~567), jo .once() use karta
+        // hai aur turant follow-state dikhata hai bina refresh ke.
     
         window.goBackToSearch = function() {
             clearAllProfileListeners();
@@ -739,6 +782,76 @@
                         tt.innerHTML = esc(myUname) + ' <i class="fas fa-chevron-down" style="font-size:12px;margin-left:4px;cursor:pointer;"></i>';
                     }
                 }
+
+                // ===== NEW FEATURE: Real-time notifications (follow alerts) =====
+                firebase.database().ref('users/' + user.uid + '/notifications').on('value', function(snap) {
+                    const badge = document.getElementById('ig-notif-badge');
+                    const panelBody = document.getElementById('notifPanelBody');
+                    if (!snap.exists()) {
+                        if (badge) badge.style.display = 'none';
+                        if (panelBody) panelBody.innerHTML = '<div class="follow-empty"><i class="far fa-bell"></i>Koi notification nahi hai.</div>';
+                        return;
+                    }
+                    let items = [];
+                    let unreadCount = 0;
+                    snap.forEach(function(child) {
+                        const n = child.val();
+                        if (!n.read) unreadCount++;
+                        items.unshift({ key: child.key, data: n });
+                    });
+
+                    if (badge) {
+                        if (unreadCount > 0) {
+                            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+
+                    if (panelBody) {
+                        let html = '';
+                        items.forEach(function(item) {
+                            const n = item.data;
+                            let label = 'activity';
+                            if (n.type === 'follow') label = 'aapko follow karne laga/lagi';
+                            else if (n.type === 'like') label = 'aapke prompt ko like kiya';
+                            else if (n.type === 'comment') label = 'aapke prompt pe comment kiya';
+                            let preview = '';
+                            if (n.type === 'comment' && n.commentText) {
+                                preview = '<div style="font-size:12px;color:#8e8e8e;margin-top:2px;font-style:italic;">"' + esc(n.commentText) + (n.commentText.length >= 60 ? '...' : '') + '"</div>';
+                            }
+                        html += '<div class="follow-user-row">'
+                                + '<div class="follow-user-avatar">' + esc((n.fromName || 'U').charAt(0).toUpperCase()) + '</div>'
+                                + '<div class="follow-user-info">'
+                                + '<div class="uname">' + esc(n.fromName || 'User') + '</div>'
+                                + '<div class="rname">' + esc(label) + '</div>'
+                                + preview
+                                + '</div></div>';
+                        });
+                        panelBody.innerHTML = html || '<div class="follow-empty"><i class="far fa-bell"></i>Koi notification nahi hai.</div>';
+                    }
+                });
+
+                const notifBtn = document.getElementById('ig-notif-btn');
+                if (notifBtn) {
+                    notifBtn.addEventListener('click', function() {
+                        document.getElementById('notifPanel').style.display = 'flex';
+                        // Panel khulte hi sab notifications read mark karo
+                        firebase.database().ref('users/' + user.uid + '/notifications').once('value', function(snap) {
+                            if (!snap.exists()) return;
+                            const updates = {};
+                            snap.forEach(function(child) {
+                                if (!child.val().read) {
+                                    updates[child.key + '/read'] = true;
+                                }
+                            });
+                            if (Object.keys(updates).length > 0) {
+                                firebase.database().ref('users/' + user.uid + '/notifications').update(updates);
+                            }
+                        });
+                    });
+                }
             }
         });
     
@@ -767,11 +880,27 @@
                 <div class="modal-ai-tag-new" id="modalAiTag"><i class="fas fa-robot"></i> AI Image</div>
             </div>
             <div class="prompts-list" id="modalPromptsList"></div>
+            <!-- 🔥 COMMENTS SECTION -->
+            <div class="comments-section" id="modalCommentsSection">
+                <div class="comments-header">
+                    <span class="comments-title"><i class="far fa-comment-dots"></i> Comments</span>
+                    <span class="comments-count" id="modalCommentCount">0</span>
+                </div>
+                <div class="comments-list" id="modalCommentsList">
+                    <div class="comments-empty"><i class="far fa-comment"></i> Koi comment nahi hai. Pehla comment karo!</div>
+                </div>
+                <div class="comments-input-area" id="modalCommentInputArea">
+                    <div class="comment-input-avatar" id="commentInputAvatar">U</div>
+                    <input type="text" id="modalCommentInput" placeholder="Add a comment..." maxlength="500" autocomplete="off">
+                    <button id="modalCommentSendBtn" class="comment-send-btn" title="Send"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+
             <div class="details-actions">
                 <button class="action-btn outline-btn"><i class="fas fa-retweet"></i> Use as Prompt</button>
             </div>
         </div>
     </div>
 </div>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0f264e7ee69fea4',t:'MTc4MjAzODQxNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

@@ -1139,6 +1139,374 @@ window.deleteMyPrompt = function(promptKey) {
     }
 }
 
+// ==========================================
+// 🔥 COMMENTS SYSTEM ENGINE 🔥
+// ==========================================
+
+// Global: Currently open prompt key for comments
+let _currentCommentPromptKey = null;
+let _commentsListenerRef = null;
+
+// --- 1. ESCAPE HTML (XSS Protection) ---
+function escHTML(str) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+// --- 2. RELATIVE TIME FORMAT ---
+function formatCommentTime(timestamp) {
+    if (!timestamp) return '';
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 10) return 'just now';
+    if (seconds < 60) return seconds + 's ago';
+    if (minutes < 60) return minutes + 'm ago';
+    if (hours < 24) return hours + 'h ago';
+    if (days < 7) return days + 'd ago';
+    // Show date for older comments
+    const d = new Date(timestamp);
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+// --- 3. DETACH PREVIOUS COMMENTS LISTENER ---
+function detachCommentsListener() {
+    if (_commentsListenerRef) {
+        _commentsListenerRef.off();
+        _commentsListenerRef = null;
+    }
+    _currentCommentPromptKey = null;
+}
+
+// --- 4. LOAD & LISTEN COMMENTS FOR A PROMPT ---
+function loadCommentsForPrompt(promptKey) {
+    if (!promptKey) return;
+
+    // Detach previous listener
+    detachCommentsListener();
+    _currentCommentPromptKey = promptKey;
+
+    const commentsRef = firebase.database().ref('submitted_prompts/' + promptKey + '/comments').orderByChild('timestamp');
+    _commentsListenerRef = commentsRef;
+
+    const listEl = document.getElementById('modalCommentsList');
+    const countEl = document.getElementById('modalCommentCount');
+    const currentUser = firebase.auth().currentUser;
+
+    commentsRef.on('value', (snap) => {
+        if (!listEl || !countEl) return;
+
+        if (!snap.exists()) {
+            listEl.innerHTML = '<div class="comments-empty"><i class="far fa-comment"></i> Koi comment nahi hai. Pehla comment karo!</div>';
+            countEl.textContent = '0';
+            return;
+        }
+
+        let comments = [];
+        snap.forEach(child => {
+            comments.push({ key: child.key, ...child.val() });
+        });
+
+        // Newest first
+        comments.reverse();
+        countEl.textContent = comments.length;
+
+        let html = '';
+        comments.forEach(c => {
+            const initial = (c.authorName || 'U').charAt(0).toUpperCase();
+            const timeStr = formatCommentTime(c.timestamp);
+            const isOwner = currentUser && c.authorId === currentUser.uid;
+
+            html += `
+                <div class="comment-item" data-comment-key="${c.key}">
+                    <div class="comment-avatar">${escHTML(initial)}</div>
+                    <div class="comment-body">
+                        <div class="comment-meta">
+                            <span class="comment-author">${escHTML(c.authorName || 'User')}</span>
+                            <span class="comment-time">${timeStr}</span>
+                        </div>
+                        <div class="comment-text">${escHTML(c.text || '')}</div>
+                    </div>
+                    ${isOwner ? `<button class="comment-delete-btn" onclick="deleteComment('${escHTML(promptKey)}', '${escHTML(c.key)}')" title="Delete"><i class="fas fa-trash-alt"></i></button>` : ''}
+                </div>
+            `;
+        });
+
+        listEl.innerHTML = html;
+
+        // Auto-scroll to bottom (newest comment)
+        listEl.scrollTop = listEl.scrollHeight;
+    });
+}
+
+// --- 5. SUBMIT A NEW COMMENT ---
+window.submitComment = function(promptKey) {
+    const input = document.getElementById('modalCommentInput');
+    if (!input) return;
+
+    const text = input.value.trim();
+    if (!text) return;
+
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert('Comment karne ke liye pehle login karo!');
+        if (typeof openAuthModal === 'function') openAuthModal();
+        return;
+    }
+
+    if (!promptKey) return;
+
+    const sendBtn = document.getElementById('modalCommentSendBtn');
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+
+    const authorName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+
+    firebase.database().ref('submitted_prompts/' + promptKey + '/comments').push({
+        text: text,
+        authorId: user.uid,
+        authorName: authorName,
+        authorEmail: user.email || '',
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    }).then(() => {
+        input.value = '';
+
+        // 🔥 NOTIFICATION: Prompt author ko notify karo
+        firebase.database().ref('submitted_prompts/' + promptKey).once('value', snap => {
+            const pData = snap.val();
+            if (pData && pData.authorId && pData.authorId !== user.uid) {
+                firebase.database().ref('users/' + pData.authorId + '/notifications').push({
+                    type: 'comment',
+                    promptId: promptKey,
+                    fromUid: user.uid,
+                    fromName: authorName,
+                    commentText: text.substring(0, 60),
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    read: false
+                });
+            }
+        });
+
+        // 🔥 UPDATE COMMENT COUNT on the prompt
+        firebase.database().ref('submitted_prompts/' + promptKey + '/commentCount').transaction(count => (count || 0) + 1);
+
+    }).catch(err => {
+        console.error('Comment submit error:', err);
+        alert('Comment post nahi hua. Try again!');
+    }).finally(() => {
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        }
+    });
+};
+
+// --- 6. DELETE OWN COMMENT ---
+window.deleteComment = function(promptKey, commentKey) {
+    if (!confirm('Yeh comment delete karna hai?')) return;
+
+    firebase.database().ref('submitted_prompts/' + promptKey + '/comments/' + commentKey).remove().then(() => {
+        // Decrease comment count
+        firebase.database().ref('submitted_prompts/' + promptKey + '/commentCount').transaction(count => (count || 1) - 1);
+    }).catch(err => {
+        console.error('Comment delete error:', err);
+    });
+};
+
+// --- 7. UPDATE COMMENT INPUT AVATAR ON AUTH ---
+function updateCommentInputAvatar() {
+    const user = firebase.auth().currentUser;
+    const avatarEl = document.getElementById('commentInputAvatar');
+    if (!avatarEl) return;
+
+    if (user) {
+        const name = user.displayName || (user.email ? user.email.split('@')[0] : 'U');
+        avatarEl.textContent = name.charAt(0).toUpperCase();
+    } else {
+        avatarEl.textContent = 'G';
+    }
+}
+
+// --- 8. HOOK INTO EXISTING openModal() FUNCTION ---
+// Patch openModal to also load comments when a modal opens
+const _originalOpenModal = window.openModal || openModal;
+window.openModal = function(id) {
+    // Call original modal logic
+    _originalOpenModal(id);
+
+    // Load comments for this prompt
+    loadCommentsForPrompt(id);
+
+    // Update avatar in comment input
+    updateCommentInputAvatar();
+
+    // Hook Enter key on comment input (only once)
+    const commentInput = document.getElementById('modalCommentInput');
+    if (commentInput && !commentInput._commentEnterHooked) {
+        commentInput._commentEnterHooked = true;
+        commentInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitComment(_currentCommentPromptKey);
+            }
+        });
+    }
+
+    // Hook send button (only once)
+    const sendBtn = document.getElementById('modalCommentSendBtn');
+    if (sendBtn && !sendBtn._commentSendHooked) {
+        sendBtn._commentSendHooked = true;
+        sendBtn.addEventListener('click', () => {
+            submitComment(_currentCommentPromptKey);
+        });
+    }
+};
+
+// --- 9. DETACH COMMENTS WHEN MODAL CLOSES ---
+const _origCloseModal = function() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+};
+// Override the existing close logic
+document.getElementById('modalCloseDirectBtn')?.removeEventListener('click', _origCloseModal);
+document.getElementById('modalCloseDirectBtn')?.addEventListener('click', () => {
+    detachCommentsListener();
+});
+
+// Also detach when clicking overlay background
+document.getElementById('modalOverlay')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modalOverlay')) {
+        detachCommentsListener();
+    }
+});
+
+// --- 10. UPDATE COMMENT INPUT AVATAR ON AUTH STATE CHANGE ---
+firebase.auth().onAuthStateChanged(() => {
+    updateCommentInputAvatar();
+});
+
+// --- 11. SHOW COMMENT COUNT ON COMMUNITY CARDS ---
+// Patch into loadCommunityPrompts to add comment count display
+const _originalLoadCommunityPrompts = loadCommunityPrompts;
+loadCommunityPrompts = function() {
+    const container = document.getElementById('community-prompts-container');
+    if (!container) return;
+
+    let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
+
+    firebase.database().ref('submitted_prompts').on('value', (snapshot) => {
+        container.innerHTML = '';
+        const data = snapshot.val();
+        if (!data) return;
+
+        const currentUser = firebase.auth().currentUser;
+        const currentUserId = currentUser ? currentUser.uid : null;
+        const favs = getFavoritesFromStorage();
+        let visibleCount = 0;
+
+        for (let key in data) {
+            const prompt = data[key];
+
+            if (showOnlyFavorites && !favs.includes(key)) continue;
+            visibleCount++;
+
+            const realLikes = prompt.likeCount || 0;
+            const commentCount = prompt.commentCount || 0;
+
+            if (typeof prompts !== 'undefined') {
+                let existingPrompt = prompts.find(x => x.id === key);
+                if (!existingPrompt) {
+                    prompts.push({
+                        id: key,
+                        images: [prompt.imageUrl],
+                        author: prompt.authorName || (prompt.authorEmail ? prompt.authorEmail.split('@')[0] : "User"),
+                        ai: prompt.aiTool || 'AI Image',
+                        prompts: [prompt.promptText],
+                        likes: realLikes
+                    });
+                } else {
+                    existingPrompt.likes = realLikes;
+                }
+            }
+
+            const displayAuthor = prompt.authorName || (prompt.authorEmail ? prompt.authorEmail.split('@')[0] : "User");
+            const authorInitial = displayAuthor.charAt(0).toUpperCase();
+
+            let deleteBtnHTML = '';
+            if (currentUserId === prompt.authorId) {
+                deleteBtnHTML = `<button onclick="event.stopPropagation(); deleteMyPrompt('${key}')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; backdrop-filter: blur(4px);" onmouseover="this.style.background='#ff4444'" onmouseout="this.style.background='rgba(0,0,0,0.5)'" title="Delete"><i class="fas fa-times"></i></button>`;
+            }
+
+            const isFav = myFavorites.includes(key);
+            const heartIcon = isFav ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>';
+            const heartColor = isFav ? '#ff4444' : 'white';
+
+            const isBookmarked = favs.includes(key);
+            const bookmarkIcon = isBookmarked ? '<i class="fas fa-bookmark"></i>' : '<i class="far fa-bookmark"></i>';
+            const bookmarkColor = isBookmarked ? '#ffaa00' : 'white';
+
+            const card = `
+                <div class="hover-card-wrapper" onmouseenter="this.querySelector('.hover-overlay').style.opacity='1'" onmouseleave="this.querySelector('.hover-overlay').style.opacity='0'" onclick="openModal('${key}')" style="position: relative; break-inside: avoid; margin-bottom: 24px; display: inline-block; width: 100%; border-radius: 16px; overflow: hidden; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                    
+                    <img src="${prompt.imageUrl}" style="width: 100%; height: auto; display: block; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                    
+                    <button onclick="event.stopPropagation(); toggleFavoriteState('${key}');" style="position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: ${bookmarkColor}; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; backdrop-filter: blur(4px); z-index: 20;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'" title="Save to Favorites">
+                        ${bookmarkIcon}
+                    </button>
+
+                    <div class="hover-overlay" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 40px 16px 16px 16px; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); opacity: 0; transition: opacity 0.3s ease; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none;">
+                        
+                        <div style="pointer-events: auto;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                <div style="background: linear-gradient(135deg, #ff9900, #ff00cc); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">${authorInitial}</div>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="color: white; font-size: 14px; font-weight: 700; line-height: 1.1;">${displayAuthor}</span>
+                                    <span style="color: #ccc; font-size: 11px;">@${prompt.authorName ? prompt.authorName.toLowerCase().replace(/\s/g, '') : 'user'}</span>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button onclick="event.stopPropagation(); navigator.clipboard.writeText('${prompt.promptText.replace(/'/g, "\\'")}'); this.innerHTML='<i class=\\'fas fa-check\\'></i> Copied'; this.style.color='#000'; setTimeout(() => { this.innerHTML='<i class=\\'fas fa-retweet\\'></i> Use Idea'; this.style.color='#000'; }, 2000);" style="background: white; border: none; color: black; padding: 8px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.3);" onmouseover="this.style.background='#eee'" onmouseout="this.style.background='white'">
+                                    <i class="fas fa-retweet"></i> Use Idea
+                                </button>
+
+                                <button onclick="event.stopPropagation(); toggleLikePrompt('${key}')" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: ${heartColor}; padding: 8px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; backdrop-filter: blur(4px); transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
+                                    ${heartIcon} ${realLikes}
+                                </button>
+
+                                <button onclick="event.stopPropagation(); openModal('${key}')" class="card-comment-count" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; backdrop-filter: blur(4px); transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
+                                    <i class="far fa-comment"></i> ${commentCount}
+                                </button>
+
+                                ${deleteBtnHTML}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+            container.innerHTML = card + container.innerHTML;
+        }
+
+        if (showOnlyFavorites && visibleCount === 0) {
+            container.innerHTML = `
+            <div style="text-align: center; padding: 80px 20px; width: 100%; grid-column: 1/-1;">
+                <i class="far fa-bookmark" style="font-size: 4rem; color: #ffaa00; margin-bottom: 20px; display: block;"></i>
+                <h4 style="font-family: 'Orbitron', sans-serif; font-size: 18px; letter-spacing: 2px; color: #fff; margin-bottom: 12px;">NO SAVED PROMPTS</h4>
+                <p style="font-size: 14px; max-width: 400px; margin: 0 auto 24px; line-height: 1.6; color: #6a7090;">Tumne abhi tak koi prompt save nahi kiya hai! Home par jaakar kisi bhi card ke bookmark icon par click karo.</p>
+                <button onclick="toggleFavoritesPageView(false)" style="background: #ff2233; color: white; border: none; padding: 12px 28px; border-radius: 8px; cursor: pointer; font-weight: bold; letter-spacing: 1px; transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">BROWSE PROMPTS</button>
+            </div>`;
+        }
+    });
+};
+
 // 🔥 6. PAGE LOAD HOTE HI DATA DIKHAO
 firebase.auth().onAuthStateChanged(() => { loadCommunityPrompts(); });
 
@@ -1212,8 +1580,14 @@ function listenForNotifications(uid) {
         notifs.forEach(n => {
             if (!n.read) unreadCount++;
             let isLike = n.type === 'like';
-            let icon = isLike ? '<i class="fas fa-heart" style="color:#ff2233"></i>' : '<i class="fas fa-user-plus" style="color:#0095f6"></i>';
-            let text = isLike ? 'liked your prompt.' : 'started following you.';
+            let isComment = n.type === 'comment';
+            let isFollow = n.type === 'follow';
+            let icon = isLike ? '<i class="fas fa-heart" style="color:#ff2233"></i>' : isComment ? '<i class="fas fa-comment" style="color:#4285f4"></i>' : '<i class="fas fa-user-plus" style="color:#0095f6"></i>';
+            let text = isLike ? 'liked your prompt.' : isComment ? 'commented on your prompt.' : 'started following you.';
+            let preview = '';
+            if (isComment && n.commentText) {
+                preview = `<div style="font-size:12px; color:#6b7280; margin-top:3px; font-style:italic;">"${escHTML(n.commentText)}${n.commentText.length >= 60 ? '...' : ''}"</div>`;
+            }
             
             html += `
                 <div style="display:flex; align-items:center; gap:16px; padding:16px 20px; border-bottom:1px solid var(--border); background: ${n.read ? 'transparent' : 'rgba(255,34,51,0.04)'}; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='var(--glass2)'" onmouseout="this.style.background='${n.read ? 'transparent' : 'rgba(255,34,51,0.04)'}'">
@@ -1222,6 +1596,7 @@ function listenForNotifications(uid) {
                     </div>
                     <div style="flex:1; font-size:15px; color:var(--text); line-height:1.4;">
                         <strong style="color:var(--text); font-weight:700;">${n.fromName || 'Someone'}</strong> ${text}
+                        ${preview}
                     </div>
                     <div style="font-size:20px; width:24px; text-align:center; flex-shrink:0;">${icon}</div>
                 </div>
