@@ -7,6 +7,22 @@ let showOnlyFavorites = false; // Favorites mode toggle engine state
 let heroProfileCoords = { x: null, y: null }; // Persist latest hero profile layout coordinates
 let profileRepositionTimeout = null; // Anti-race condition timer state
 
+// 🔥 DARK MODE: Auto-apply on page load
+(function() {
+    const savedDark = localStorage.getItem('ankitstudio_darkmode');
+    if (savedDark === 'true') {
+        document.documentElement.classList.add('dark-mode');
+        document.body?.classList.add('dark-mode');
+    }
+})();
+// Also apply when body loads
+document.addEventListener('DOMContentLoaded', function() {
+    const savedDark = localStorage.getItem('ankitstudio_darkmode');
+    if (savedDark === 'true') {
+        document.body.classList.add('dark-mode');
+    }
+});
+
 // Real-Time Event Debouncing System Engine 
 function debounce(func, delay = 300) {
     let timeoutId;

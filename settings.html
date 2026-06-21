@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - AnkitStudioAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            padding: 0 !important;
+            background: #fff !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: #000;
+        }
+
+        /* ===== TOP NAV ===== */
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #efefef;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 100;
+        }
+        .settings-header .back-btn {
+            font-size: 22px;
+            cursor: pointer;
+            color: #000;
+            background: none;
+            border: none;
+        }
+        .settings-header h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .settings-header .placeholder { width: 22px; }
+
+        /* ===== SETTINGS LIST ===== */
+        .settings-list {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .settings-group {
+            border-bottom: 8px solid #f0f0f0;
+        }
+        .settings-group-title {
+            padding: 16px 16px 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #8e8e8e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #efefef;
+            text-decoration: none;
+            color: #000;
+        }
+        .settings-item:last-child { border-bottom: none; }
+        .settings-item:hover { background: #fafafa; }
+        .settings-item:active { background: #f0f0f0; }
+
+        .settings-item-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+        }
+        .settings-item-left i {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+            color: #262626;
+        }
+        .settings-item-left .item-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .settings-item-left .item-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #000;
+        }
+        .settings-item-left .item-subtitle {
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-top: 2px;
+        }
+
+        .settings-item .chevron {
+            color: #c7c7cc;
+            font-size: 14px;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: #ccc;
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: #0095f6;
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(20px);
+        }
+
+        /* Destructive items */
+        .settings-item.danger .item-title { color: #ed4956; }
+        .settings-item.danger i { color: #ed4956; }
+
+        /* ===== MODAL OVERLAY ===== */
+        .settings-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(0,0,0,0.5);
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .settings-modal-overlay.open { display: flex; }
+
+        .settings-modal {
+            background: #fff;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 16px 16px 0 0;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .settings-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid #efefef;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 5;
+        }
+        .settings-modal-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .settings-modal-header .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #000;
+            padding: 0 4px;
+        }
+        .settings-modal-header .modal-save-btn {
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 700;
+            color: #0095f6;
+            cursor: pointer;
+        }
+        .settings-modal-header .modal-save-btn:disabled {
+            color: #b3d7f7;
+            cursor: not-allowed;
+        }
+
+        .settings-modal-body {
+            padding: 20px 16px;
+        }
+
+        /* Edit Profile Form */
+        .edit-avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .edit-avatar-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #dbdbdb;
+        }
+        .edit-avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f09433, #bc1888);
+            color: #fff;
+            font-size: 30px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #dbdbdb;
+        }
+        .change-photo-btn {
+            background: none;
+            border: none;
+            color: #0095f6;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .edit-field {
+            margin-bottom: 16px;
+        }
+        .edit-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8e8e8e;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .edit-field input,
+        .edit-field textarea {
+            width: 100%;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #000;
+            background: #fafafa;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .edit-field input:focus,
+        .edit-field textarea:focus {
+            border-color: #000;
+            background: #fff;
+        }
+        .edit-field textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .edit-field .char-count {
+            text-align: right;
+            font-size: 11px;
+            color: #8e8e8e;
+            margin-top: 4px;
+        }
+
+        /* Password change */
+        .password-field {
+            position: relative;
+        }
+        .password-field .toggle-pass {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #8e8e8e;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Bottom Nav */
+        .ig-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            border-top: 1px solid #dbdbdb;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 12px 0;
+            z-index: 9999999;
+        }
+        .ig-bottom-nav i { font-size: 24px; color: #000; cursor: pointer; }
+        .ig-nav-profile {
+            width: 28px; height: 28px; border-radius: 50%;
+            object-fit: cover; border: 1px solid #dbdbdb; cursor: pointer;
+        }
+
+        /* Toast notification */
+        .settings-toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #262626;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 999999;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .settings-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Confirmation Dialog */
+        .confirm-dialog {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+        .confirm-dialog.open { display: flex; }
+        .confirm-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 340px;
+            width: 90%;
+            text-align: center;
+        }
+        .confirm-box h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .confirm-box p {
+            font-size: 13px;
+            color: #8e8e8e;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .confirm-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .confirm-btns button {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+        .confirm-btns .btn-danger {
+            background: #ed4956;
+            color: #fff;
+        }
+        .confirm-btns .btn-danger:hover { background: #d93545; }
+        .confirm-btns .btn-cancel {
+            background: #f0f0f0;
+            color: #000;
+        }
+        .confirm-btns .btn-cancel:hover { background: #e0e0e0; }
+
+        /* ===== DARK MODE OVERRIDES ===== */
+        body.dark-mode {
+            background: #000 !important;
+            color: #fff !important;
+        }
+        body.dark-mode .settings-header {
+            background: #000;
+            border-color: #262626;
+        }
+        body.dark-mode .settings-header h1 { color: #fff; }
+        body.dark-mode .settings-header .back-btn { color: #fff; }
+        body.dark-mode .settings-group { border-color: #1a1a1a; }
+        body.dark-mode .settings-item {
+            border-color: #262626;
+            color: #fff;
+        }
+        body.dark-mode .settings-item:hover { background: #1a1a1a; }
+        body.dark-mode .settings-item-left .item-title { color: #fff; }
+        body.dark-mode .settings-item-left .item-subtitle { color: #8e8e8e; }
+        body.dark-mode .settings-item-left i { color: #fff; }
+        body.dark-mode .settings-group-title { color: #8e8e8e; }
+        body.dark-mode .settings-modal {
+            background: #000;
+        }
+        body.dark-mode .settings-modal-header {
+            background: #000;
+            border-color: #262626;
+        }
+        body.dark-mode .settings-modal-header h2 { color: #fff; }
+        body.dark-mode .settings-modal-header .modal-close-btn { color: #fff; }
+        body.dark-mode .edit-field input,
+        body.dark-mode .edit-field textarea {
+            background: #1a1a1a;
+            border-color: #333;
+            color: #fff;
+        }
+        body.dark-mode .edit-field input:focus,
+        body.dark-mode .edit-field textarea:focus {
+            border-color: #fff;
+            background: #111;
+        }
+        body.dark-mode .edit-field label { color: #8e8e8e; }
+        body.dark-mode .ig-bottom-nav {
+            background: #000;
+            border-color: #262626;
+        }
+        body.dark-mode .ig-bottom-nav i { color: #fff; }
+        body.dark-mode .confirm-box {
+            background: #1a1a1a;
+        }
+        body.dark-mode .confirm-box h3 { color: #fff; }
+        body.dark-mode .confirm-box p { color: #8e8e8e; }
+        body.dark-mode .confirm-btns .btn-cancel {
+            background: #333;
+            color: #fff;
+        }
+        body.dark-mode .settings-toast {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="settings-header">
+    <button class="back-btn" onclick="history.back();"><i class="fas fa-arrow-left"></i></button>
+    <h1>Settings & Privacy</h1>
+    <div class="placeholder"></div>
+</div>
+
+<!-- SETTINGS LIST -->
+<div class="settings-list">
+
+    <!-- PROFILE GROUP -->
+    <div class="settings-group">
+        <div class="settings-group-title">Your Account</div>
+
+        <div class="settings-item" onclick="openEditProfile()">
+            <div class="settings-item-left">
+                <i class="fas fa-user-edit"></i>
+                <div class="item-text">
+                    <span class="item-title">Edit Profile</span>
+                    <span class="item-subtitle">Name, bio, photo, links</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+
+        <div class="settings-item" onclick="openPasswordChange()">
+            <div class="settings-item-left">
+                <i class="fas fa-lock"></i>
+                <div class="item-text">
+                    <span class="item-title">Change Password</span>
+                    <span class="item-subtitle">Update your account password</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-eye-slash"></i>
+                <div class="item-text">
+                    <span class="item-title">Private Account</span>
+                    <span class="item-subtitle">Only approved followers can see your prompts</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="privateAccountToggle" onchange="togglePrivateAccount(this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- PREFERENCES GROUP -->
+    <div class="settings-group">
+        <div class="settings-group-title">Preferences</div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-moon"></i>
+                <div class="item-text">
+                    <span class="item-title">Dark Mode</span>
+                    <span class="item-subtitle">Switch to dark theme</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-bell"></i>
+                <div class="item-text">
+                    <span class="item-title">Push Notifications</span>
+                    <span class="item-subtitle">Get notified for likes, comments, follows</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="notifToggle" checked onchange="toggleNotifications(this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- SUPPORT GROUP -->
+    <div class="settings-group">
+        <div class="settings-group-title">Support & About</div>
+
+        <div class="settings-item" onclick="showToast('Help Center coming soon! 🚀')">
+            <div class="settings-item-left">
+                <i class="fas fa-circle-question"></i>
+                <div class="item-text">
+                    <span class="item-title">Help Center</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+
+        <div class="settings-item" onclick="showToast('Privacy Policy page coming soon! 📄')">
+            <div class="settings-item-left">
+                <i class="fas fa-shield-halved"></i>
+                <div class="item-text">
+                    <span class="item-title">Privacy Policy</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+
+        <div class="settings-item" onclick="showToast('Terms of Service page coming soon! 📜')">
+            <div class="settings-item-left">
+                <i class="fas fa-file-contract"></i>
+                <div class="item-text">
+                    <span class="item-title">Terms of Service</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+
+        <div class="settings-item" onclick="showAbout()">
+            <div class="settings-item-left">
+                <i class="fas fa-info-circle"></i>
+                <div class="item-text">
+                    <span class="item-title">About AnkitStudioAI</span>
+                    <span class="item-subtitle">Version 1.0.0</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+    </div>
+
+    <!-- LOGIN GROUP -->
+    <div class="settings-group">
+        <div class="settings-group-title">Account Actions</div>
+
+        <div class="settings-item" onclick="handleLogout()">
+            <div class="settings-item-left">
+                <i class="fas fa-right-from-bracket"></i>
+                <div class="item-text">
+                    <span class="item-title" style="color:#0095f6;">Log Out</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-item danger" onclick="confirmDeleteAccount()">
+            <div class="settings-item-left">
+                <i class="fas fa-trash-alt"></i>
+                <div class="item-text">
+                    <span class="item-title">Delete Account</span>
+                    <span class="item-subtitle" style="color:#ed4956;">Permanently delete your account and data</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron" style="color:#ed4956;"></i>
+        </div>
+    </div>
+
+    <div style="text-align:center; padding:24px 16px 100px; color:#8e8e8e; font-size:12px;">
+        Made with ❤️ by Ankit Burdak · ANKITSTUDIOAI © 2026
+    </div>
+</div>
+
+<!-- ===== EDIT PROFILE MODAL ===== -->
+<div class="settings-modal-overlay" id="editProfileModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('editProfileModal')">&times;</button>
+            <h2>Edit Profile</h2>
+            <button class="modal-save-btn" id="saveProfileBtn" onclick="saveProfile()">Save</button>
+        </div>
+        <div class="settings-modal-body">
+            <div class="edit-avatar-section">
+                <div class="edit-avatar-placeholder" id="editAvatarDisplay">U</div>
+                <input type="file" id="editAvatarInput" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+                <button class="change-photo-btn" onclick="document.getElementById('editAvatarInput').click()">Change Profile Photo</button>
+            </div>
+
+            <div class="edit-field">
+                <label>Display Name</label>
+                <input type="text" id="editName" maxlength="30" placeholder="Your name">
+                <div class="char-count"><span id="nameCount">0</span>/30</div>
+            </div>
+
+            <div class="edit-field">
+                <label>Username</label>
+                <input type="text" id="editUsername" maxlength="20" placeholder="username" style="text-transform:lowercase;">
+                <div class="char-count"><span id="usernameCount">0</span>/20</div>
+            </div>
+
+            <div class="edit-field">
+                <label>Bio</label>
+                <textarea id="editBio" maxlength="150" placeholder="Write a short bio about yourself..."></textarea>
+                <div class="char-count"><span id="bioCount">0</span>/150</div>
+            </div>
+
+            <div class="edit-field">
+                <label>Website / Link</label>
+                <input type="url" id="editWebsite" placeholder="https://yourwebsite.com">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CHANGE PASSWORD MODAL ===== -->
+<div class="settings-modal-overlay" id="passwordModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('passwordModal')">&times;</button>
+            <h2>Change Password</h2>
+            <button class="modal-save-btn" id="changePassBtn" onclick="changePassword()">Update</button>
+        </div>
+        <div class="settings-modal-body">
+            <div class="edit-field">
+                <label>Current Password</label>
+                <div class="password-field">
+                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                    <button class="toggle-pass" onclick="togglePass('currentPassword', this)"><i class="far fa-eye"></i></button>
+                </div>
+            </div>
+            <div class="edit-field">
+                <label>New Password</label>
+                <div class="password-field">
+                    <input type="password" id="newPassword" placeholder="At least 6 characters">
+                    <button class="toggle-pass" onclick="togglePass('newPassword', this)"><i class="far fa-eye"></i></button>
+                </div>
+            </div>
+            <div class="edit-field">
+                <label>Confirm New Password</label>
+                <div class="password-field">
+                    <input type="password" id="confirmPassword" placeholder="Re-enter new password">
+                    <button class="toggle-pass" onclick="togglePass('confirmPassword', this)"><i class="far fa-eye"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ABOUT MODAL ===== -->
+<div class="settings-modal-overlay" id="aboutModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('aboutModal')">&times;</button>
+            <h2>About</h2>
+            <div style="width:50px;"></div>
+        </div>
+        <div class="settings-modal-body" style="text-align:center; padding:32px 20px;">
+            <div style="font-size:48px; margin-bottom:16px;">⚡</div>
+            <h2 style="font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:3px; margin-bottom:4px;">ANKITSTUDIOAI</h2>
+            <p style="color:#8e8e8e; font-size:13px; margin-bottom:20px;">Premium AI Prompt Marketplace</p>
+            <p style="font-size:14px; line-height:1.6; margin-bottom:16px;">Built with ❤️ by <strong>Ankit Burdak</strong></p>
+            <div style="display:flex; gap:12px; justify-content:center; margin-bottom:20px;">
+                <span style="background:#f0f0f0; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600;">🔥 v1.0.0</span>
+                <span style="background:#f0f0f0; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600;">🔥 Firebase</span>
+            </div>
+            <p style="color:#8e8e8e; font-size:12px;">© 2026 AnkitStudioAI. All rights reserved.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CONFIRM DIALOG ===== -->
+<div class="confirm-dialog" id="confirmDialog">
+    <div class="confirm-box">
+        <h3 id="confirmTitle">Are you sure?</h3>
+        <p id="confirmText">This action cannot be undone.</p>
+        <div class="confirm-btns">
+            <button class="btn-danger" id="confirmYesBtn" onclick="executeConfirmedAction()">Delete</button>
+            <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="settings-toast" id="settingsToast"></div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<div class="ig-bottom-nav">
+    <i class="fas fa-home" onclick="window.location.href='index.html'"></i>
+    <i class="fas fa-search" onclick="window.location.href='profile.html'"></i>
+    <i class="far fa-plus-square" onclick="window.location.href='index.html'"></i>
+    <i class="far fa-heart" onclick="window.location.href='index.html'"></i>
+    <img src="" alt="Profile" class="ig-nav-profile" id="navProfileImg" onclick="window.location.href='profile.html'">
+</div>
+
+<script src="js/firebase-config.js"></script>
+<script>
+    // ============================================================
+    //  GLOBALS
+    // ============================================================
+    let _pendingAction = null;
+    let _avatarFileToUpload = null;
+
+    // ============================================================
+    //  DARK MODE — Load saved preference
+    // ============================================================
+    const savedDark = localStorage.getItem('ankitstudio_darkmode');
+    if (savedDark === 'true') {
+        document.body.classList.add('dark-mode');
+        const dmToggle = document.getElementById('darkModeToggle');
+        if (dmToggle) dmToggle.checked = true;
+    }
+
+    // ============================================================
+    //  AUTH STATE — Load user data
+    // ============================================================
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // Set nav profile image
+        const navImg = document.getElementById('navProfileImg');
+        if (navImg && user.photoURL) navImg.src = user.photoURL;
+
+        // Load profile data from Firebase
+        firebase.database().ref('users/' + user.uid).once('value', function(snap) {
+            const data = snap.val() || {};
+            
+            // Load private account toggle
+            const privateToggle = document.getElementById('privateAccountToggle');
+            if (privateToggle) privateToggle.checked = data.isPrivate || false;
+        });
+
+        // Populate edit profile fields
+        const name = user.displayName || (user.email ? user.email.split('@')[0] : '');
+        const username = user.email ? user.email.split('@')[0].toLowerCase() : '';
+        
+        document.getElementById('editName').value = name;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('nameCount').textContent = name.length;
+        document.getElementById('usernameCount').textContent = username.length;
+
+        // Load bio and website from Firebase
+        firebase.database().ref('users/' + user.uid + '/profile').once('value', function(snap) {
+            const profile = snap.val() || {};
+            document.getElementById('editBio').value = profile.bio || '';
+            document.getElementById('editWebsite').value = profile.website || '';
+            document.getElementById('bioCount').textContent = (profile.bio || '').length;
+
+            // Update avatar initial
+            const avatarEl = document.getElementById('editAvatarDisplay');
+            if (avatarEl && !user.photoURL) {
+                avatarEl.textContent = name.charAt(0).toUpperCase();
+            }
+        });
+
+        // If user has photo, show it
+        if (user.photoURL) {
+            const avatarEl = document.getElementById('editAvatarDisplay');
+            avatarEl.outerHTML = `<img src="${user.photoURL}" class="edit-avatar-img" id="editAvatarDisplay">`;
+        }
+    });
+
+    // ============================================================
+    //  CHARACTER COUNTERS
+    // ============================================================
+    document.getElementById('editName')?.addEventListener('input', function() {
+        document.getElementById('nameCount').textContent = this.value.length;
+    });
+    document.getElementById('editUsername')?.addEventListener('input', function() {
+        document.getElementById('usernameCount').textContent = this.value.length;
+    });
+    document.getElementById('editBio')?.addEventListener('input', function() {
+        document.getElementById('bioCount').textContent = this.value.length;
+    });
+
+    // ============================================================
+    //  MODAL OPEN / CLOSE
+    // ============================================================
+    function openEditProfile() {
+        document.getElementById('editProfileModal').classList.add('open');
+    }
+
+    function openPasswordChange() {
+        document.getElementById('passwordModal').classList.add('open');
+    }
+
+    function showAbout() {
+        document.getElementById('aboutModal').classList.add('open');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+    }
+
+    // Close modal on overlay click
+    document.querySelectorAll('.settings-modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('open');
+            }
+        });
+    });
+
+    // ============================================================
+    //  AVATAR PREVIEW
+    // ============================================================
+    function previewAvatar(input) {
+        if (!input.files || !input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const existingImg = document.getElementById('editAvatarDisplay');
+            if (existingImg) {
+                if (existingImg.tagName === 'IMG') {
+                    existingImg.src = e.target.result;
+                } else {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'edit-avatar-img';
+                    img.id = 'editAvatarDisplay';
+                    existingImg.parentNode.replaceChild(img, existingImg);
+                }
+            }
+            _avatarFileToUpload = input.files[0];
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    // ============================================================
+    //  SAVE PROFILE
+    // ============================================================
+    async function saveProfile() {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        const saveBtn = document.getElementById('saveProfileBtn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        try {
+            const name = document.getElementById('editName').value.trim();
+            const bio = document.getElementById('editBio').value.trim();
+            const website = document.getElementById('editWebsite').value.trim();
+
+            // 1. Update Firebase Auth display name
+            await user.updateProfile({ displayName: name });
+
+            // 2. Upload avatar if changed
+            if (_avatarFileToUpload) {
+                const imgbbApiKey = "5f30b483ae91c03320748137616415d7";
+                const formData = new FormData();
+                formData.append("image", _avatarFileToUpload);
+
+                const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+                    method: "POST",
+                    body: formData
+                });
+                const imgbbData = await imgbbRes.json();
+
+                if (imgbbData.success) {
+                    await user.updateProfile({ photoURL: imgbbData.data.url });
+                    console.log('🔥 Avatar updated:', imgbbData.data.url);
+                }
+            }
+
+            // 3. Save bio & website to Realtime Database
+            await firebase.database().ref('users/' + user.uid + '/profile').update({
+                bio: bio,
+                website: website,
+                displayName: name
+            });
+
+            _avatarFileToUpload = null;
+            closeModal('editProfileModal');
+            showToast('✅ Profile updated successfully!');
+        } catch (err) {
+            console.error('Save profile error:', err);
+            showToast('❌ Failed to save profile: ' + err.message);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+        }
+    }
+
+    // ============================================================
+    //  CHANGE PASSWORD
+    // ============================================================
+    function changePassword() {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        const currentPass = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+
+        if (!currentPass || !newPass || !confirmPass) {
+            showToast('⚠️ Please fill all fields!');
+            return;
+        }
+        if (newPass.length < 6) {
+            showToast('⚠️ Password must be at least 6 characters!');
+            return;
+        }
+        if (newPass !== confirmPass) {
+            showToast('⚠️ New passwords do not match!');
+            return;
+        }
+
+        const btn = document.getElementById('changePassBtn');
+        btn.disabled = true;
+        btn.textContent = 'Updating...';
+
+        // Re-authenticate then update
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPass);
+        user.reauthenticateWithCredential(credential).then(() => {
+            return user.updatePassword(newPass);
+        }).then(() => {
+            showToast('✅ Password changed successfully!');
+            closeModal('passwordModal');
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }).catch(err => {
+            console.error('Password change error:', err);
+            if (err.code === 'auth/wrong-password') {
+                showToast('❌ Current password is incorrect!');
+            } else if (err.code === 'auth/weak-password') {
+                showToast('❌ New password is too weak!');
+            } else {
+                showToast('❌ Error: ' + err.message);
+            }
+        }).finally(() => {
+            btn.disabled = false;
+            btn.textContent = 'Update';
+        });
+    }
+
+    // ============================================================
+    //  TOGGLE PASSWORD VISIBILITY
+    // ============================================================
+    function togglePass(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.innerHTML = '<i class="far fa-eye-slash"></i>';
+        } else {
+            input.type = 'password';
+            btn.innerHTML = '<i class="far fa-eye"></i>';
+        }
+    }
+
+    // ============================================================
+    //  DARK MODE
+    // ============================================================
+    function toggleDarkMode(enabled) {
+        if (enabled) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('ankitstudio_darkmode', 'true');
+            showToast('🌙 Dark mode ON');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('ankitstudio_darkmode', 'false');
+            showToast('☀️ Light mode ON');
+        }
+    }
+
+    // ============================================================
+    //  PRIVATE ACCOUNT
+    // ============================================================
+    function togglePrivateAccount(enabled) {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        firebase.database().ref('users/' + user.uid).update({
+            isPrivate: enabled
+        }).then(() => {
+            showToast(enabled ? '🔒 Account is now Private' : '🔓 Account is now Public');
+        }).catch(err => {
+            showToast('❌ Failed to update');
+            document.getElementById('privateAccountToggle').checked = !enabled;
+        });
+    }
+
+    // ============================================================
+    //  NOTIFICATIONS TOGGLE
+    // ============================================================
+    function toggleNotifications(enabled) {
+        localStorage.setItem('ankitstudio_notifications', enabled ? 'true' : 'false');
+        showToast(enabled ? '🔔 Notifications ON' : '🔕 Notifications OFF');
+    }
+
+    // ============================================================
+    //  LOGOUT
+    // ============================================================
+    function handleLogout() {
+        firebase.auth().signOut().then(() => {
+            window.location.href = 'index.html';
+        }).catch(err => {
+            showToast('❌ Logout failed');
+        });
+    }
+
+    // ============================================================
+    //  DELETE ACCOUNT
+    // ============================================================
+    function confirmDeleteAccount() {
+        document.getElementById('confirmTitle').textContent = 'Delete Account?';
+        document.getElementById('confirmText').textContent = 'This will permanently delete your account, all your prompts, comments, and data. This action CANNOT be undone!';
+        document.getElementById('confirmYesBtn').textContent = 'Delete My Account';
+        _pendingAction = 'deleteAccount';
+        document.getElementById('confirmDialog').classList.add('open');
+    }
+
+    function executeConfirmedAction() {
+        if (_pendingAction === 'deleteAccount') {
+            deleteAccount();
+        }
+        closeConfirm();
+    }
+
+    function closeConfirm() {
+        document.getElementById('confirmDialog').classList.remove('open');
+        _pendingAction = null;
+    }
+
+    async function deleteAccount() {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        showToast('Deleting account... ⏳');
+
+        try {
+            // 1. Remove user data from Realtime Database
+            await firebase.database().ref('users/' + user.uid).remove();
+
+            // 2. Remove user's prompts
+            const promptsSnap = await firebase.database().ref('submitted_prompts').orderByChild('authorId').equalTo(user.uid).once('value');
+            const updates = {};
+            if (promptsSnap.exists()) {
+                promptsSnap.forEach(child => {
+                    updates[child.key] = null;
+                });
+                await firebase.database().ref('submitted_prompts').update(updates);
+            }
+
+            // 3. Delete Firebase Auth account
+            await user.delete();
+
+            showToast('✅ Account deleted');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        } catch (err) {
+            console.error('Delete account error:', err);
+            if (err.code === 'auth/requires-recent-login') {
+                showToast('⚠️ Please log out and log back in, then try again.');
+            } else {
+                showToast('❌ Error: ' + err.message);
+            }
+        }
+    }
+
+    // ============================================================
+    //  TOAST
+    // ============================================================
+    function showToast(msg) {
+        const toast = document.getElementById('settingsToast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2500);
+    }
+
+    // ============================================================
+    //  DARK MODE: Apply to main site pages too
+    // ============================================================
+    // Apply dark mode class to index.html / profile.html if they load this preference
+    window.applyDarkModeGlobally = function() {
+        const saved = localStorage.getItem('ankitstudio_darkmode');
+        if (saved === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+    };
+</script>
+
+</body>
+</html>
