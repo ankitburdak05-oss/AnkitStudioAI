@@ -1091,46 +1091,7 @@ function loadCommunityPrompts() {
     });
 }
 
-// 🔥 4. REAL FIREBASE LIKE / UNLIKE LOGIC (With Notifications)
-window.toggleLikePrompt = function(promptKey) {
-    let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
-    const dbRef = firebase.database().ref('submitted_prompts/' + promptKey + '/likeCount');
-    const currentUser = firebase.auth().currentUser;
 
-    if (myFavorites.includes(promptKey)) {
-        // UNLIKE KAR RAHA HAI
-        myFavorites = myFavorites.filter(id => id !== promptKey);
-        dbRef.transaction(currentLikes => (currentLikes || 0) > 0 ? currentLikes - 1 : 0);
-    } else {
-        // LIKE KAR RAHA HAI
-        myFavorites.push(promptKey);
-        dbRef.transaction(currentLikes => (currentLikes || 0) + 1);
-
-        // 🔥 NOTIFICATION BHEJNE KA LOGIC 🔥
-        if (currentUser) {
-            firebase.database().ref('submitted_prompts/' + promptKey).once('value', snap => {
-                let pData = snap.val();
-                // Khud ke post par like ka notification nahi jayega
-                if (pData && pData.authorId && pData.authorId !== currentUser.uid) {
-                    firebase.database().ref('users/' + pData.authorId + '/notifications').push({
-                        type: 'like',
-                        promptId: promptKey,
-                        fromUid: currentUser.uid,
-                        fromName: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User'),
-                        timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        read: false
-                    });
-                }
-            });
-        }
-    }
-
-    // 3. Local memory update kar do taaki dil (heart) turant apna color badle
-    localStorage.setItem('community_favs', JSON.stringify(myFavorites));
-    
-    // 4. Screen ko turant refresh karo
-    loadCommunityPrompts();
-};
 
 // 🔥 5. DELETE KARNE KA LOGIC
 window.deleteMyPrompt = function(promptKey) {
@@ -1639,3 +1600,44 @@ firebase.auth().onAuthStateChanged(user => {
         if(notifWrap) notifWrap.style.display = 'none';
     }
 });
+
+// 🔥 4. REAL FIREBASE LIKE / UNLIKE LOGIC (With Notifications)
+window.toggleLikePrompt = function(promptKey) {
+    let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
+    const dbRef = firebase.database().ref('submitted_prompts/' + promptKey + '/likeCount');
+    const currentUser = firebase.auth().currentUser;
+
+    if (myFavorites.includes(promptKey)) {
+        // UNLIKE KAR RAHA HAI
+        myFavorites = myFavorites.filter(id => id !== promptKey);
+        dbRef.transaction(currentLikes => (currentLikes || 0) > 0 ? currentLikes - 1 : 0);
+    } else {
+        // LIKE KAR RAHA HAI
+        myFavorites.push(promptKey);
+        dbRef.transaction(currentLikes => (currentLikes || 0) + 1);
+
+        // 🔥 NOTIFICATION BHEJNE KA LOGIC 🔥
+        if (currentUser) {
+            firebase.database().ref('submitted_prompts/' + promptKey).once('value', snap => {
+                let pData = snap.val();
+                // Khud ke post par like ka notification nahi jayega
+                if (pData && pData.authorId && pData.authorId !== currentUser.uid) {
+                    firebase.database().ref('users/' + pData.authorId + '/notifications').push({
+                        type: 'like',
+                        promptId: promptKey,
+                        fromUid: currentUser.uid,
+                        fromName: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User'),
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        read: false
+                    });
+                }
+            });
+        }
+    }
+
+    // 3. Local memory update kar do taaki dil (heart) turant apna color badle
+    localStorage.setItem('community_favs', JSON.stringify(myFavorites));
+    
+    // 4. Screen ko turant refresh karo
+    loadCommunityPrompts();
+};

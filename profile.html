@@ -629,6 +629,42 @@
     };
     
     // ============================================================
+    //  🔥 AUTO-OPEN USER PROFILE FROM NOTIFICATION CLICK (URL PARAM)
+    // ============================================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewUid = urlParams.get('viewUid');
+    const viewName = urlParams.get('viewName');
+
+    if (viewUid) {
+        // Clear the URL params so refresh doesn't re-trigger
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Wait for Firebase auth to be ready, then open the profile
+        const waitForAuthAndOpen = function() {
+            const me = firebase.auth().currentUser;
+            if (me) {
+                if (viewUid === me.uid) {
+                    // Agar khud ki profile hai toh normal profile dikhao
+                    const profileBtn = document.getElementById('ig-profile-btn');
+                    if (profileBtn) profileBtn.click();
+                } else {
+                    // Dusre user ki profile kholo
+                    setTimeout(function() {
+                        if (typeof window.openUserProfile === 'function') {
+                            window.openUserProfile(viewUid, decodeURIComponent(viewName || 'User'));
+                        } else {
+                            console.error('openUserProfile function not found');
+                        }
+                    }, 500);
+                }
+            } else {
+                // Auth not ready yet, retry
+                setTimeout(waitForAuthAndOpen, 300);
+            }
+        };
+        waitForAuthAndOpen();
+    }
+
+    // ============================================================
     //  MAIN SCRIPT
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
@@ -819,14 +855,24 @@
                             else if (n.type === 'comment') label = 'aapke prompt pe comment kiya';
                             let preview = '';
                             if (n.type === 'comment' && n.commentText) {
-                                preview = '<div style="font-size:12px;color:#8e8e8e;margin-top:2px;font-style:italic;">"' + esc(n.commentText) + (n.commentText.length >= 60 ? '...' : '') + '"</div>';
+                                preview = '<div style="font-size:12px;color:#8e8e8e;margin-top:2px;font-style:italic;background:rgba(0,0,0,0.03);padding:4px 8px;border-radius:6px;border-left:3px solid #4285f4;">"' + esc(n.commentText) + (n.commentText.length >= 60 ? '...' : '') + '"</div>';
                             }
-                        html += '<div class="follow-user-row">'
+                            // 🔥 User handle + UID
+                            let fromHandle = '@user';
+                            if (n.fromName) fromHandle = '@' + n.fromName.toLowerCase().replace(/\s+/g, '');
+                            else if (n.fromUid) fromHandle = '@' + n.fromUid.substring(0, 8);
+                            let uidLine = '';
+                            if (n.fromUid) uidLine = '<div style="font-size:10px;color:#aaa;font-family:monospace;margin-top:1px;">ID: ' + esc(n.fromUid.substring(0,12)) + '...</div>';
+                            // 🔥 Click to view profile
+                            let clickHandler = n.fromUid ? ' onclick="openUserProfile(\'' + esc(n.fromUid) + '\', \'' + esc(n.fromName || 'User') + '\')"' : '';
+                        html += '<div class="follow-user-row"' + clickHandler + ' style="cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'transparent\'">'
                                 + '<div class="follow-user-avatar">' + esc((n.fromName || 'U').charAt(0).toUpperCase()) + '</div>'
                                 + '<div class="follow-user-info">'
-                                + '<div class="uname">' + esc(n.fromName || 'User') + '</div>'
+                                + '<div class="uname">' + esc(n.fromName || 'User') + ' <span style="font-size:11px;color:#aaa;font-weight:400;">' + esc(fromHandle) + '</span></div>'
                                 + '<div class="rname">' + esc(label) + '</div>'
                                 + preview
+                                + uidLine
+                                + '<div style="font-size:11px;color:#0095f6;font-weight:600;margin-top:3px;"><i class="fas fa-external-link-alt" style="font-size:9px;"></i> View Profile</div>'
                                 + '</div></div>';
                         });
                         panelBody.innerHTML = html || '<div class="follow-empty"><i class="far fa-bell"></i>Koi notification nahi hai.</div>';
@@ -902,5 +948,5 @@
         </div>
     </div>
 </div>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0f264e7ee69fea4',t:'MTc4MjAzODQxNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0f28d5fcad966e5',t:'MTc4MjA0MDA3NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
