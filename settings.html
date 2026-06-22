@@ -933,8 +933,16 @@
             await firebase.database().ref('users/' + user.uid + '/profile').update({
                 bio: bio,
                 website: website,
-                displayName: name
+                displayName: name,
+                photoURL: user.photoURL || null  // 🔥 FIX: Photo URL bhi save karo DB mein taaki dusre users dekh sakein!
             });
+
+            // 🔥 FIX: Also save photoURL at top-level users/{uid}/photoURL for easy access
+            if (user.photoURL) {
+                await firebase.database().ref('users/' + user.uid).update({
+                    photoURL: user.photoURL
+                });
+            }
 
             _avatarFileToUpload = null;
             closeModal('editProfileModal');

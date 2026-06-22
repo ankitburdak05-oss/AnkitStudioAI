@@ -59,7 +59,7 @@
         .dm-list-view {
             height: calc(100vh - 56px);
             overflow-y: auto;
-            padding-bottom: 70px;
+            padding-bottom: 20px;
         }
 
         .dm-search-bar {
@@ -689,8 +689,8 @@
 <!-- ===== TOAST ===== -->
 <div class="settings-toast" id="settingsToast"></div>
 
-<!-- ===== BOTTOM NAV ===== -->
-<div class="ig-bottom-nav">
+<!-- ===== BOTTOM NAV — Shown only when opened directly, hidden when coming from profile ===== -->
+<div class="ig-bottom-nav" id="dmBottomNav">
     <i class="fas fa-home" onclick="window.location.href='index.html'"></i>
     <i class="fas fa-search" onclick="window.location.href='profile.html'"></i>
     <i class="far fa-plus-square" onclick="window.location.href='index.html'"></i>
@@ -711,6 +711,7 @@ let _chatListListenerRef = null;
 let _userCache = {};
 let _lastTypingTime = 0;
 let _allChatItems = [];
+let _cameFromProfile = false; // 🔥 FIX: Track if user came from profile page
 
 // Dark mode
 const savedDark = localStorage.getItem('ankitstudio_darkmode');
@@ -740,6 +741,17 @@ firebase.auth().onAuthStateChanged(function(user) {
     const params = new URLSearchParams(window.location.search);
     const chatUid = params.get('chatWith');
     const chatName = params.get('chatName');
+
+    // 🔥 FIX: Agar profile se Message click karke aaye ho (chatWith param hai) toh bottom nav HIDE karo
+    // Direct messages.html open kiya toh bottom nav DIKHEGA
+    const bottomNav = document.getElementById('dmBottomNav');
+    const listPadding = document.querySelector('.dm-list-view');
+    if (chatUid && bottomNav) {
+        bottomNav.style.display = 'none';
+        _cameFromProfile = true;
+        if (listPadding) listPadding.style.paddingBottom = '20px';
+    }
+
     if (chatUid) {
         window.history.replaceState({}, document.title, window.location.pathname);
         setTimeout(() => openChatWith(chatUid, chatName || 'User'), 500);
@@ -770,11 +782,17 @@ function loadUserCache() {
         snap.forEach(function(child) {
             const uid = child.key;
             const d = child.val();
-            _userCache[uid] = {
-                name: d.profile?.displayName || d.displayName || d.name || (d.email ? d.email.split('@')[0] : 'User'),
-                email: d.email || '',
-                photo: d.profile?.photoURL || d.photoURL || null
-            };
+            const photo = d.profile?.photoURL || d.photoURL || null;
+            if (_userCache[uid]) {
+                // Update existing entry with photo
+                _userCache[uid].photo = photo;
+            } else {
+                _userCache[uid] = {
+                    name: d.profile?.displayName || d.displayName || d.name || (d.email ? d.email.split('@')[0] : 'User'),
+                    email: d.email || '',
+                    photo: photo
+                };
+            }
         });
     });
 }
@@ -828,6 +846,11 @@ function renderChatList(chats) {
         const lastTime = chat.lastMessageTime || 0;
         const unread = chat.unreadCount || 0;
         const timeStr = formatTime(lastTime);
+        // 🔥 FIX: Show profile photo in chat list if available
+        const photoUrl = cached.photo || chat.partnerPhoto || null;
+        const avatarHtml = photoUrl
+            ? `<div class="dm-avatar"><img src="${escHTML(photoUrl)}" alt="${escHTML(name)}"></div>`
+            : `<div class="dm-avatar">${initial}</div>`;
 
         // Truncate message preview
         let preview = lastMsg;
@@ -837,7 +860,7 @@ function renderChatList(chats) {
         const isSentByMe = chat.lastSender === _myUid;
 
         html += `<div class="dm-item" onclick="openChatWith('${uid}', '${escJS(name)}')">
-            <div class="dm-avatar">${initial}</div>
+            ${avatarHtml}
             <div class="dm-info">
                 <div class="dm-name">${escHTML(name)}</div>
                 <div class="dm-preview">
@@ -879,7 +902,16 @@ function openChatWith(uid, name) {
     document.getElementById('dmChatView').classList.add('active');
 
     document.getElementById('chatUserName').textContent = name;
-    document.getElementById('chatAvatar').textContent = name.charAt(0).toUpperCase();
+
+    // 🔥 FIX: Show partner's profile photo in chat header if available
+    const cached = _userCache[uid] || {};
+    const photoUrl = cached.photo || null;
+    const chatAvatarEl = document.getElementById('chatAvatar');
+    if (chatAvatarEl && photoUrl) {
+        chatAvatarEl.innerHTML = `<img src="${escHTML(photoUrl)}" alt="${escHTML(name)}">`;
+    } else {
+        chatAvatarEl.textContent = name.charAt(0).toUpperCase();
+    }
 
     // Clear messages area
     document.getElementById('chatMessages').innerHTML = '';
@@ -913,6 +945,14 @@ function closeChatView() {
 
     document.getElementById('dmChatView').classList.remove('active');
     document.getElementById('dmListView').classList.remove('hidden');
+
+    // 🔥 FIX: Chat se wapas aaye toh bottom nav tabhi dikhao jab directly open kiya tha
+    const bottomNav = document.getElementById('dmBottomNav');
+    const listPadding = document.querySelector('.dm-list-view');
+    if (bottomNav && !_cameFromProfile) {
+        bottomNav.style.display = 'flex';
+    }
+    if (listPadding) listPadding.style.paddingBottom = _cameFromProfile ? '20px' : '70px';
 }
 
 // ============================================================
@@ -1020,10 +1060,15 @@ function sendMessage() {
         sendBtn.disabled = false;
 
         // Update chat metadata for both users
-        const updates = {};
+        const myName = firebase.auth().currentUser?.displayName || (firebase.auth().currentUser?.email ? firebase.auth().currentUser.email.split('@')[0] : 'User');
+        const myPhoto = firebase.auth().currentUser?.photoURL || null;
+        const partnerCached = _userCache[_chatPartnerUid] || {};
+        const partnerPhoto = partnerCached.photo || null;
+
         updates['users/' + _myUid + '/chats/' + _chatPartnerUid] = {
             partnerUid: _chatPartnerUid,
             partnerName: _chatPartnerName,
+            partnerPhoto: partnerPhoto,
             lastMessage: text,
             lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
             lastSender: _myUid,
@@ -1031,7 +1076,8 @@ function sendMessage() {
         };
         updates['users/' + _chatPartnerUid + '/chats/' + _myUid] = {
             partnerUid: _myUid,
-            partnerName: firebase.auth().currentUser?.displayName || (firebase.auth().currentUser?.email ? firebase.auth().currentUser.email.split('@')[0] : 'User'),
+            partnerName: myName,
+            partnerPhoto: myPhoto,
             lastMessage: text,
             lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
             lastSender: _myUid,
@@ -1337,5 +1383,5 @@ window.startChat = function(uid, name) {
 
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0f375285e2a0b42',t:'MTc4MjA0OTU2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0f81fbceb03d341',t:'MTc4MjA5ODQ5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

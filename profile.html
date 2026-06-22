@@ -488,12 +488,21 @@
     window.renderFollowButton = function(targetId, isFollowing) {
         const c = document.getElementById('dynamic-action-buttons');
         if (!c) return;
+        // 🔥 FIX: Get target user name from top-title or cache
+        let targetName = 'User';
+        if (typeof _userCacheMap !== 'undefined' && _userCacheMap[targetId]) {
+            targetName = _userCacheMap[targetId].name || _userCacheMap[targetId].email?.split('@')[0] || 'User';
+        } else {
+            const nameEl = document.getElementById('main-profile-name');
+            if (nameEl) targetName = nameEl.textContent || 'User';
+        }
+        const chatUrl = "messages.html?chatWith=" + encodeURIComponent(targetId) + "&chatName=" + encodeURIComponent(targetName);
         if (isFollowing) {
             c.innerHTML = '<button type="button" data-follow-target="'+targetId+'" data-follow-action="show-unfollow" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Following <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>'
-                        + '<button style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
+                        + '<button onclick="window.location.href=\'' + chatUrl + '\'" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
         } else {
             c.innerHTML = '<button type="button" data-follow-target="'+targetId+'" data-follow-action="follow" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#0095f6;font-weight:600;font-size:14px;cursor:pointer;color:#fff;">Follow</button>'
-                        + '<button style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
+                        + '<button onclick="window.location.href=\'' + chatUrl + '\'" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
         }
     };
 
@@ -501,8 +510,17 @@
     window.renderUnfollowButton = function(targetId) {
         const c = document.getElementById('dynamic-action-buttons');
         if (!c) return;
+        // 🔥 FIX: Get target user name for Message button
+        let targetName = 'User';
+        if (typeof _userCacheMap !== 'undefined' && _userCacheMap[targetId]) {
+            targetName = _userCacheMap[targetId].name || _userCacheMap[targetId].email?.split('@')[0] || 'User';
+        } else {
+            const nameEl = document.getElementById('main-profile-name');
+            if (nameEl) targetName = nameEl.textContent || 'User';
+        }
+        const chatUrl = "messages.html?chatWith=" + encodeURIComponent(targetId) + "&chatName=" + encodeURIComponent(targetName);
         c.innerHTML = '<button type="button" data-follow-target="'+targetId+'" data-follow-action="unfollow" style="flex:1;padding:7px 0;border:1px solid #ed4956;border-radius:8px;background:#fff;font-weight:600;font-size:14px;cursor:pointer;color:#ed4956;">Unfollow</button>'
-                    + '<button type="button" data-follow-target="'+targetId+'" data-follow-action="show-following" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Cancel</button>';
+                    + '<button onclick="window.location.href=\'' + chatUrl + '\'" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
     };
 
     // 3. SINGLE CLICK LISTENER
@@ -618,6 +636,37 @@
         if (typeof attachProfileStatsListener === 'function') attachProfileStatsListener(authorId);
         else if (typeof attachStats === 'function') attachStats(authorId);
         if (typeof attachPostsListener === 'function') attachPostsListener(authorId);
+
+        // 🔥 FIX: Fetch target user's profile photo + bio from Realtime Database
+        firebase.database().ref('users/' + authorId).once('value', function(uSnap) {
+            if (uSnap.exists()) {
+                const uData = uSnap.val();
+                const profile = uData.profile || {};
+                // Update profile picture
+                const photoUrl = profile.photoURL || uData.photoURL || null;
+                const mainPic = document.getElementById('main-profile-pic');
+                if (mainPic && photoUrl) {
+                    mainPic.src = photoUrl;
+                } else if (mainPic && !photoUrl) {
+                    // No photo — show default gradient or initial
+                    mainPic.src = '';
+                    mainPic.style.background = 'linear-gradient(135deg, #f09433, #bc1888)';
+                }
+                // Update bio section
+                if (profile.displayName) {
+                    const nameEl = document.getElementById('main-profile-name');
+                    if (nameEl) nameEl.textContent = profile.displayName;
+                }
+                if (profile.bio) {
+                    const bioEl = document.querySelector('.ig-bio-text');
+                    if (bioEl) bioEl.textContent = profile.bio;
+                }
+                if (profile.website) {
+                    const catEl = document.getElementById('main-profile-category');
+                    if (catEl && profile.website) catEl.innerHTML = '<a href="' + profile.website + '" target="_blank" style="color:#0095f6;text-decoration:none;">' + profile.website + '</a>';
+                }
+            }
+        });
 
         window.renderFollowButton(authorId, false);
 
@@ -791,6 +840,24 @@
             if (me) {
                 attachProfileStatsListener(me.uid);
                 attachPostsListener(me.uid);
+
+                // 🔥 FIX: Load own profile photo + bio from Realtime Database (not just Auth)
+                firebase.database().ref('users/' + me.uid).once('value', function(uSnap) {
+                    if (uSnap.exists()) {
+                        const uData = uSnap.val();
+                        const profile = uData.profile || {};
+                        const photoUrl = profile.photoURL || uData.photoURL || me.photoURL || null;
+                        const mainPic = document.getElementById('main-profile-pic');
+                        if (mainPic && photoUrl) mainPic.src = photoUrl;
+                        if (profile.displayName) {
+                            if (mainProfileName) mainProfileName.textContent = profile.displayName;
+                        }
+                        if (profile.bio) {
+                            const bioEl = document.querySelector('.ig-bio-text');
+                            if (bioEl) bioEl.textContent = profile.bio;
+                        }
+                    }
+                });
             }
             const c = document.getElementById('dynamic-action-buttons');
             if (c) {
@@ -810,6 +877,15 @@
                         if (el) el.src = user.photoURL;
                     });
                 }
+                // 🔥 FIX: Also try to load photo from Realtime Database (more up-to-date)
+                firebase.database().ref('users/' + user.uid + '/profile/photoURL').once('value', function(snap) {
+                    if (snap.exists() && snap.val()) {
+                        ['main-profile-pic', 'ig-profile-btn'].forEach(function(id) {
+                            const el = document.getElementById(id);
+                            if (el) el.src = snap.val();
+                        });
+                    }
+                });
                 if (user.displayName) {
                     const el = document.getElementById('main-profile-name');
                     if (el) el.textContent = user.displayName;
@@ -949,5 +1025,5 @@
         </div>
     </div>
 </div>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0f374e1a9740b42',t:'MTc4MjA0OTU1Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
