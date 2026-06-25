@@ -2,6 +2,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
   authDomain: "ankitstudioai.firebaseapp.com",
+  databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com",
   projectId: "ankitstudioai",
   storageBucket: "ankitstudioai.firebasestorage.app",
   messagingSenderId: "450755070024",
@@ -9,8 +10,10 @@ const firebaseConfig = {
   measurementId: "G-BJ44E7P08S"
 };
 
-// Core Engine Initialization
-firebase.initializeApp(firebaseConfig);
+// Core Engine Initialization (Safe Mode to prevent duplicate app errors)
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
 // FIXED: Initialized Realtime Database to perfectly match app.js sync logic
 const database = firebase.database(); 
@@ -28,9 +31,10 @@ function loginWithGoogle() {
             window.location.reload();
         })
         .catch((error) => {
-            console.error("Google Sign-In Error:", error.message);
-            alert("Google Login Failed: " + error.message);
+            console.error("Error during Google Sign-In:", error.message);
+            alert("Login failed: " + error.message);
         });
 }
-// Is line ko firebase-config.js ke ekdam aakhiri mein daal do
+
+// Is line ko firebase-config.js ke ekdam aakhiri mein daal do taaki button kaam kare
 window.loginWithGoogle = loginWithGoogle;

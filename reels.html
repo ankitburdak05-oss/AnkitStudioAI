@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Reels - ANKITSTUDIOAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%;overflow:hidden}
+        body{font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#000;color:#fff;-webkit-user-select:none;user-select:none}
+
+        /* ===== REELS CONTAINER ===== */
+        .reels-container{width:100%;height:100vh;overflow:hidden;position:relative;scroll-snap-type:y mandatory;overflow-y:auto;scrollbar-width:none}
+        .reels-container::-webkit-scrollbar{display:none}
+
+        /* ===== SINGLE REEL ===== */
+        .reel{width:100%;height:100vh;scroll-snap-align:start;position:relative;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden}
+        .reel-media{width:100%;height:100%;object-fit:cover}
+        .reel-media-image{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+        .reel-media-image img{width:100%;height:100%;object-fit:cover}
+
+        /* Gradient overlay for text */
+        .reel-overlay{position:absolute;bottom:0;left:0;right:0;padding:16px 16px 80px;background:linear-gradient(transparent,rgba(0,0,0,0.8));z-index:2}
+
+        /* Author info */
+        .reel-author{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .reel-author-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;overflow:hidden;flex-shrink:0}
+        .reel-author-av img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+        .reel-author-name{font-size:14px;font-weight:600}
+        .reel-follow-btn{padding:4px 14px;background:#0095f6;border:none;border-radius:6px;font-size:12px;font-weight:600;color:#fff;cursor:pointer}
+        .reel-follow-btn.following{background:transparent;border:1px solid rgba(255,255,255,0.4);color:#fff}
+
+        /* Caption */
+        .reel-caption{font-size:13px;line-height:1.4;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .reel-caption .cap-user{font-weight:600;margin-right:4px}
+        .reel-caption-more{font-size:12px;color:rgba(255,255,255,0.7);cursor:pointer}
+
+        /* Audio tag */
+        .reel-audio{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);margin-top:4px}
+        .reel-audio i{font-size:10px}
+        .reel-audio-name{font-weight:600;cursor:pointer}
+        .reel-audio-name:hover{text-decoration:underline}
+        .reel-audio-spin{animation:spin 3s linear infinite}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+        /* Right action bar */
+        .reel-actions{position:absolute;right:12px;bottom:100px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:18px}
+        .reel-action{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+        .reel-action i{font-size:26px;color:#fff;transition:transform .15s}
+        .reel-action:active i{transform:scale(.85)}
+        .reel-action i.liked{color:#ed4956}
+        .reel-action span{font-size:11px;font-weight:600;color:#fff}
+        .reel-action-avatar{width:36px;height:36px;border-radius:50%;border:2px solid #fff;overflow:hidden;background:linear-gradient(135deg,#f09433,#bc1888);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+
+        /* Progress bar for video */
+        .reel-progress{position:absolute;bottom:64px;left:0;right:0;height:2px;background:rgba(255,255,255,0.2);z-index:4}
+        .reel-progress-fill{height:100%;background:#fff;width:0%;transition:width .1s linear}
+
+        /* ===== REEL UPLOAD ===== */
+        #reelUploadModal{position:fixed;inset:0;z-index:99999;background:#000;display:none;flex-direction:column}
+        #reelUploadModal.open{display:flex}
+        .upload-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #333}
+        .upload-title{font-size:16px;font-weight:700;color:#fff}
+        .upload-close{background:none;border:none;font-size:22px;cursor:pointer;color:#fff}
+        .upload-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+        .upload-preview{width:240px;height:360px;border-radius:16px;overflow:hidden;background:#1a1a1a;display:flex;align-items:center;justify-content:center}
+        .upload-preview img{width:100%;height:100%;object-fit:cover}
+        .upload-preview-placeholder{color:#555;text-align:center;font-size:14px}
+        .upload-preview-placeholder i{font-size:48px;display:block;margin-bottom:12px;color:#333}
+        .upload-input{width:100%;max-width:300px;background:transparent;border:1px solid #333;border-radius:10px;padding:10px 14px;color:#fff;font-size:14px;outline:none}
+        .upload-input::placeholder{color:#555}
+        .upload-btn{width:100%;max-width:300px;padding:12px;background:#0095f6;border:none;border-radius:8px;font-size:16px;font-weight:600;color:#fff;cursor:pointer}
+        .upload-btn:disabled{background:#333;color:#666;cursor:not-allowed}
+        .upload-file-btn{width:100%;max-width:300px;padding:12px;background:#1a1a1a;border:1px solid #333;border-radius:8px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;text-align:center}
+
+        /* ===== AUDIO SEARCH MODAL ===== */
+        #audioSearchModal{position:fixed;inset:0;z-index:100000;background:#fff;display:none;flex-direction:column;color:#000}
+        #audioSearchModal.open{display:flex}
+        .audio-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #efefef}
+        .audio-back{background:none;border:none;font-size:20px;cursor:pointer;color:#000}
+        .audio-search{flex:1;background:#efefef;border:none;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;color:#000}
+        .audio-search::placeholder{color:#8e8e8e}
+        .audio-list{overflow-y:auto;flex:1;padding:8px 0}
+        .audio-item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer}
+        .audio-item:active{background:#f5f5f5}
+        .audio-icon{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#f09433,#bc1888);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .audio-icon i{color:#fff;font-size:18px}
+        .audio-name{font-size:14px;font-weight:600}
+        .audio-artist{font-size:12px;color:#8e8e8e}
+
+        /* ===== BOTTOM NAV ===== */
+        .ig-bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#000;border-top:1px solid #262626;display:flex;justify-content:space-around;align-items:center;padding:10px 0 12px;z-index:9999}
+        .ig-bottom-nav i{font-size:24px;color:#fff;cursor:pointer}
+        .ig-nav-profile{width:28px;height:28px;border-radius:50%;object-fit:cover;cursor:pointer;border:2px solid #fff}
+
+        /* ===== COMMENTS MODAL ===== */
+        #reelCommentsModal{position:fixed;inset:0;z-index:99998;background:#fff;display:none;flex-direction:column;color:#000;border-radius:16px 16px 0 0;margin-top:auto;max-height:60vh;bottom:0}
+        #reelCommentsModal.open{display:flex}
+        .rcm-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #efefef}
+        .rcm-title{font-size:16px;font-weight:700}
+        .rcm-close{background:none;border:none;font-size:22px;cursor:pointer;color:#000}
+        .rcm-list{overflow-y:auto;flex:1;padding:8px 16px}
+        .rcm-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5}
+        .rcm-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .rcm-name{font-size:13px;font-weight:600}
+        .rcm-text{font-size:13px;color:#333;margin-top:2px}
+        .rcm-time{font-size:11px;color:#8e8e8e;margin-top:2px}
+        .rcm-input-area{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid #efefef}
+        .rcm-input{flex:1;border:none;background:#efefef;border-radius:20px;padding:10px 14px;font-size:13px;outline:none;color:#000}
+        .rcm-send{width:36px;height:36px;border-radius:50%;background:#0095f6;border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+        /* Dark mode for modals */
+        body.dark-mode #audioSearchModal{background:#000}
+        body.dark-mode .audio-header{border-color:#262626}
+        body.dark-mode .audio-search{background:#262626;color:#fff;border-color:#333}
+        body.dark-mode .audio-name{color:#fff}
+        body.dark-mode #reelCommentsModal{background:#000}
+        body.dark-mode .rcm-header{border-color:#262626}
+        body.dark-mode .rcm-title{color:#fff}
+        body.dark-mode .rcm-close{color:#fff}
+        body.dark-mode .rcm-text{color:#ccc}
+        body.dark-mode .rcm-input{background:#262626;color:#fff;border-color:#333}
+    </style>
+</head>
+<body>
+<script>if(sessionStorage.getItem('splash_shown')){document.documentElement.style.setProperty('--splash-display','none');}</script>
+
+<!-- ===== REELS FEED ===== -->
+<div class="reels-container" id="reelsFeed">
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#8e8e8e">
+        <div style="text-align:center"><i class="fas fa-circle-notch fa-spin" style="font-size:32px;display:block;margin-bottom:12px"></i>Loading reels...</div>
+    </div>
+</div>
+
+<!-- ===== REEL UPLOAD ===== -->
+<div id="reelUploadModal">
+    <div class="upload-header">
+        <button class="upload-close" onclick="closeReelUpload()"><i class="fas fa-arrow-left"></i></button>
+        <span class="upload-title">New Reel</span>
+        <div style="width:30px"></div>
+    </div>
+    <div class="upload-body">
+        <div class="upload-preview" id="reelPreview">
+            <div class="upload-preview-placeholder"><i class="fas fa-film"></i>Select a photo/video</div>
+        </div>
+        <button class="upload-file-btn" onclick="document.getElementById('reelFileInput').click()"><i class="fas fa-image"></i> Select Media</button>
+        <input type="file" id="reelFileInput" accept="image/*,video/*" style="display:none" onchange="previewReelMedia(this)">
+        <input type="text" class="upload-input" id="reelCaption" placeholder="Write a caption...">
+        <div style="width:100%;max-width:300px;display:flex;gap:8px;align-items:center" onclick="document.getElementById('audioSearchModal').classList.add('open')">
+            <input type="text" class="upload-input" id="reelAudioDisplay" placeholder="Add audio/music tag" readonly style="cursor:pointer;flex:1">
+            <i class="fas fa-music" style="color:#8e8e8e;font-size:18px;cursor:pointer"></i>
+        </div>
+        <input type="hidden" id="reelAudioName" value="">
+        <input type="hidden" id="reelAudioArtist" value="">
+        <button class="upload-btn" id="reelShareBtn" onclick="shareReel()" disabled>Share Reel</button>
+    </div>
+</div>
+
+<!-- ===== AUDIO SEARCH ===== -->
+<div id="audioSearchModal">
+    <div class="audio-header">
+        <button class="audio-back" onclick="document.getElementById('audioSearchModal').classList.remove('open')"><i class="fas fa-arrow-left"></i></button>
+        <input type="text" class="audio-search" id="audioSearchInput" placeholder="Search audio...">
+    </div>
+    <div class="audio-list" id="audioSearchResults"></div>
+</div>
+
+<!-- ===== COMMENTS MODAL ===== -->
+<div id="reelCommentsModal">
+    <div class="rcm-header">
+        <span class="rcm-title">Comments</span>
+        <button class="rcm-close" onclick="document.getElementById('reelCommentsModal').classList.remove('open')">&times;</button>
+    </div>
+    <div class="rcm-list" id="reelCommentsList"></div>
+    <div class="rcm-input-area">
+        <input type="text" class="rcm-input" id="reelCommentInput" placeholder="Add a comment...">
+        <button class="rcm-send" id="reelCommentSendBtn" onclick="sendReelComment()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<!-- ===== BOTTOM NAV ===== -->
+<div class="ig-bottom-nav">
+    <i class="fas fa-home" onclick="window.location.href='index.html'"></i>
+    <i class="fas fa-search" onclick="window.location.href='index.html?view=searchView'"></i>
+    <i class="far fa-plus-square" onclick="openMediaPicker()"></i>
+    <!-- ✅ Reels icon active highlight (white + underline since bg is black) -->
+    <i class="fas fa-film" style="color:#fff;border-bottom:2px solid #fff;padding-bottom:4px"></i>
+    <img src="" alt="Profile" class="ig-nav-profile" onclick="window.location.href='profile.html'">
+</div>
+
+<script>
+function openMediaPicker(){
+    window.location.href = 'index.html?openMediaPicker=1';
+}
+// ===== FIREBASE INIT =====
+const firebaseConfig={apiKey:"AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",authDomain:"ankitstudioai.firebaseapp.com",projectId:"ankitstudioai",storageBucket:"ankitstudioai.firebasestorage.app",messagingSenderId:"450755070024",appId:"1:450755070024:web:4bf14bc4da4caf1200b07d"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+let _myUid=null,_reelsCache=[],_currentReelId=null;
+
+if(localStorage.getItem('ankitstudio_darkmode')==='true')document.body.classList.add('dark-mode');
+
+// ===== AUDIO LIBRARY (Static for now, can be dynamic) =====
+const AUDIO_LIBRARY=[
+    {name:"Aesthetic Vibes",artist:"Lo-Fi Beats"},
+    {name:"Neon Dreams",artist:"Synthwave"},
+    {name:"Cosmic Journey",artist:"Space Ambient"},
+    {name:"Midnight City",artist:"Chillhop"},
+    {name:"Digital Rain",artist:"Cyberpunk OST"},
+    {name:"Sunset Drive",artist:"Tropical House"},
+    {name:"Ethereal Glow",artist:"Ambient"},
+    {name:"Retro Wave",artist:"80s Synth"},
+    {name:"Bass Drop",artist:"EDM"},
+    {name:"Chill Mode",artist:"Lo-Fi Hip Hop"},
+    {name:"Trending Now",artist:"Viral Hits"},
+    {name:"Original Audio",artist:"Original"},
+];
+
+firebase.auth().onAuthStateChanged(function(user){
+    if(user){
+        _myUid=user.uid;
+        loadReels();
+        loadAudioSearch();
+    }else{
+        window.location.href='index.html';
+    }
+});
+
+// ===== LOAD REELS =====
+function loadReels(){
+    db.ref('reels').orderByChild('timestamp').limitToLast(50).on('value',function(snap){
+        var feed=document.getElementById('reelsFeed');
+        feed.innerHTML='';
+        _reelsCache=[];
+        if(!snap.exists()){
+            // Show existing posts as reels (fallback content)
+            loadPostsAsReels();
+            return;
+        }
+        var reels=[];
+        snap.forEach(function(c){reels.unshift({key:c.key,data:c.val()})});
+        _reelsCache=reels;
+        if(reels.length===0){loadPostsAsReels();return}
+        reels.forEach(function(reel){
+            feed.innerHTML+=buildReelHTML(reel);
+        });
+    });
+}
+
+// Fallback: show posts as reels
+function loadPostsAsReels(){
+    var feed=document.getElementById('reelsFeed');
+    db.ref('posts').limitToLast(20).once('value',function(snap){
+        if(!snap.exists()){feed.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#8e8e8e;text-align:center;padding:20px"><div><i class="far fa-play-circle" style="font-size:64px;display:block;margin-bottom:16px;color:#333"></i><h3>No reels yet</h3><p style="margin-top:8px;font-size:14px">Create your first reel! 🎬</p></div></div>';return}
+        feed.innerHTML='';
+        var posts=[];
+        snap.forEach(function(c){posts.unshift({key:c.key,data:c.val()})});
+        posts.forEach(function(post){
+            var d=post.data;
+            var authorName=d.authorName||'User';
+            var html='<div class="reel" data-reel-id="'+post.key+'">'+
+                '<div class="reel-media-image"><img src="'+(d.imageUrl||'https://via.placeholder.com/400x700/111/333?text=Reel')+'" alt="" onerror="this.style.background=\'#111\'"></div>'+
+                '<div class="reel-overlay">'+
+                    '<div class="reel-author"><div class="reel-author-av">'+authorName.charAt(0).toUpperCase()+'</div><div class="reel-author-name">'+esc(authorName)+'</div></div>'+
+                    '<div class="reel-caption"><span class="cap-user">'+esc(authorName)+'</span>'+esc((d.caption||'').substring(0,100))+'</div>'+
+                    '<div class="reel-audio"><i class="fas fa-music reel-audio-spin"></i><span class="reel-audio-name">'+(d.aiTool||'AI')+' • Original Audio</span></div>'+
+                '</div>'+
+                '<div class="reel-actions">'+
+                    '<div class="reel-action" onclick="toggleReelLike(this,\''+post.key+'\')"><i class="far fa-heart"></i><span>'+(d.likeCount||0)+'</span></div>'+
+                    '<div class="reel-action" onclick="openReelComments(\''+post.key+'\')"><i class="far fa-comment"></i><span>'+(d.commentCount||0)+'</span></div>'+
+                    '<div class="reel-action" onclick="shareReelPost(\''+post.key+'\')"><i class="far fa-paper-plane"></i></div>'+
+                    '<div class="reel-action" onclick="toggleReelSave(this)"><i class="far fa-bookmark"></i></div>'+
+                '</div>'+
+            '</div>';
+            feed.innerHTML+=html;
+        });
+    });
+}
+
+function buildReelHTML(reel){
+    var d=reel.data;
+    var authorName=d.authorName||'User';
+    var audioTag=d.audioName?('<i class="fas fa-music reel-audio-spin"></i><span class="reel-audio-name" onclick="showReelsWithAudio(\''+esc(d.audioName)+'\',\''+esc(d.audioArtist||'')+'\')">'+esc(d.audioName)+' • '+esc(d.audioArtist||'Original')+'</span>'):'';
+    var isVideo=d.type==='video';
+    var mediaHtml=isVideo?
+        '<video class="reel-media" src="'+esc(d.videoUrl||d.imageUrl||'')+'" loop playsinline muted onclick="this.paused?this.play():this.pause()"></video><div class="reel-progress"><div class="reel-progress-fill" id="progress-'+reel.key+'"></div></div>':
+        '<div class="reel-media-image"><img src="'+esc(d.imageUrl||'')+'" alt=""></div>';
+    return '<div class="reel" data-reel-id="'+reel.key+'">'+
+        mediaHtml+
+        '<div class="reel-overlay">'+
+            '<div class="reel-author"><div class="reel-author-av">'+authorName.charAt(0).toUpperCase()+'</div><div class="reel-author-name">'+esc(authorName)+'</div>'+(d.authorId!==_myUid?'<button class="reel-follow-btn" onclick="toggleReelFollow(this,\''+d.authorId+'\')">Follow</button>':'')+'</div>'+
+            '<div class="reel-caption"><span class="cap-user">'+esc(authorName)+'</span>'+esc((d.caption||'').substring(0,150))+'</div>'+
+            (audioTag?'<div class="reel-audio">'+audioTag+'</div>':'')+
+        '</div>'+
+        '<div class="reel-actions">'+
+            '<div class="reel-action" onclick="toggleReelLike(this,\''+reel.key+'\')"><i class="far fa-heart"></i><span>'+(d.likes||0)+'</span></div>'+
+            '<div class="reel-action" onclick="openReelComments(\''+reel.key+'\')"><i class="far fa-comment"></i><span>'+(d.comments||0)+'</span></div>'+
+            '<div class="reel-action" onclick="shareReelExternal(\''+reel.key+'\')"><i class="far fa-paper-plane"></i></div>'+
+            '<div class="reel-action" onclick="toggleReelSave(this)"><i class="far fa-bookmark"></i></div>'+
+        '</div>'+
+    '</div>';
+}
+
+// ===== REEL INTERACTIONS =====
+function toggleReelLike(el,reelId){
+    var icon=el.querySelector('i');
+    var span=el.querySelector('span');
+    var wasLiked=icon.classList.contains('liked');
+    if(wasLiked){icon.classList.remove('liked','fas');icon.classList.add('far');span.textContent=parseInt(span.textContent)-1}
+    else{icon.classList.remove('far');icon.classList.add('fas','liked');icon.style.transform='scale(1.3)';setTimeout(function(){icon.style.transform=''},200);span.textContent=parseInt(span.textContent)+1}
+    db.ref('reels/'+reelId+'/likes').transaction(function(c){return(c||0)+(wasLiked?-1:1)});
+}
+
+function toggleReelSave(el){
+    var icon=el.querySelector('i');
+    if(icon.classList.contains('saved')){icon.classList.remove('saved','fas');icon.classList.add('far')}
+    else{icon.classList.remove('far');icon.classList.add('fas','saved')}
+}
+
+function toggleReelFollow(btn,authorId){
+    if(!_myUid)return;
+    if(btn.classList.contains('following')){
+        btn.classList.remove('following');btn.textContent='Follow';
+        db.ref('users/'+_myUid+'/following/'+authorId).remove();
+        db.ref('users/'+authorId+'/followers/'+_myUid).remove();
+    }else{
+        btn.classList.add('following');btn.textContent='Following';
+        db.ref('users/'+_myUid+'/following/'+authorId).set({createdAt:firebase.database.ServerValue.TIMESTAMP});
+        db.ref('users/'+authorId+'/followers/'+_myUid).set({createdAt:firebase.database.ServerValue.TIMESTAMP});
+    }
+}
+
+// ===== COMMENTS =====
+function openReelComments(reelId){
+    _currentReelId=reelId;
+    document.getElementById('reelCommentsModal').classList.add('open');
+    loadReelComments(reelId);
+}
+function loadReelComments(reelId){
+    var list=document.getElementById('reelCommentsList');
+    list.innerHTML='<div style="text-align:center;padding:20px;color:#8e8e8e">Loading...</div>';
+    db.ref('reels/'+reelId+'/comments').once('value',function(snap){
+        if(!snap.exists()){list.innerHTML='<div style="text-align:center;padding:20px;color:#8e8e8e">No comments yet</div>';return}
+        var html='';
+        snap.forEach(function(c){
+            var cm=c.val();
+            html+='<div class="rcm-item"><div class="rcm-av">'+(cm.authorName||'U').charAt(0).toUpperCase()+'</div><div><div class="rcm-name">'+esc(cm.authorName||'User')+'</div><div class="rcm-text">'+esc(cm.text)+'</div><div class="rcm-time">'+fmtTime(cm.timestamp)+'</div></div></div>';
+        });
+        list.innerHTML=html;
+    });
+}
+function sendReelComment(){
+    if(!_currentReelId||!_myUid)return;
+    var input=document.getElementById('reelCommentInput');
+    var text=input.value.trim();if(!text)return;
+    var user=firebase.auth().currentUser;
+    var name=user?(user.displayName||(user.email?user.email.split('@')[0]:'User')):'User';
+    db.ref('reels/'+_currentReelId+'/comments').push({authorId:_myUid,authorName:name,text:text,timestamp:firebase.database.ServerValue.TIMESTAMP}).then(function(){
+        input.value='';loadReelComments(_currentReelId);
+        db.ref('reels/'+_currentReelId+'/comments').transaction(function(c){return(c||0)+1});
+    });
+}
+
+// ===== AUDIO SEARCH =====
+function loadAudioSearch(){
+    var results=document.getElementById('audioSearchResults');
+    var html='';
+    AUDIO_LIBRARY.forEach(function(a){
+        html+='<div class="audio-item" onclick="selectAudio(\''+esc(a.name)+'\',\''+esc(a.artist)+'\')"><div class="audio-icon"><i class="fas fa-music"></i></div><div><div class="audio-name">'+esc(a.name)+'</div><div class="audio-artist">'+esc(a.artist)+'</div></div></div>';
+    });
+    results.innerHTML=html;
+}
+document.getElementById('audioSearchInput').addEventListener('input',function(){
+    var q=this.value.toLowerCase().trim();
+    var results=document.getElementById('audioSearchResults');
+    var filtered=AUDIO_LIBRARY.filter(function(a){return a.name.toLowerCase().includes(q)||a.artist.toLowerCase().includes(q)});
+    var html='';
+    filtered.forEach(function(a){
+        html+='<div class="audio-item" onclick="selectAudio(\''+esc(a.name)+'\',\''+esc(a.artist)+'\')"><div class="audio-icon"><i class="fas fa-music"></i></div><div><div class="audio-name">'+esc(a.name)+'</div><div class="audio-artist">'+esc(a.artist)+'</div></div></div>';
+    });
+    results.innerHTML=html||'<div style="text-align:center;padding:20px;color:#8e8e8e">No audio found</div>';
+});
+function selectAudio(name,artist){
+    document.getElementById('reelAudioDisplay').value=name+' • '+artist;
+    document.getElementById('reelAudioName').value=name;
+    document.getElementById('reelAudioArtist').value=artist;
+    document.getElementById('audioSearchModal').classList.remove('open');
+}
+
+// ===== SHOW REELS WITH SAME AUDIO =====
+function showReelsWithAudio(name,artist){
+    // Filter reels with same audio tag
+    db.ref('reels').orderByChild('audioName').equalTo(name).once('value',function(snap){
+        if(!snap.exists()){showToast('No other reels with this audio');return}
+        var feed=document.getElementById('reelsFeed');
+        feed.innerHTML='';
+        snap.forEach(function(c){
+            feed.innerHTML+=buildReelHTML({key:c.key,data:c.val()});
+        });
+    });
+}
+
+// ===== REEL UPLOAD =====
+var _reelMediaUrl='';
+function openReelUpload(){
+    document.getElementById('reelUploadModal').classList.add('open');
+    document.getElementById('reelPreview').innerHTML='<div class="upload-preview-placeholder"><i class="fas fa-film"></i>Select a photo/video</div>';
+    document.getElementById('reelCaption').value='';
+    document.getElementById('reelAudioDisplay').value='';
+    document.getElementById('reelAudioName').value='';
+    document.getElementById('reelAudioArtist').value='';
+    document.getElementById('reelShareBtn').disabled=true;
+    _reelMediaUrl='';
+}
+function closeReelUpload(){document.getElementById('reelUploadModal').classList.remove('open')}
+
+function previewReelMedia(input){
+    if(!input.files||!input.files[0])return;
+    var file=input.files[0];
+    var isVideo=file.type.startsWith('video');
+    var reader=new FileReader();
+    reader.onload=function(e){
+        if(isVideo){
+            document.getElementById('reelPreview').innerHTML='<video src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover" muted autoplay loop></video>';
+        }else{
+            document.getElementById('reelPreview').innerHTML='<img src="'+e.target.result+'">';
+        }
+        document.getElementById('reelShareBtn').disabled=false;
+    };
+    reader.readAsDataURL(file);
+}
+
+function shareReel(){
+    if(!_myUid)return;
+    var fileInput=document.getElementById('reelFileInput');
+    var caption=document.getElementById('reelCaption').value.trim();
+    var audioName=document.getElementById('reelAudioName').value;
+    var audioArtist=document.getElementById('reelAudioArtist').value;
+    var btn=document.getElementById('reelShareBtn');
+    btn.textContent='Sharing...';btn.disabled=true;
+    var user=firebase.auth().currentUser;
+    var authorName=user?(user.displayName||(user.email?user.email.split('@')[0]:'User')):'User';
+
+    if(fileInput.files&&fileInput.files[0]){
+        var file=fileInput.files[0];
+        var isVideo=file.type.startsWith('video');
+        var fd=new FormData();fd.append("image",file);
+        fetch("https://api.imgbb.com/1/upload?key=5f30b483ae91c03320748137616415d7",{method:"POST",body:fd})
+        .then(function(r){return r.json()})
+        .then(function(d){
+            var url=d.success?d.data.url:'';
+            saveReelToDb(url,isVideo,caption,audioName,audioArtist,authorName);
+        }).catch(function(){saveReelToDb('',isVideo,caption,audioName,audioArtist,authorName)});
+    }else{
+        saveReelToDb('',false,caption,audioName,audioName,authorName);
+    }
+}
+
+function saveReelToDb(url,isVideo,caption,audioName,audioArtist,authorName){
+    var reelData={
+        imageUrl:url,
+        videoUrl:isVideo?url:'',
+        type:isVideo?'video':'image',
+        caption:caption,
+        audioName:audioName,
+        audioArtist:audioArtist,
+        authorId:_myUid,
+        authorName:authorName,
+        likes:0,
+        comments:0,
+        shares:0,
+        timestamp:firebase.database.ServerValue.TIMESTAMP
+    };
+    db.ref('reels').push(reelData).then(function(){
+        closeReelUpload();showToast('Reel shared! 🎬');
+        btn=document.getElementById('reelShareBtn');btn.textContent='Share Reel';btn.disabled=false;
+    }).catch(function(err){showToast('Error: '+err.message)});
+}
+
+function shareReelPost(postId){window.location.href='messages.html?sharePost='+encodeURIComponent(postId)}
+function shareReelExternal(reelId){if(navigator.share){navigator.share({title:'Check this reel!',url:window.location.href}).catch(function(){})}else{showToast('Link copied!')}}
+
+// ===== HELPERS =====
+function esc(s){var d=document.createElement('div');d.appendChild(document.createTextNode(s||''));return d.innerHTML}
+function fmtTime(ts){if(!ts)return'';var diff=Date.now()-ts,mins=Math.floor(diff/60000);if(mins<1)return'Just now';if(mins<60)return mins+'m';var hrs=Math.floor(mins/60);if(hrs<24)return hrs+'h';return Math.floor(hrs/24)+'d'}
+function showToast(msg){var t=document.createElement('div');t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#262626;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:999999';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},2000)}
+
+// Video progress tracking
+document.addEventListener('play',function(e){
+    if(e.target.tagName==='VIDEO'){
+        var reel=e.target.closest('.reel');
+        if(!reel)return;
+        var reelId=reel.dataset.reelId;
+        var video=e.target;
+        video.onprogress=function(){
+            if(video.duration){
+                var pct=(video.currentTime/video.duration)*100;
+                var bar=document.getElementById('progress-'+reelId);
+                if(bar)bar.style.width=pct+'%';
+            }
+        };
+        video.ontimeupdate=video.onprogress;
+    }
+},true);
+</script>
+<!-- ✅ Anti-flicker: nav bar instantly show hoga, content smooth aayega -->
+<style>
+  /* Bottom nav instantly render — firebase load ka wait nahi */
+  .ig-bottom-nav{
+    position:fixed;bottom:0;left:0;width:100%;
+    background:#fff;border-top:1px solid #dbdbdb;
+    display:flex;justify-content:space-around;align-items:center;
+    padding:9px 0 11px;z-index:9999;
+    transform:translateZ(0);will-change:transform;
+  }
+  /* Dark mode saved state instantly apply */
+  body.dark-mode .ig-bottom-nav{background:#000;border-top-color:#262626;}
+</style>
+<script>
+  // ✅ Dark mode instantly apply (firebase ka wait nahi)
+  if(localStorage.getItem('ankitstudio_darkmode')==='true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a11173415ebcc9e4',t:'MTc4MjM2NDA2Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></html>

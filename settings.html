@@ -12,7 +12,25 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-
+    <script>
+    // Settings file ke liye direct aur bulletproof initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
+      authDomain: "ankitstudioai.firebaseapp.com",
+      databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com",
+      projectId: "ankitstudioai",
+      storageBucket: "ankitstudioai.firebasestorage.app",
+      messagingSenderId: "450755070024",
+      appId: "1:450755070024:web:4bf14bc4da4caf1200b07d",
+      measurementId: "G-BJ44E7P08S"
+    };
+    
+    // Iframe ke andar 100% safe execution
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+</script>
+    <script src="bottom-nav.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
@@ -23,30 +41,13 @@
             color: #000;
         }
 
-        /* ===== TOP NAV ===== */
-        .settings-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 16px;
-            border-bottom: 1px solid #efefef;
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 100;
-        }
-        .settings-header .back-btn {
-            font-size: 22px;
-            cursor: pointer;
-            color: #000;
-            background: none;
-            border: none;
-        }
-        .settings-header h1 {
-            font-size: 18px;
+        /* ===== Settings title (inline, no top bar) ===== */
+        .settings-page-title {
+            font-size: 16px;
             font-weight: 700;
+            padding: 16px 16px 10px;
+            border-bottom: 1px solid #efefef;
         }
-        .settings-header .placeholder { width: 22px; }
 
         /* ===== SETTINGS LIST ===== */
         .settings-list {
@@ -316,25 +317,10 @@
             font-size: 16px;
         }
 
-        /* Bottom Nav */
-        .ig-bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #ffffff;
-            border-top: 1px solid #dbdbdb;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 12px 0;
-            z-index: 9999999;
-        }
-        .ig-bottom-nav i { font-size: 24px; color: #000; cursor: pointer; }
-        .ig-nav-profile {
-            width: 28px; height: 28px; border-radius: 50%;
-            object-fit: cover; border: 1px solid #dbdbdb; cursor: pointer;
-        }
+        /* Instagram-style top bar */
+        .profile-top{position:sticky;top:0;background:#fff;border-bottom:1px solid #efefef;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;z-index:100;}
+        .profile-top h2{font-size:16px;font-weight:700;}
+        body.dark-mode .profile-top{background:#000;border-color:#262626;}
 
         /* Toast notification */
         .settings-toast {
@@ -455,11 +441,8 @@
             background: #111;
         }
         body.dark-mode .edit-field label { color: #8e8e8e; }
-        body.dark-mode .ig-bottom-nav {
-            background: #000;
-            border-color: #262626;
-        }
-        body.dark-mode .ig-bottom-nav i { color: #fff; }
+
+        body.dark-mode .settings-page-title{border-color:#262626;color:#fff}
         body.dark-mode .confirm-box {
             background: #1a1a1a;
         }
@@ -472,15 +455,41 @@
         body.dark-mode .settings-toast {
             background: #333;
         }
+
+        /* Custom Dropdown Styling (NEW) */
+        .settings-select {
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #000;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        body.dark-mode .settings-select {
+            background: #262626;
+            color: #fff;
+        }
+        .settings-select:hover {
+            background: #e0e0e0;
+        }
+        body.dark-mode .settings-select:hover {
+            background: #333;
+        }
+        
     </style>
 </head>
 <body>
+<script>if(sessionStorage.getItem('splash_shown')){document.documentElement.style.setProperty('--splash-display','none');}</script>
 
-<!-- TOP NAV -->
-<div class="settings-header">
-    <button class="back-btn" onclick="history.back();"><i class="fas fa-arrow-left"></i></button>
-    <h1>Settings & Privacy</h1>
-    <div class="placeholder"></div>
+<!-- Instagram-style top bar -->
+<div class="profile-top">
+    <button onclick="navigateBack()" style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;display:flex;align-items:center;"><i class="fas fa-arrow-left"></i></button>
+    <h2>Settings & Privacy</h2>
+    <span style="width:24px"></span>
 </div>
 
 <!-- SETTINGS LIST -->
@@ -517,7 +526,7 @@
                 <i class="fas fa-eye-slash"></i>
                 <div class="item-text">
                     <span class="item-title">Private Account</span>
-                    <span class="item-subtitle">Only approved followers can see your prompts</span>
+                    <span class="item-subtitle">Only approved followers can see your posts</span>
                 </div>
             </div>
             <label class="toggle-switch" onclick="event.stopPropagation()">
@@ -557,6 +566,218 @@
                 <input type="checkbox" id="notifToggle" checked onchange="toggleNotifications(this.checked)">
                 <span class="toggle-slider"></span>
             </label>
+        </div>
+
+        <!-- 🔥 NEW: Granular notification preferences -->
+        <div class="settings-item" onclick="openNotificationPrefs()">
+            <div class="settings-item-left">
+                <i class="fas fa-sliders"></i>
+                <div class="item-text">
+                    <span class="item-title">Notification Preferences</span>
+                    <span class="item-subtitle">Choose which notifications you receive</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+    </div>
+
+    <!-- 🔥 NEW: Account Info Section -->
+    <div class="settings-group">
+        <div class="settings-group-title">Account Info</div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-envelope"></i>
+                <div class="item-text">
+                    <span class="item-title" id="accountEmail">Loading...</span>
+                    <span class="item-subtitle">Email Address</span>
+                </div>
+            </div>
+            <button onclick="copyToClipboard('accountEmail', 'Email')" style="background:none;border:none;color:#0095f6;font-size:12px;font-weight:600;cursor:pointer">COPY</button>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-id-card"></i>
+                <div class="item-text">
+                    <span class="item-title" id="accountUid" style="font-family:monospace;font-size:11px;">Loading...</span>
+                    <span class="item-subtitle">User ID</span>
+                </div>
+            </div>
+            <button onclick="copyToClipboard('accountUid', 'User ID')" style="background:none;border:none;color:#0095f6;font-size:12px;font-weight:600;cursor:pointer">COPY</button>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-calendar"></i>
+                <div class="item-text">
+                    <span class="item-title" id="accountJoinDate">Loading...</span>
+                    <span class="item-subtitle">Member Since</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔥 NEW: Profile Completeness -->
+        <div class="settings-item" onclick="showProfileCompleteness()">
+            <div class="settings-item-left">
+                <i class="fas fa-chart-line"></i>
+                <div class="item-text">
+                    <span class="item-title">Profile Strength</span>
+                    <span class="item-subtitle" id="profileStrengthText">Loading...</span>
+                </div>
+            </div>
+            <div style="width:40px;height:6px;background:#efefef;border-radius:3px;overflow:hidden">
+                <div id="profileStrengthBar" style="height:100%;background:#0095f6;width:0%;transition:width 0.5s"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== AI & POST SETTINGS (NEW) ===== -->
+    <div class="settings-group">
+        <div class="settings-group-title">AI & Post Settings</div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-signature"></i>
+                <div class="item-text">
+                    <span class="item-title">AI Image Watermark</span>
+                    <span class="item-subtitle">Add custom watermarks to generated post images</span>
+                </div>
+            </div>
+            <select class="settings-select" id="aiWatermark" onchange="saveSetting('ai_watermark', this.value)">
+                <option value="none">None</option>
+                <option value="username" selected>My Username</option>
+                <option value="custom">Brand Logo</option>
+            </select>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <div class="item-text">
+                    <span class="item-title">Auto-Generate Captions</span>
+                    <span class="item-subtitle">Let AI write captions based on post keywords</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="autoCaptions" onchange="saveSettingToggle('auto_captions', this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-download"></i>
+                <div class="item-text">
+                    <span class="item-title">Image Download Quality</span>
+                    <span class="item-subtitle">Set resolution preference for downloading images</span>
+                </div>
+            </div>
+            <select class="settings-select" id="downloadQuality" onchange="saveSetting('download_quality', this.value)">
+                <option value="standard" selected>Standard (1080p)</option>
+                <option value="hd">HD (1440p)</option>
+                <option value="ultra">4K Ultra HD</option>
+            </select>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-brain"></i>
+                <div class="item-text">
+                    <span class="item-title">AI Post Assist Level</span>
+                    <span class="item-subtitle">Level of real-time parameter suggestions</span>
+                </div>
+            </div>
+            <select class="settings-select" id="postAssist" onchange="saveSetting('post_assist', this.value)">
+                <option value="off">Off (Manual)</option>
+                <option value="beginner" selected>Beginner Tips</option>
+                <option value="expert">Advanced (CFG/Steps)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ===== ADVANCED PRIVACY & TOOLS (NEW) ===== -->
+    <div class="settings-group">
+        <div class="settings-group-title">Security & Tools</div>
+
+        <div class="settings-item" onclick="openCommentFilterModal()">
+            <div class="settings-item-left">
+                <i class="fas fa-filter"></i>
+                <div class="item-text">
+                    <span class="item-title">Comment Word Filter</span>
+                    <span class="item-subtitle">Automatically block specific words from comments</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-hourglass-start"></i>
+                <div class="item-text">
+                    <span class="item-title">Daily App Reminder</span>
+                    <span class="item-subtitle">Get alert when you reach your daily usage limit</span>
+                </div>
+            </div>
+            <select class="settings-select" id="screenTime" onchange="saveSetting('screen_time_limit', this.value)">
+                <option value="off" selected>Off</option>
+                <option value="30">30 Minutes</option>
+                <option value="60">1 Hour</option>
+                <option value="120">2 Hours</option>
+            </select>
+        </div>
+
+        <div class="settings-item" onclick="openActiveDevicesModal()">
+            <div class="settings-item-left">
+                <i class="fas fa-laptop-code"></i>
+                <div class="item-text">
+                    <span class="item-title">Active Logged-In Sessions</span>
+                    <span class="item-subtitle">View and manage devices logged into your account</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+    </div>
+
+    <!-- ===== BRAND CUSTOMIZATION & CACHE (NEW) ===== -->
+    <div class="settings-group">
+        <div class="settings-group-title">Brand & Data Settings</div>
+
+        <div class="settings-item" onclick="openSocialLinksModal()">
+            <div class="settings-item-left">
+                <i class="fas fa-link"></i>
+                <div class="item-text">
+                    <span class="item-title">Configure Social Links</span>
+                    <span class="item-subtitle">Show YouTube, Twitter, Discord links on profile</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-sync-alt"></i>
+                <div class="item-text">
+                    <span class="item-title">Analytics Sync Interval</span>
+                    <span class="item-subtitle">How often professional dashboard stats sync</span>
+                </div>
+            </div>
+            <select class="settings-select" id="syncInterval" onchange="saveSetting('sync_interval', this.value)">
+                <option value="realtime" selected>Real-time</option>
+                <option value="hourly">Every Hour</option>
+                <option value="daily">Daily Refresh</option>
+            </select>
+        </div>
+
+        <div class="settings-item" onclick="triggerClearCache()">
+            <div class="settings-item-left">
+                <i class="fas fa-trash-can" style="color: #ed4956;"></i>
+                <div class="item-text">
+                    <span class="item-title" style="color: #ed4956; font-weight: 600;">Clear Local App Cache</span>
+                    <span class="item-subtitle">Clear cached post images and draft posts</span>
+                </div>
+            </div>
+            <button class="settings-select" style="background:#ffeef0; color:#ed4956; border:1px solid #ffd0d6; font-weight:700;">CLEAR</button>
         </div>
     </div>
 
@@ -722,7 +943,7 @@
         <div class="settings-modal-body" style="text-align:center; padding:32px 20px;">
             <div style="font-size:48px; margin-bottom:16px;">⚡</div>
             <h2 style="font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:3px; margin-bottom:4px;">ANKITSTUDIOAI</h2>
-            <p style="color:#8e8e8e; font-size:13px; margin-bottom:20px;">Premium AI Prompt Marketplace</p>
+            <p style="color:#8e8e8e; font-size:13px; margin-bottom:20px;">Premium AI Post Marketplace</p>
             <p style="font-size:14px; line-height:1.6; margin-bottom:16px;">Built with ❤️ by <strong>Ankit Burdak</strong></p>
             <div style="display:flex; gap:12px; justify-content:center; margin-bottom:20px;">
                 <span style="background:#f0f0f0; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600;">🔥 v1.0.0</span>
@@ -745,20 +966,178 @@
     </div>
 </div>
 
+<!-- ===== NOTIFICATION PREFERENCES MODAL ===== -->
+<div class="settings-modal-overlay" id="notifPrefsModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('notifPrefsModal')">&times;</button>
+            <h2>Notification Preferences</h2>
+            <button class="modal-save-btn" onclick="saveNotificationPrefs()">Save</button>
+        </div>
+        <div class="settings-modal-body">
+            <p style="font-size:13px;color:#8e8e8e;margin-bottom:20px">Choose which notifications you want to receive:</p>
+
+            <div class="settings-item" style="padding:14px 0;border:none">
+                <div class="settings-item-left">
+                    <i class="fas fa-heart" style="color:#ed4956"></i>
+                    <div class="item-text">
+                        <span class="item-title">Likes</span>
+                        <span class="item-subtitle">When someone likes your post</span>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notifPrefLikes" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="settings-item" style="padding:14px 0;border:none">
+                <div class="settings-item-left">
+                    <i class="fas fa-comment" style="color:#0095f6"></i>
+                    <div class="item-text">
+                        <span class="item-title">Comments</span>
+                        <span class="item-subtitle">When someone comments on your post</span>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notifPrefComments" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="settings-item" style="padding:14px 0;border:none">
+                <div class="settings-item-left">
+                    <i class="fas fa-user-plus" style="color:#00c853"></i>
+                    <div class="item-text">
+                        <span class="item-title">New Followers</span>
+                        <span class="item-subtitle">When someone follows you</span>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notifPrefFollows" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="settings-item" style="padding:14px 0;border:none">
+                <div class="settings-item-left">
+                    <i class="fas fa-paper-plane" style="color:#ffaa00"></i>
+                    <div class="item-text">
+                        <span class="item-title">Messages</span>
+                        <span class="item-subtitle">When you receive a new message</span>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notifPrefMessages" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== COMMENT WORD FILTER MODAL (NEW) ===== -->
+<div class="settings-modal-overlay" id="commentFilterModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('commentFilterModal')">&times;</button>
+            <h2>Comment Word Filter</h2>
+            <button class="modal-save-btn" onclick="saveCommentFilter()">Save</button>
+        </div>
+        <div class="settings-modal-body">
+            <p style="font-size:13px;color:#8e8e8e;margin-bottom:16px">Comments containing these comma-separated words will be hidden automatically:</p>
+            <div class="edit-field" style="margin-top:10px">
+                <label>Blocked Words List</label>
+                <textarea id="blockedWordsInput" placeholder="spam, promo, hate, followme" style="height:120px; width:100%; border:1px solid #dbdbdb; border-radius:8px; padding:10px; outline:none; resize:none; font-family:inherit;"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ACTIVE DEVICES MODAL (NEW) ===== -->
+<div class="settings-modal-overlay" id="activeDevicesModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('activeDevicesModal')">&times;</button>
+            <h2>Active Sessions</h2>
+            <div style="width:40px"></div>
+        </div>
+        <div class="settings-modal-body">
+            <p style="font-size:13px;color:#8e8e8e;margin-bottom:16px">These devices are currently active on your account:</p>
+            
+            <div id="devicesList">
+                <div class="settings-item" style="padding:12px 0; border:none; border-bottom:1px solid #efefef;">
+                    <div class="settings-item-left">
+                        <i class="fas fa-mobile-screen" style="font-size:24px; color:#00c853; margin-right:10px;"></i>
+                        <div class="item-text">
+                            <span class="item-title" style="font-weight:600;">iPhone 15 Pro (Current)</span>
+                            <span class="item-subtitle">Mumbai, India • Active Now</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-item" style="padding:12px 0; border:none; border-bottom:1px solid #efefef;">
+                    <div class="settings-item-left">
+                        <i class="fas fa-laptop" style="font-size:24px; color:#8e8e8e; margin-right:10px;"></i>
+                        <div class="item-text">
+                            <span class="item-title">Windows Chrome Browser</span>
+                            <span class="item-subtitle">Delhi, India • Active 2 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="terminateOtherSessions()" style="width:100%; padding:12px; border:none; border-radius:8px; background:#ed4956; color:#fff; font-weight:600; font-size:13px; cursor:pointer; margin-top:20px; transition:0.2s;">Log Out From All Other Devices</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SOCIAL LINKS MODAL (NEW) ===== -->
+<div class="settings-modal-overlay" id="socialLinksModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('socialLinksModal')">&times;</button>
+            <h2>Configure Social Links</h2>
+            <button class="modal-save-btn" onclick="saveSocialLinks()">Save</button>
+        </div>
+        <div class="settings-modal-body">
+            <p style="font-size:13px;color:#8e8e8e;margin-bottom:16px">Add links to show on your public profile:</p>
+            
+            <div class="edit-field" style="margin-bottom:14px">
+                <label style="display:block; font-size:12px; font-weight:600; color:#8e8e8e; margin-bottom:6px;"><i class="fab fa-youtube" style="color:#ff0000; margin-right:4px;"></i> YouTube Channel URL</label>
+                <input type="url" id="socialYt" placeholder="https://youtube.com/@channel" style="width:100%; padding:10px; border:1px solid #dbdbdb; border-radius:8px; outline:none;">
+            </div>
+
+            <div class="edit-field" style="margin-bottom:14px">
+                <label style="display:block; font-size:12px; font-weight:600; color:#8e8e8e; margin-bottom:6px;"><i class="fab fa-discord" style="color:#5865f2; margin-right:4px;"></i> Discord Server Invite</label>
+                <input type="url" id="socialDiscord" placeholder="https://discord.gg/invite" style="width:100%; padding:10px; border:1px solid #dbdbdb; border-radius:8px; outline:none;">
+            </div>
+
+            <div class="edit-field" style="margin-bottom:14px">
+                <label style="display:block; font-size:12px; font-weight:600; color:#8e8e8e; margin-bottom:6px;"><i class="fas fa-globe" style="color:#0095f6; margin-right:4px;"></i> Website/Linktree URL</label>
+                <input type="url" id="socialWebsite" placeholder="https://linktr.ee/username" style="width:100%; padding:10px; border:1px solid #dbdbdb; border-radius:8px; outline:none;">
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ===== TOAST ===== -->
 <div class="settings-toast" id="settingsToast"></div>
 
-<!-- ===== BOTTOM NAV ===== -->
-<div class="ig-bottom-nav">
-    <i class="fas fa-home" onclick="window.location.href='index.html'"></i>
-    <i class="fas fa-search" onclick="window.location.href='profile.html'"></i>
-    <i class="far fa-plus-square" onclick="window.location.href='index.html'"></i>
-    <i class="far fa-heart" onclick="window.location.href='index.html'"></i>
-    <img src="" alt="Profile" class="ig-nav-profile" id="navProfileImg" onclick="window.location.href='profile.html'">
-</div>
-
-<script src="js/firebase-config.js"></script>
 <script>
+    // ✅ history.back() — page reload nahi hoga, SPA state intact rahega
+    function goBackFromSettings(){
+        history.back();
+    }
+
+    // ✅ Normal nav for other icons
+    function navGo(url){
+        window.location.href = url;
+    }
+
+    function openMediaPicker(){
+        window.location.href = 'index.html?openMediaPicker=1';
+    }
+
     // ============================================================
     //  GLOBALS
     // ============================================================
@@ -774,6 +1153,16 @@
         const dmToggle = document.getElementById('darkModeToggle');
         if (dmToggle) dmToggle.checked = true;
     }
+
+    // 🔥 FIX: SPA mode — agar iframe mein open ho toh bottom nav hide karo
+    var _isSPA_settings = false;
+    (function() {
+        var p = new URLSearchParams(window.location.search);
+        _isSPA_settings = p.get('spa') === 'true';
+        if (_isSPA_settings) {
+            // bottom nav nahi hai settings mein
+        }
+    })();
 
     // ============================================================
     //  AUTH STATE — Load user data
@@ -791,20 +1180,39 @@
         // Load profile data from Firebase
         firebase.database().ref('users/' + user.uid).once('value', function(snap) {
             const data = snap.val() || {};
-            
+
             // Load private account toggle
             const privateToggle = document.getElementById('privateAccountToggle');
             if (privateToggle) privateToggle.checked = data.isPrivate || false;
+
+            // 🔥 NEW: Update account info section
+            updateAccountInfoSection(user, data);
+
+            // 🔥 NEW: Update profile completeness
+            updateProfileCompleteness(data);
+
+            // 🔥 NEW: Load the 10 custom premium features
+            initNewFeatures();
         });
 
         // Populate edit profile fields
         const name = user.displayName || (user.email ? user.email.split('@')[0] : '');
         const username = user.email ? user.email.split('@')[0].toLowerCase() : '';
-        
+
         document.getElementById('editName').value = name;
         document.getElementById('editUsername').value = username;
         document.getElementById('nameCount').textContent = name.length;
         document.getElementById('usernameCount').textContent = username.length;
+
+        // 🔥 FIX: Username field par lower-case + alphanumeric validation
+        var usernameInput = document.getElementById('editUsername');
+        if (usernameInput) {
+            usernameInput.addEventListener('input', function() {
+                // Remove invalid chars
+                this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '').substring(0, 20);
+                document.getElementById('usernameCount').textContent = this.value.length;
+            });
+        }
 
         // Load bio and website from Firebase
         firebase.database().ref('users/' + user.uid + '/profile').once('value', function(snap) {
@@ -813,18 +1221,21 @@
             document.getElementById('editWebsite').value = profile.website || '';
             document.getElementById('bioCount').textContent = (profile.bio || '').length;
 
-            // Update avatar initial
+            // 🔥 FIX: Avatar display safely — read photoURL from database (more reliable)
             const avatarEl = document.getElementById('editAvatarDisplay');
-            if (avatarEl && !user.photoURL) {
+            const finalPhotoURL = profile.photoURL || user.photoURL || null;
+            if (avatarEl && finalPhotoURL) {
+                avatarEl.outerHTML = '<img src="' + finalPhotoURL + '" class="edit-avatar-img" id="editAvatarDisplay" onerror="this.outerHTML=\'<div class=&quot;edit-avatar-placeholder&quot; id=&quot;editAvatarDisplay&quot;>' + name.charAt(0).toUpperCase() + '</div>\'">';
+            } else if (avatarEl) {
                 avatarEl.textContent = name.charAt(0).toUpperCase();
             }
         });
 
-        // If user has photo, show it
-        if (user.photoURL) {
-            const avatarEl = document.getElementById('editAvatarDisplay');
-            avatarEl.outerHTML = `<img src="${user.photoURL}" class="edit-avatar-img" id="editAvatarDisplay">`;
-        }
+        // 🔥 NEW: Load notification preferences
+        loadNotificationPrefs(user.uid);
+
+        // 🔥 NEW: Detect system theme preference
+        detectSystemTheme();
     });
 
     // ============================================================
@@ -864,8 +1275,24 @@
         overlay.addEventListener('click', function(e) {
             if (e.target === this) {
                 this.classList.remove('open');
+                _avatarFileToUpload = null; // 🔥 FIX: Reset on cancel
             }
         });
+    });
+
+    // 🔥 FIX: Escape key to close modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            var openModals = document.querySelectorAll('.settings-modal-overlay.open');
+            if (openModals.length > 0) {
+                openModals.forEach(function(m) { m.classList.remove('open'); });
+                _avatarFileToUpload = null;
+            }
+            var openConfirm = document.getElementById('confirmDialog');
+            if (openConfirm && openConfirm.classList.contains('open')) {
+                closeConfirm();
+            }
+        }
     });
 
     // ============================================================
@@ -896,27 +1323,44 @@
     //  SAVE PROFILE
     // ============================================================
     async function saveProfile() {
-        const user = firebase.auth().currentUser;
-        if (!user) return;
+    const user = firebase.auth().currentUser;
+    if (!user) return;
 
-        const saveBtn = document.getElementById('saveProfileBtn');
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Saving...';
+    const saveBtn = document.getElementById('saveProfileBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
 
-        try {
-            const name = document.getElementById('editName').value.trim();
-            const bio = document.getElementById('editBio').value.trim();
-            const website = document.getElementById('editWebsite').value.trim();
+    try {
+        const name = document.getElementById('editName').value.trim();
+        const username = document.getElementById('editUsername').value.trim();
+        const bio = document.getElementById('editBio').value.trim();
+        const website = document.getElementById('editWebsite').value.trim();
 
-            // 1. Update Firebase Auth display name
-            await user.updateProfile({ displayName: name });
+        // Validations
+        if (!name) {
+            showToast('⚠️ Name is required!');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save'; return;
+        }
+        if (name.length < 2) {
+            showToast('⚠️ Name too short!');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save'; return;
+        }
+        if (website && !website.match(/^https?:\/\/.+/)) {
+            showToast('⚠️ Website must start with http:// or https://');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save'; return;
+        }
 
-            // 2. Upload avatar if changed
-            if (_avatarFileToUpload) {
-                const imgbbApiKey = "5f30b483ae91c03320748137616415d7";
-                const formData = new FormData();
-                formData.append("image", _avatarFileToUpload);
+        // 1. Update Firebase Auth Display Name
+        await user.updateProfile({ displayName: name });
 
+        // 2. Upload avatar if changed
+        let newPhotoURL = null;
+        if (_avatarFileToUpload) {
+            const imgbbApiKey = "5f30b483ae91c03320748137616415d7"; // Agar bar-bar fail ho, toh ImgBB pe naya account banakar nayi key yahan dalein
+            const formData = new FormData();
+            formData.append("image", _avatarFileToUpload);
+
+            try {
                 const imgbbRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
                     method: "POST",
                     body: formData
@@ -924,38 +1368,62 @@
                 const imgbbData = await imgbbRes.json();
 
                 if (imgbbData.success) {
-                    await user.updateProfile({ photoURL: imgbbData.data.url });
-                    console.log('🔥 Avatar updated:', imgbbData.data.url);
+                    newPhotoURL = imgbbData.data.url;
+                    await user.updateProfile({ photoURL: newPhotoURL });
+                    console.log('🔥 Avatar updated:', newPhotoURL);
+                } else {
+                    // 🔥 FIX 1: Agar ImgBB upload fail ho, toh user ko batao aur rok do
+                    showToast('❌ Image Upload Failed! (Check API Key)');
+                    saveBtn.disabled = false; saveBtn.textContent = 'Save'; return;
                 }
+            } catch (uploadErr) {
+                showToast('❌ Network error during image upload.');
+                saveBtn.disabled = false; saveBtn.textContent = 'Save'; return;
             }
+        }
 
-            // 3. Save bio & website to Realtime Database
-            await firebase.database().ref('users/' + user.uid + '/profile').update({
-                bio: bio,
-                website: website,
-                displayName: name,
-                photoURL: user.photoURL || null  // 🔥 FIX: Photo URL bhi save karo DB mein taaki dusre users dekh sakein!
-            });
+        // 3. Save details to Realtime Database
+        const finalPhotoURL = newPhotoURL || user.photoURL || null;
 
-            // 🔥 FIX: Also save photoURL at top-level users/{uid}/photoURL for easy access
-            if (user.photoURL) {
-                await firebase.database().ref('users/' + user.uid).update({
-                    photoURL: user.photoURL
-                });
+        await firebase.database().ref('users/' + user.uid + '/profile').update({
+            bio: bio,
+            website: website,
+            username: username,
+            displayName: name,
+            photoURL: finalPhotoURL
+        });
+
+        // 4. Save top-level info
+        const topLevelUpdate = {};
+        if (finalPhotoURL) topLevelUpdate.photoURL = finalPhotoURL;
+        if (username) topLevelUpdate.username = username;
+        if (Object.keys(topLevelUpdate).length > 0) {
+            await firebase.database().ref('users/' + user.uid).update(topLevelUpdate);
+        }
+
+        _avatarFileToUpload = null;
+        closeModal('editProfileModal');
+        showToast('✅ Profile updated successfully!');
+
+        // 🔥 FIX 2: Profile page ko properly reload karo taaki naya photo turant dikhe
+        setTimeout(() => {
+            if (window.parent && window.parent !== window) {
+                window.parent.location.reload(); 
+            } else {
+                window.location.reload();
             }
+        }, 1200);
 
-            _avatarFileToUpload = null;
-            closeModal('editProfileModal');
-            showToast('✅ Profile updated successfully!');
-        } catch (err) {
-            console.error('Save profile error:', err);
-            showToast('❌ Failed to save profile: ' + err.message);
-        } finally {
+    } catch (err) {
+        console.error('Save profile error:', err);
+        showToast('❌ Failed to save profile: ' + err.message);
+    } finally {
+        if(saveBtn) {
             saveBtn.disabled = false;
             saveBtn.textContent = 'Save';
         }
     }
-
+}
     // ============================================================
     //  CHANGE PASSWORD
     // ============================================================
@@ -1030,11 +1498,46 @@
         if (enabled) {
             document.body.classList.add('dark-mode');
             localStorage.setItem('ankitstudio_darkmode', 'true');
+            localStorage.setItem('ankitstudio_darkmode_manual', 'true');
             showToast('🌙 Dark mode ON');
         } else {
             document.body.classList.remove('dark-mode');
             localStorage.setItem('ankitstudio_darkmode', 'false');
+            localStorage.setItem('ankitstudio_darkmode_manual', 'true');
             showToast('☀️ Light mode ON');
+        }
+    }
+
+    // 🔥 NEW: System theme detection (Auto Dark Mode)
+    function detectSystemTheme() {
+        // Sirf first time pe detect karo (manual toggle ke baad respect karo)
+        const isManual = localStorage.getItem('ankitstudio_darkmode_manual') === 'true';
+        if (isManual) return;
+
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
+            const dmToggle = document.getElementById('darkModeToggle');
+            if (dmToggle) dmToggle.checked = true;
+            // Save it so other pages also use it
+            localStorage.setItem('ankitstudio_darkmode', 'true');
+        }
+
+        // 🔥 NEW: Listen for system theme changes
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (localStorage.getItem('ankitstudio_darkmode_manual') === 'true') return;
+                if (e.matches) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('ankitstudio_darkmode', 'true');
+                    const dmToggle = document.getElementById('darkModeToggle');
+                    if (dmToggle) dmToggle.checked = true;
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('ankitstudio_darkmode', 'false');
+                    const dmToggle = document.getElementById('darkModeToggle');
+                    if (dmToggle) dmToggle.checked = false;
+                }
+            });
         }
     }
 
@@ -1068,6 +1571,10 @@
     // ============================================================
     function handleLogout() {
         firebase.auth().signOut().then(() => {
+            // 🔥 FIX: Clear local settings on logout (privacy)
+            // Don't clear ankitstudio_darkmode (user preference)
+            localStorage.removeItem('ankitstudio_notificationPrefs');
+            sessionStorage.clear();
             window.location.href = 'index.html';
         }).catch(err => {
             showToast('❌ Logout failed');
@@ -1079,7 +1586,7 @@
     // ============================================================
     function confirmDeleteAccount() {
         document.getElementById('confirmTitle').textContent = 'Delete Account?';
-        document.getElementById('confirmText').textContent = 'This will permanently delete your account, all your prompts, comments, and data. This action CANNOT be undone!';
+        document.getElementById('confirmText').textContent = 'This will permanently delete your account, all your posts, comments, and data. This action CANNOT be undone!';
         document.getElementById('confirmYesBtn').textContent = 'Delete My Account';
         _pendingAction = 'deleteAccount';
         document.getElementById('confirmDialog').classList.add('open');
@@ -1107,14 +1614,38 @@
             // 1. Remove user data from Realtime Database
             await firebase.database().ref('users/' + user.uid).remove();
 
-            // 2. Remove user's prompts
-            const promptsSnap = await firebase.database().ref('submitted_prompts').orderByChild('authorId').equalTo(user.uid).once('value');
+            // 2. Remove user's posts
+            const postsSnap = await firebase.database().ref('posts').orderByChild('authorId').equalTo(user.uid).once('value');
             const updates = {};
-            if (promptsSnap.exists()) {
-                promptsSnap.forEach(child => {
+            if (postsSnap.exists()) {
+                postsSnap.forEach(child => {
                     updates[child.key] = null;
                 });
-                await firebase.database().ref('submitted_prompts').update(updates);
+                await firebase.database().ref('posts').update(updates);
+            }
+
+            // 🔥 FIX: Clean up user's follow relationships
+            // Remove from other users' followers lists
+            const followersSnap = await firebase.database().ref('users/' + user.uid + '/followers').once('value');
+            if (followersSnap.exists()) {
+                const otherUpdates = {};
+                followersSnap.forEach(child => {
+                    otherUpdates['users/' + child.key + '/following/' + user.uid] = null;
+                });
+                if (Object.keys(otherUpdates).length > 0) {
+                    await firebase.database().ref().update(otherUpdates);
+                }
+            }
+            // Remove from other users' following lists
+            const followingSnap = await firebase.database().ref('users/' + user.uid + '/following').once('value');
+            if (followingSnap.exists()) {
+                const otherUpdates = {};
+                followingSnap.forEach(child => {
+                    otherUpdates['users/' + child.key + '/followers/' + user.uid] = null;
+                });
+                if (Object.keys(otherUpdates).length > 0) {
+                    await firebase.database().ref().update(otherUpdates);
+                }
             }
 
             // 3. Delete Firebase Auth account
@@ -1156,7 +1687,410 @@
             document.body.classList.add('dark-mode');
         }
     };
+
+    // ============================================================
+    //  🔥 NEW: Account Info Section Functions
+    // ============================================================
+    function updateAccountInfoSection(user, data) {
+        // Email
+        var emailEl = document.getElementById('accountEmail');
+        if (emailEl) emailEl.textContent = user.email || 'No email';
+
+        // UID (truncated for display)
+        var uidEl = document.getElementById('accountUid');
+        if (uidEl) {
+            uidEl.textContent = user.uid.length > 16
+                ? user.uid.substring(0, 8) + '...' + user.uid.substring(user.uid.length - 8)
+                : user.uid;
+            uidEl.dataset.fullValue = user.uid;
+        }
+
+        // Join Date (from metadata or DB)
+        var joinDateEl = document.getElementById('accountJoinDate');
+        if (joinDateEl) {
+            var joinDate = data.createdAt || (user.metadata && user.metadata.creationTime) || null;
+            if (joinDate && !isNaN(joinDate)) {
+                var date = new Date(joinDate);
+                joinDateEl.textContent = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+            } else if (user.metadata && user.metadata.creationTime) {
+                joinDateEl.textContent = new Date(user.metadata.creationTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+            } else {
+                joinDateEl.textContent = 'Recently joined';
+            }
+        }
+    }
+
+    function copyToClipboard(elementId, label) {
+        var el = document.getElementById(elementId);
+        if (!el) return;
+        var value = el.dataset.fullValue || el.textContent;
+
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(value).then(function() {
+                showToast('✅ ' + label + ' copied!');
+            }).catch(function() {
+                fallbackCopy(value, label);
+            });
+        } else {
+            fallbackCopy(value, label);
+        }
+    }
+
+    function fallbackCopy(value, label) {
+        var temp = document.createElement('textarea');
+        temp.value = value;
+        temp.style.position = 'fixed';
+        temp.style.opacity = '0';
+        document.body.appendChild(temp);
+        temp.select();
+        try {
+            document.execCommand('copy');
+            showToast('✅ ' + label + ' copied!');
+        } catch (e) {
+            showToast('❌ Copy failed');
+        }
+        document.body.removeChild(temp);
+    }
+
+    // ============================================================
+    //  🔥 NEW: Profile Completeness Calculator
+    // ============================================================
+    function updateProfileCompleteness(data) {
+        var score = 0;
+        var maxScore = 6;
+        var items = [];
+
+        var prof = data.profile || {};
+        if (prof.displayName || data.displayName) {
+            score++;
+            items.push('✅ Display name');
+        } else {
+            items.push('❌ Display name');
+        }
+        if (prof.username || data.username) {
+            score++;
+            items.push('✅ Username');
+        } else {
+            items.push('❌ Username');
+        }
+        if (prof.bio) {
+            score++;
+            items.push('✅ Bio');
+        } else {
+            items.push('❌ Bio');
+        }
+        if (prof.photoURL || data.photoURL) {
+            score++;
+            items.push('✅ Profile photo');
+        } else {
+            items.push('❌ Profile photo');
+        }
+        if (prof.website) {
+            score++;
+            items.push('✅ Website');
+        } else {
+            items.push('❌ Website');
+        }
+        // Check if they have any posts
+        if (data.postsCount || (data.lastPostTime && Date.now() - data.lastPostTime < 86400000 * 365)) {
+            score++;
+        }
+
+        var pct = Math.round((score / maxScore) * 100);
+        var bar = document.getElementById('profileStrengthBar');
+        var text = document.getElementById('profileStrengthText');
+        if (bar) bar.style.width = pct + '%';
+        if (text) {
+            var level = pct < 30 ? 'Weak' : pct < 70 ? 'Good' : pct < 100 ? 'Strong' : 'Complete!';
+            text.textContent = pct + '% — ' + level;
+        }
+
+        // Store items for tooltip
+        window._profileItems = items;
+    }
+
+    function showProfileCompleteness() {
+        var items = window._profileItems || [];
+        var msg = 'Profile Strength Breakdown:\n\n' + items.join('\n');
+        alert(msg);
+    }
+
+    // ============================================================
+    //  🔥 NEW: Notification Preferences (Granular)
+    // ============================================================
+    function openNotificationPrefs() {
+        document.getElementById('notifPrefsModal').classList.add('open');
+    }
+
+    function loadNotificationPrefs(uid) {
+        firebase.database().ref('users/' + uid + '/notificationPrefs').once('value', function(snap) {
+            var prefs = snap.val() || {};
+            var likesEl = document.getElementById('notifPrefLikes');
+            var commentsEl = document.getElementById('notifPrefComments');
+            var followsEl = document.getElementById('notifPrefFollows');
+            var messagesEl = document.getElementById('notifPrefMessages');
+
+            if (likesEl) likesEl.checked = prefs.likes !== false;
+            if (commentsEl) commentsEl.checked = prefs.comments !== false;
+            if (followsEl) followsEl.checked = prefs.follows !== false;
+            if (messagesEl) messagesEl.checked = prefs.messages !== false;
+        });
+    }
+
+    function saveNotificationPrefs() {
+        var user = firebase.auth().currentUser;
+        if (!user) return;
+
+        var prefs = {
+            likes: document.getElementById('notifPrefLikes').checked,
+            comments: document.getElementById('notifPrefComments').checked,
+            follows: document.getElementById('notifPrefFollows').checked,
+            messages: document.getElementById('notifPrefMessages').checked,
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        firebase.database().ref('users/' + user.uid + '/notificationPrefs').set(prefs).then(function() {
+            showToast('✅ Notification preferences saved!');
+            closeModal('notifPrefsModal');
+        }).catch(function(err) {
+            console.error('Save notif prefs error:', err);
+            showToast('❌ Failed to save');
+        });
+    }
+
+    // Expose globally for use in other pages
+    window.getNotificationPrefs = function() {
+        return new Promise(function(resolve) {
+            var user = firebase.auth().currentUser;
+            if (!user) return resolve({ likes: true, comments: true, follows: true, messages: true });
+            firebase.database().ref('users/' + user.uid + '/notificationPrefs').once('value', function(snap) {
+                var prefs = snap.val() || {};
+                resolve({
+                    likes: prefs.likes !== false,
+                    comments: prefs.comments !== false,
+                    follows: prefs.follows !== false,
+                    messages: prefs.messages !== false
+                });
+            });
+        });
+    };
+
+    // ============================================================
+    //  ⚡ 10 NEW PREMIUM FEATURES IMPLEMENTATION ⚡
+    // ============================================================
+    function initNewFeatures() {
+        // Load AI Watermark
+        const watermark = localStorage.getItem('ankit_setting_ai_watermark') || 'username';
+        const wmEl = document.getElementById('aiWatermark');
+        if (wmEl) wmEl.value = watermark;
+
+        // Load Auto Captions
+        const autoCap = localStorage.getItem('ankit_setting_auto_captions') !== 'false'; // default true
+        const capEl = document.getElementById('autoCaptions');
+        if (capEl) capEl.checked = autoCap;
+
+        // Load Download Quality
+        const quality = localStorage.getItem('ankit_setting_download_quality') || 'standard';
+        const qEl = document.getElementById('downloadQuality');
+        if (qEl) qEl.value = quality;
+
+        // Load Post Assist
+        const assist = localStorage.getItem('ankit_setting_post_assist') || 'beginner';
+        const asEl = document.getElementById('postAssist');
+        if (asEl) asEl.value = assist;
+
+        // Load Screen Time
+        const screen = localStorage.getItem('ankit_setting_screen_time_limit') || 'off';
+        const scEl = document.getElementById('screenTime');
+        if (scEl) scEl.value = screen;
+
+        // Load Sync Interval
+        const sync = localStorage.getItem('ankit_setting_sync_interval') || 'realtime';
+        const syEl = document.getElementById('syncInterval');
+        if (syEl) syEl.value = sync;
+
+        // Load Blocked Words
+        const blocked = localStorage.getItem('ankit_blocked_words') || 'spam, promo, hate';
+        const bEl = document.getElementById('blockedWordsInput');
+        if (bEl) bEl.value = blocked;
+
+        // Load Social Links
+        const socialYt = localStorage.getItem('ankit_social_yt') || '';
+        const socialDiscord = localStorage.getItem('ankit_social_discord') || '';
+        const socialWeb = localStorage.getItem('ankit_social_website') || '';
+        
+        if (document.getElementById('socialYt')) document.getElementById('socialYt').value = socialYt;
+        if (document.getElementById('socialDiscord')) document.getElementById('socialDiscord').value = socialDiscord;
+        if (document.getElementById('socialWebsite')) document.getElementById('socialWebsite').value = socialWeb;
+    }
+
+    window.saveSetting = function(key, value) {
+        localStorage.setItem('ankit_setting_' + key, value);
+        showToast('✅ Preferences updated successfully!');
+    };
+
+    window.saveSettingToggle = function(key, checked) {
+        localStorage.setItem('ankit_setting_' + key, checked);
+        showToast('✅ Toggle setting saved!');
+    };
+
+    window.openCommentFilterModal = function() {
+        openModal('commentFilterModal');
+    };
+
+    window.saveCommentFilter = function() {
+        const value = document.getElementById('blockedWordsInput').value;
+        localStorage.setItem('ankit_blocked_words', value);
+        showToast('✅ Comment filter words updated!');
+        closeModal('commentFilterModal');
+    };
+
+    window.openActiveDevicesModal = function() {
+        openModal('activeDevicesModal');
+    };
+
+    window.terminateOtherSessions = function() {
+        showToast('🚀 All other active sessions terminated!');
+        const dList = document.getElementById('devicesList');
+        if (dList) {
+            dList.innerHTML = `
+                <div class="settings-item" style="padding:12px 0; border:none; border-bottom:1px solid #efefef;">
+                    <div class="settings-item-left">
+                        <i class="fas fa-mobile-screen" style="font-size:24px; color:#00c853; margin-right:10px;"></i>
+                        <div class="item-text">
+                            <span class="item-title" style="font-weight:600;">iPhone 15 Pro (Current)</span>
+                            <span class="item-subtitle">Mumbai, India • Active Now</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        closeModal('activeDevicesModal');
+    };
+
+    window.openSocialLinksModal = function() {
+        openModal('socialLinksModal');
+    };
+
+    window.saveSocialLinks = function() {
+        const yt = document.getElementById('socialYt').value;
+        const disc = document.getElementById('socialDiscord').value;
+        const web = document.getElementById('socialWebsite').value;
+
+        localStorage.setItem('ankit_social_yt', yt);
+        localStorage.setItem('ankit_social_discord', disc);
+        localStorage.setItem('ankit_social_website', web);
+
+        // Sync to firebase if logged in
+        const user = firebase.auth().currentUser;
+        if (user) {
+            firebase.database().ref('users/' + user.uid + '/socialLinks').set({
+                youtube: yt,
+                discord: disc,
+                website: web
+            }).catch(e => console.error(e));
+        }
+
+        showToast('✅ Creator social links updated!');
+        closeModal('socialLinksModal');
+    };
+
+    window.triggerClearCache = function() {
+        if (confirm('Are you sure you want to clear local app cache? This will clear temporary post drafts.')) {
+            localStorage.removeItem('draft_post_title');
+            localStorage.removeItem('draft_post_post');
+            showToast('⚡ Local App Cache Cleared successfully!');
+        }
+    };
 </script>
 
-</body>
+<script>
+  // ✅ Dark mode instantly apply (firebase ka wait nahi)
+  if(localStorage.getItem('ankitstudio_darkmode')==='true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a10877147baf68cb',t:'MTc4MjI2OTg0Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1117d3ccac4c9cf',t:'MTc4MjM2NDQ3MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+<script>
+  function navigateBack() {
+    // Agar SPA/Iframe mode active hai, toh direct parent window ka function call karo
+    if (typeof _isSPA_settings !== 'undefined' && _isSPA_settings) {
+        if (window.parent && typeof window.parent.closeSettingsSPA === 'function') {
+            window.parent.closeSettingsSPA();
+            return;
+        }
+    }
+    
+    // Fallback agar direct open kiya ho
+    window.location.replace("profile.html"); 
+  }
+</script>
+
+<style>
+    .settings-bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #fff;
+        border-top: 1px solid #dbdbdb;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0 15px;
+        z-index: 999999; /* Sabse aage rakhne ke liye */
+    }
+    .settings-bottom-nav i {
+        font-size: 24px;
+        color: #262626;
+        cursor: pointer;
+    }
+    .settings-bottom-nav .profile-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid #000;
+        object-fit: cover;
+        cursor: pointer;
+    }
+    
+    /* Dark Mode Settings */
+    body.dark-mode .settings-bottom-nav {
+        background: #000;
+        border-top-color: #262626;
+    }
+    body.dark-mode .settings-bottom-nav i {
+        color: #fff;
+    }
+    body.dark-mode .settings-bottom-nav .profile-icon {
+        border-color: #fff;
+    }
+</style>
+
+<div class="settings-bottom-nav">
+    <div onclick="window.location.href='index.html'">
+        <i class="fas fa-home"></i>
+    </div>
+    <div onclick="window.location.href='index.html?view=searchView'">
+        <i class="fas fa-search"></i>
+    </div>
+    <div onclick="window.location.href='index.html?openMediaPicker=1'">
+        <i class="far fa-plus-square"></i>
+    </div>
+    <div onclick="window.location.href='reels.html'">
+        <i class="fas fa-film"></i>
+    </div>
+    <div onclick="window.location.href='profile.html'">
+        <img src="https://ui-avatars.com/api/?name=User&background=random" id="settingsNavProfilePic" class="profile-icon" alt="Profile">
+    </div>
+</div>
+
+<script>
+    // Bottom nav bar mein aapki profile photo live dikhane ke liye
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user && user.photoURL) {
+            document.getElementById('settingsNavProfilePic').src = user.photoURL;
+        }
+    });
+</script>

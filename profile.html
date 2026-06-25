@@ -2,153 +2,289 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - AnkitStudioAI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Profile - ANKITSTUDIOAI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <!-- Firebase compat -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
-        /* ===== FULL PAGE RESET ===== */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; }
-        body { padding: 0 !important; background: #fff !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%}
+        body{padding:0!important;background:#fff!important;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#000;overflow-x:hidden}
 
-        /* ===== CONTAINER — FULL PAGE ===== */
-        #ig-profile-section { min-height: 100vh; background: #fff; }
-        .ig-container { max-width: 100%; background: #fff; color: #000; padding-bottom: 70px; }
+        #ig-profile-section{min-height:100vh;background:#fff}
+        .ig-container{max-width:100%;background:#fff;color:#000;padding-bottom:70px}
 
-        /* ===== TOP NAV ===== */
-        .ig-header-nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #efefef; position: sticky; top: 0; background: #fff; z-index: 100; }
-        .ig-username { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+        /* TOP NAV */
+        .ig-header-nav{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #efefef;position:sticky;top:0;background:#fff;z-index:100}
+        .ig-username{font-size:18px;font-weight:700;display:flex;align-items:center;gap:4px}
+        .ig-header-nav i{cursor:pointer}
 
-        /* ===== PROFILE INFO — STATS ON TOP ===== */
-        .ig-profile-info { display: flex; align-items: center; padding: 16px; gap: 20px; }
-        .ig-avatar-box { position: relative; width: 86px; height: 86px; flex-shrink: 0; }
-        .ig-avatar-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #dbdbdb; }
-        .ig-add-story { position: absolute; bottom: 0; right: 0; background: #0095f6; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; font-size: 12px; cursor: pointer; }
+        /* PROFILE INFO */
+        .ig-profile-info{display:flex;align-items:center;padding:16px;gap:20px}
+        .ig-avatar-box{position:relative;width:86px;height:86px;flex-shrink:0}
+        .ig-avatar-box img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid #dbdbdb}
+        .ig-avatar-initial{width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:700}
+        .ig-add-story{position:absolute;bottom:0;right:0;background:#0095f6;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-size:12px;cursor:pointer}
 
-        /* STATS GRID — POSTS | FOLLOWERS | FOLLOWING */
-        .ig-stats-box { flex: 1; display: flex; justify-content: space-around; text-align: center; }
-        .ig-stat { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 6px 8px; border-radius: 8px; transition: background 0.15s; -webkit-tap-highlight-color: transparent; }
-        .ig-stat:active { background: #f0f0f0; }
-        .ig-stat strong { display: block; font-size: 17px; font-weight: 700; color: #000; }
-        .ig-stat span { font-size: 13px; color: #262626; }
+        /* STATS */
+        .ig-stats-box{flex:1;display:flex;justify-content:space-around;text-align:center}
+        .ig-stat{display:flex;flex-direction:column;align-items:center;cursor:pointer;padding:6px 8px;border-radius:8px;transition:background .15s;-webkit-tap-highlight-color:transparent}
+        .ig-stat:active{background:#f0f0f0}
+        .ig-stat strong{display:block;font-size:17px;font-weight:700;color:#000}
+        .ig-stat span{font-size:13px;color:#262626}
 
-        /* ===== BIO ===== */
-        .ig-bio-section { padding: 4px 16px 14px; font-size: 14px; line-height: 1.5; }
-        .ig-name { font-weight: 700; font-size: 15px; }
-        .ig-category { color: #8e8e8e; font-size: 13px; margin-bottom: 3px; }
-        .ig-bio-text { white-space: pre-line; color: #262626; }
+        /* BIO */
+        .ig-bio-section{padding:4px 16px 14px;font-size:14px;line-height:1.5}
+        .ig-name{font-weight:700;font-size:15px}
+        .ig-category{color:#8e8e8e;font-size:13px;margin-bottom:3px}
+        .ig-bio-text{white-space:pre-line;color:#262626}
 
-        /* ===== DASHBOARD BANNER ===== */
-        .ig-dashboard-banner { margin: 0 16px 14px; padding: 10px 14px; background: #fafafa; border-radius: 8px; font-size: 14px; border: 1px solid #efefef; }
-        .ig-dashboard-banner strong { display: block; font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-        .ig-dashboard-banner span { color: #8e8e8e; font-size: 13px; }
+        /* DASHBOARD BANNER */
+        .ig-dashboard-banner{margin:0 16px 14px;padding:10px 14px;background:#fafafa;border-radius:8px;font-size:14px;border:1px solid #efefef;cursor:pointer}
+        .ig-dashboard-banner strong{display:block;font-weight:600;font-size:14px;margin-bottom:2px}
+        .ig-dashboard-banner span{color:#8e8e8e;font-size:13px}
 
-        /* ===== ACTION BUTTONS ===== */
-        .ig-action-buttons { display: flex; gap: 8px; padding: 0 16px 16px; }
-        .ig-action-buttons button { flex: 1; padding: 7px 0; border: none; border-radius: 8px; background: #efefef; font-weight: 600; font-size: 14px; cursor: pointer; color: #000; }
+        /* ACTION BUTTONS */
+        .ig-action-buttons{display:flex;gap:8px;padding:0 16px 16px}
+        .ig-action-buttons button{flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;transition:.15s}
+        .ig-action-buttons button.primary-btn{background:#0095f6;color:#fff}
+        .ig-action-buttons button.danger-btn{background:#fff;color:#ed4956;border:1px solid #ed4956}
+        .ig-action-buttons button:disabled{opacity:.6;cursor:not-allowed}
 
-        /* ===== HIGHLIGHTS ===== */
-        .ig-highlights-container { display: flex; gap: 18px; padding: 0 16px 16px; overflow-x: auto; scrollbar-width: none; }
-        .ig-highlights-container::-webkit-scrollbar { display: none; }
-        .ig-highlight { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; flex-shrink: 0; }
-        .ig-highlight-img { width: 64px; height: 64px; border-radius: 50%; border: 1px solid #dbdbdb; padding: 3px; display: flex; align-items: center; justify-content: center; }
-        .ig-highlight-img img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .ig-highlight-img.new-hl { font-size: 24px; }
+        /* HIGHLIGHTS */
+        .ig-highlights-container{display:flex;gap:18px;padding:0 16px 16px;overflow-x:auto;scrollbar-width:none}
+        .ig-highlights-container::-webkit-scrollbar{display:none}
+        .ig-highlight{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;cursor:pointer;flex-shrink:0}
+        .ig-highlight-img{width:64px;height:64px;border-radius:50%;border:1px solid #dbdbdb;padding:3px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+        .ig-highlight-img img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+        .ig-highlight-img.new-hl{font-size:24px;color:#8e8e8e}
 
-        /* ===== TABS + GRID ===== */
-        .ig-tabs-container { display: flex; border-top: 1px solid #efefef; border-bottom: 1px solid #efefef; }
-        .ig-tab { flex: 1; text-align: center; padding: 12px 0; color: #8e8e8e; font-size: 20px; cursor: pointer; }
-        .ig-tab.active { color: #000; border-top: 2px solid #000; }
-        .ig-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
-        .ig-photo-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; }
+        /* TABS */
+        .ig-tabs-container{display:flex;border-top:1px solid #efefef}
+        .ig-tab{flex:1;text-align:center;padding:12px 0;color:#8e8e8e;font-size:20px;cursor:pointer;border-top:2px solid transparent}
+        .ig-tab.active{color:#000;border-top-color:#000}
 
-        /* ===== BOTTOM NAV ===== */
-        .ig-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; border-top: 1px solid #dbdbdb; display: flex; justify-content: space-around; align-items: center; padding: 10px 0 12px; z-index: 9999; }
-        .ig-bottom-nav i { font-size: 24px; color: #000; cursor: pointer; }
-        .ig-nav-profile { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid #000; cursor: pointer; }
+        /* PHOTO GRID */
+        .ig-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:#fff;min-height:120px}
+        .ig-photo-grid img{width:100%;aspect-ratio:1/1;object-fit:cover;cursor:pointer;display:block;background:#f5f5f5}
+        .ig-photo-grid .grid-empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:#8e8e8e;font-size:14px}
 
-        /* ===== SEARCH / EXPLORE ===== */
-        .ig-explore-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding-top: 2px; }
-        .ig-explore-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; cursor: pointer; }
+        /* SEARCH */
+        .ig-explore-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding-top:2px}
+        .ig-explore-grid img{width:100%;aspect-ratio:1/1;object-fit:cover;cursor:pointer}
 
-        /* ===== FOLLOW LIST MODAL — OPENS FROM TOP ===== */
-        #followListModal {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 99999;
-            background: #fff;
-            display: none;
-        }
-        #followListModal.open { display: flex; flex-direction: column; }
-        .follow-sheet {
-            background: #fff;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            animation: fFadeIn 0.15s ease;
-        }
-        @keyframes fFadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .follow-sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #efefef; flex-shrink: 0; }
-        .follow-sheet-header .ftitle { font-size: 16px; font-weight: 700; color: #000; flex: 1; text-align: center; }
-        .follow-sheet-header .fclose { background: none; border: none; font-size: 24px; cursor: pointer; color: #000; width: 28px; line-height: 1; }
-        .follow-tabs { display: flex; gap: 8px; padding: 10px 16px 6px; flex-shrink: 0; border-bottom: 1px solid #efefef; }
-        .follow-tab { padding: 6px 20px; border: none; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s; }
-        .follow-tab.active { background: #000; color: #fff; }
-        .follow-tab.inactive { background: #efefef; color: #000; }
-        .follow-list-body { overflow-y: auto; flex: 1; padding-bottom: 24px; }
-        .follow-user-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.15s; }
-        .follow-user-row:last-child { border-bottom: none; }
-        .follow-user-row:active { background: #f5f5f5; }
-        .follow-user-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg,#f09433,#dc2743,#bc1888); color: #fff; font-size: 19px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .follow-user-info { flex: 1; }
-        .follow-user-info .uname { font-size: 14px; font-weight: 600; color: #000; }
-        .follow-user-info .rname { font-size: 13px; color: #8e8e8e; margin-top: 1px; }
-        .follow-empty { text-align: center; padding: 80px 16px; color: #8e8e8e; font-size: 14px; line-height: 1.6; }
-        .follow-empty i { font-size: 44px; display: block; margin-bottom: 14px; }
+        /* BOTTOM NAV */
+        .ig-bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#fff;border-top:1px solid #dbdbdb;display:flex;justify-content:space-around;align-items:center;padding:10px 0 12px;z-index:9999}
+        .ig-bottom-nav i{font-size:24px;color:#000;cursor:pointer}
+        .ig-bottom-nav .nav-active{color:#0095f6}
+        .ig-nav-profile{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #000;cursor:pointer;background:#eee}
+
+        /* FOLLOW LIST MODAL */
+        #followListModal{position:fixed;inset:0;z-index:99999;background:#fff;display:none;flex-direction:column}
+        #followListModal.open{display:flex;animation:fFadeIn .15s ease}
+        @keyframes fFadeIn{from{opacity:0}to{opacity:1}}
+        .follow-sheet-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #efefef;flex-shrink:0}
+        .follow-sheet-header .ftitle{font-size:16px;font-weight:700;color:#000;flex:1;text-align:center}
+        .follow-sheet-header .fclose{background:none;border:none;font-size:24px;cursor:pointer;color:#000;width:28px;line-height:1}
+        .follow-tabs{display:flex;gap:8px;padding:10px 16px 6px;flex-shrink:0;border-bottom:1px solid #efefef}
+        .follow-tab{padding:6px 20px;border:none;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+        .follow-tab.active{background:#000;color:#fff}
+        .follow-tab.inactive{background:#efefef;color:#000}
+        .follow-list-body{overflow-y:auto;flex:1;padding-bottom:24px}
+        .follow-user-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background .15s}
+        .follow-user-row:active{background:#f5f5f5}
+        .follow-user-avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+        .follow-user-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+        .follow-user-info{flex:1}
+        .follow-user-info .uname{font-size:14px;font-weight:600;color:#000}
+        .follow-user-info .rname{font-size:13px;color:#8e8e8e;margin-top:1px}
+        .follow-empty{text-align:center;padding:80px 16px;color:#8e8e8e;font-size:14px;line-height:1.6}
+        .follow-empty i{font-size:44px;display:block;margin-bottom:14px}
+
+        /* MODAL - Post viewer */
+        .modal-overlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:16px}
+        .modal-overlay.open{display:flex}
+        .advanced-modal{background:#fff;width:100%;max-width:950px;max-height:92vh;border-radius:12px;overflow:hidden;display:flex;flex-direction:row}
+        @media(max-width:768px){.advanced-modal{flex-direction:column;max-height:95vh}}
+        .modal-gallery{flex:1.3;background:#000;position:relative;display:flex;align-items:center;justify-content:center;min-height:300px}
+        .modal-gallery img{max-width:100%;max-height:70vh;object-fit:contain}
+        .gallery-controls{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;z-index:5}
+        .gallery-btn{background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;backdrop-filter:blur(4px)}
+        .gallery-btn.close-btn{background:rgba(0,0,0,.7)}
+        .image-counter{background:rgba(0,0,0,.55);color:#fff;padding:4px 10px;border-radius:12px;font-size:12px}
+        .gallery-thumbnails{position:absolute;bottom:10px;left:0;right:0;display:flex;gap:6px;justify-content:center;padding:0 10px;overflow-x:auto}
+        .gallery-thumbnails img{width:52px;height:52px;border-radius:6px;object-fit:cover;cursor:pointer;border:2px solid transparent;opacity:.7}
+        .gallery-thumbnails img.active{border-color:#fff;opacity:1}
+        .modal-details{flex:1;background:#fff;display:flex;flex-direction:column;max-width:380px;min-width:320px}
+        @media(max-width:768px){.modal-details{max-width:100%;max-height:45vh}}
+        .details-header{padding:14px 16px;border-bottom:1px solid #efefef;display:flex;align-items:center;justify-content:space-between}
+        .author-info{display:flex;align-items:center;gap:10px}
+        .author-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
+        .author-name{font-size:14px;font-weight:700}
+        .author-handle{font-size:12px;color:#8e8e8e}
+        .modal-ai-tag-new{font-size:11px;background:#efefef;padding:4px 10px;border-radius:14px;font-weight:600;color:#333}
+        .posts-list{padding:12px 16px;overflow-y:auto;flex:0 0 auto;max-height:180px;border-bottom:1px solid #efefef}
+        .post-box-item{background:#fafafa;border:1px solid #efefef;border-radius:8px;margin-bottom:10px;overflow:hidden}
+        .post-box-header{font-size:11px;font-weight:700;color:#8e8e8e;padding:8px 12px;background:#f5f5f5;border-bottom:1px solid #efefef}
+        .post-box-text{padding:10px 12px;font-size:13px;line-height:1.5;color:#262626}
+        .post-box-actions{display:flex;gap:8px;padding:0 12px 10px}
+        .post-action-btn{font-size:11px;background:#fff;border:1px solid #dbdbdb;border-radius:6px;padding:5px 10px;cursor:pointer;color:#333}
+        .post-action-btn:hover{background:#f5f5f5}
+        /* comments */
+        .comments-section{flex:1;display:flex;flex-direction:column;min-height:150px;overflow:hidden}
+        .comments-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #efefef;font-size:13px;font-weight:700}
+        .comments-count{background:#0095f6;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px}
+        .comments-list{flex:1;overflow-y:auto;padding:8px 16px;background:#fafafa}
+        .comment-item{display:flex;gap:10px;margin-bottom:12px;font-size:13px}
+        .comment-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .comment-body{flex:1}
+        .comment-meta{margin-bottom:2px}
+        .comment-author{font-weight:600;font-size:13px;margin-right:6px}
+        .comment-time{font-size:11px;color:#8e8e8e}
+        .comment-text{color:#333;line-height:1.4;word-break:break-word}
+        .comment-delete-btn{background:none;border:none;color:#ed4956;cursor:pointer;font-size:12px;padding:2px 4px}
+        .comments-empty{text-align:center;color:#8e8e8e;padding:30px 10px;font-size:13px}
+        .comments-empty i{font-size:24px;display:block;margin-bottom:8px}
+        .comments-input-area{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid #efefef;background:#fff}
+        .comment-input-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .comments-input-area input{flex:1;border:1px solid #dbdbdb;border-radius:20px;padding:8px 14px;font-size:13px;outline:none}
+        .comments-input-area input:focus{border-color:#a8a8a8}
+        .comment-send-btn{background:#0095f6;border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .comment-send-btn:disabled{background:#b2dffc;cursor:not-allowed}
+        .details-actions{padding:12px 16px;border-top:1px solid #efefef}
+        .action-btn{width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+        .outline-btn{background:#fff;border:1px solid #dbdbdb;color:#262626}
+
+        /* MEDIA PICKER */
+        #mediaPickerModal{position:fixed;inset:0;z-index:999999;background:#000;display:none;flex-direction:column;animation:mpFadeIn .18s ease}
+        #mediaPickerModal.open{display:flex}
+        @keyframes mpFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .mp-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#000;flex-shrink:0;color:#fff}
+        .mp-header-title{font-size:17px;font-weight:700;color:#fff;flex:1;text-align:center}
+        .mp-header-btn{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;width:32px;display:flex;align-items:center;justify-content:center;padding:0}
+        .mp-action-row{display:flex;gap:10px;padding:10px 16px 6px;background:#000;flex-shrink:0}
+        .mp-action-chip{display:flex;align-items:center;gap:8px;background:#222;border:1.5px solid #333;border-radius:20px;padding:8px 14px;cursor:pointer;color:#fff;font-size:14px;font-weight:600}
+        .mp-draft-dot{background:#0095f6;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:2px}
+        .mp-recents-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px;background:#000;flex-shrink:0;color:#fff}
+        .mp-recents-label{display:flex;align-items:center;gap:6px;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+        .mp-select-btn{display:flex;align-items:center;gap:7px;background:#222;border:none;border-radius:6px;padding:7px 14px;color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+        .mp-grid-wrap{flex:1;overflow-y:auto;background:#000}
+        .mp-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+        .mp-photo-cell{aspect-ratio:1/1;background:#111;overflow:hidden;position:relative;cursor:pointer}
+        .mp-photo-cell img,.mp-photo-cell video{width:100%;height:100%;object-fit:cover;display:block}
+        .mp-photo-cell.empty{background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:#444}
+        .mp-camera-cell{aspect-ratio:1/1;background:#1a1a1a;overflow:hidden;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#888;font-size:28px}
+        .mp-video-badge{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.6);border-radius:4px;padding:2px 5px;font-size:11px;color:#fff;display:flex;align-items:center;gap:3px}
+        .mp-bottom-tabs{display:flex;background:#000;border-top:1px solid #222;flex-shrink:0}
+        .mp-tab{flex:1;text-align:center;padding:14px 0 12px;color:#666;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;border-top:2px solid transparent;transition:.15s}
+        .mp-tab.active{color:#fff;border-top-color:#fff}
+
+        /* NOTIF PANEL */
+        #notifPanel{position:fixed;inset:0;z-index:99998;background:#fff;display:none;flex-direction:column}
+
+        /* Toast */
+        .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);background:#262626;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:999999;opacity:0;transition:all .3s ease;pointer-events:none}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+        /* dark */
+        body.dark-mode{background:#000!important;color:#fff!important}
+        body.dark-mode #ig-profile-section,body.dark-mode .ig-container{background:#000;color:#fff}
+        body.dark-mode .ig-header-nav{background:#000;border-color:#262626}
+        body.dark-mode .ig-stat strong,body.dark-mode .ig-name,body.dark-mode .ig-username{color:#fff}
+        body.dark-mode .ig-bio-text{color:#ddd}
+        body.dark-mode .ig-dashboard-banner{background:#111;border-color:#262626}
+        body.dark-mode .ig-action-buttons button{background:#262626;color:#fff}
+        body.dark-mode .ig-tabs-container{border-color:#262626}
+        body.dark-mode .ig-tab.active{color:#fff;border-top-color:#fff}
+        body.dark-mode .ig-bottom-nav{background:#000;border-color:#262626}
+        body.dark-mode .ig-bottom-nav i{color:#fff}
+        body.dark-mode .advanced-modal{background:#111}
+        body.dark-mode .modal-details{background:#111;color:#fff}
+        body.dark-mode .details-header,body.dark-mode .posts-list,body.dark-mode .comments-header,body.dark-mode .details-actions,body.dark-mode .comments-input-area{border-color:#262626;background:#111}
+        body.dark-mode .post-box-item{background:#1a1a1a;border-color:#262626}
+        body.dark-mode .post-box-header{background:#222;border-color:#262626;color:#aaa}
+        body.dark-mode .post-box-text{color:#ddd}
+        body.dark-mode .comments-list{background:#0a0a0a}
+        body.dark-mode .comment-text{color:#ddd}
+        body.dark-mode #followListModal,body.dark-mode .follow-sheet{background:#000;color:#fff}
+        body.dark-mode .follow-sheet-header{border-color:#262626}
+        body.dark-mode .follow-user-row{border-color:#1a1a1a}
+        body.dark-mode .follow-user-info .uname{color:#fff}
     </style>
-
 </head>
-<body>
+<!-- SETTINGS SPA OVERLAY (Bina reload ke settings open karne ke liye) -->
+<div id="settingsSPAContainer" style="display: none; position: fixed; inset: 0; z-index: 9999999; background: #fff;">
+    <iframe id="settingsIframe" style="width: 100%; height: 100%; border: none;"></iframe>
+</div>
 
+<script>
+// SPA mode mein settings open/close karne ke functions
+window.openSettingsSPA = function() {
+    var container = document.getElementById('settingsSPAContainer');
+    var iframe = document.getElementById('settingsIframe');
+    
+    container.style.display = 'block'; 
+    
+    // Iframe mein pehli baar settings.html load karein
+    if (!iframe.src || iframe.src.indexOf('settings.html') === -1) {
+        iframe.src = 'settings.html?spa=true';
+    }
+    
+    // Bottom nav hide karein taaki full screen look aaye
+    document.getElementById('bottom-nav-bar').style.display = 'none';
+};
+
+window.closeSettingsSPA = function() {
+    document.getElementById('settingsSPAContainer').style.display = 'none';
+    // Wapas aane par bottom nav show karein
+    document.getElementById('bottom-nav-bar').style.display = 'flex';
+};
+</script>
+<body>
+<script>if(sessionStorage.getItem('splash_shown')){document.documentElement.style.setProperty('--splash-display','none');}</script>
 <div id="ig-profile-section">
     <div class="ig-container">
 
         <!-- TOP NAV -->
         <div class="ig-header-nav">
-            <i class="fas fa-plus" style="cursor:pointer;font-size:22px;" id="top-left-icon"></i>
+            <i class="fas fa-plus" style="font-size:22px" id="top-left-icon" onclick="openMediaPicker()"></i>
             <div class="ig-username" id="top-title">
-                ankitburdakk <i class="fas fa-chevron-down" style="font-size:12px;"></i>
+                <span id="top-title-text">loading</span>
+                <i class="fas fa-chevron-down" style="font-size:12px"></i>
             </div>
-            <a href="settings.html" style="color:#000;text-decoration:none;"><i class="fas fa-bars" style="cursor:pointer;font-size:22px;" id="top-right-icon"></i></a>
+            <i class="fas fa-bars" style="font-size:22px; cursor:pointer;" id="top-right-icon" onclick="openSettingsSPA()"></i>
         </div>
 
-        <!-- SEARCH / EXPLORE VIEW -->
-        <div id="search-content-wrap" style="display:none;">
-            <div style="padding:10px 16px; border-bottom:1px solid #efefef;">
-                <div style="background:#efefef; border-radius:10px; display:flex; align-items:center; padding:8px 12px;">
-                    <i class="fas fa-search" style="color:#8e8e8e; font-size:14px;"></i>
-                    <input type="text" id="ig-search-input" placeholder="Search users..." style="border:none; background:transparent; outline:none; margin-left:10px; width:100%; font-size:14px; color:#000;">
+        <!-- SEARCH / EXPLORE WRAP -->
+        <div id="search-content-wrap" style="display:none">
+            <div style="padding:10px 16px;border-bottom:1px solid #efefef">
+                <div style="background:#efefef;border-radius:10px;display:flex;align-items:center;padding:8px 12px">
+                    <i class="fas fa-search" style="color:#8e8e8e;font-size:14px"></i>
+                    <input type="text" id="ig-search-input" placeholder="Search users..." style="border:none;background:transparent;outline:none;margin-left:10px;width:100%;font-size:14px;color:#000">
                 </div>
             </div>
-            <div class="ig-explore-grid"></div>
+            <div class="ig-explore-grid" id="exploreGrid"></div>
+            <div id="ig-search-results-list" style="display:none;padding:0 16px"></div>
         </div>
 
-        <!-- PROFILE VIEW -->
+        <!-- PROFILE WRAP -->
         <div id="profile-content-wrap">
 
             <!-- AVATAR + STATS -->
             <div class="ig-profile-info">
                 <div class="ig-avatar-box">
-                    <img src="" alt="Avatar" id="main-profile-pic">
-                    <div class="ig-add-story"><i class="fas fa-plus"></i></div>
+                    <div id="main-profile-pic-wrap" style="width:100%;height:100%;border-radius:50%;overflow:hidden">
+                        <img src="" alt="Avatar" id="main-profile-pic" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:none">
+                        <div class="ig-avatar-initial" id="main-profile-initial">U</div>
+                    </div>
+                    <div class="ig-add-story" onclick="showToast('Story upload coming soon!')"><i class="fas fa-plus"></i></div>
                 </div>
                 <div class="ig-stats-box">
                     <div class="ig-stat" id="stat-posts">
@@ -168,828 +304,161 @@
 
             <!-- BIO -->
             <div class="ig-bio-section">
-                <div class="ig-name" id="main-profile-name">Ankit Burdak</div>
-                <div class="ig-category" id="main-profile-category">Reel creator</div>
-                <div class="ig-bio-text">Welcome to my AI Prompt Studio<br>DM for collabs</div>
+                <div class="ig-name" id="main-profile-name">User</div>
+                <div class="ig-category" id="main-profile-category"></div>
+                <div class="ig-bio-text" id="main-profile-bio">Welcome to ANKITSTUDIOAI ✨</div>
             </div>
 
-            <!-- PRO DASHBOARD (only for own profile) -->
-            <div class="ig-dashboard-banner" id="pro-dashboard">
+            <!-- PRO DASHBOARD -->
+            <div class="ig-dashboard-banner" id="pro-dashboard" onclick="window.location.href='dashboard.html'">
                 <strong>Professional dashboard</strong>
-                <span>295 views in the last 30 days.</span>
+                <span>View your insights and analytics →</span>
             </div>
 
             <!-- ACTION BUTTONS -->
             <div class="ig-action-buttons" id="dynamic-action-buttons">
-                <button>Edit profile</button>
-                <button>Share profile</button>
+                <!-- Purana: <button onclick="window.location.href='settings.html?from=profileView'">Edit profile</button> -->
+<button onclick="openSettingsSPA()">Edit profile</button>
+                <button onclick="shareProfile()">Share profile</button>
             </div>
 
             <!-- HIGHLIGHTS -->
-            <div class="ig-highlights-container">
-                <div class="ig-highlight">
+            <div class="ig-highlights-container" id="highlightsContainer">
+                <div class="ig-highlight" onclick="window.location.href='stories.html'">
                     <div class="ig-highlight-img new-hl"><i class="fas fa-plus"></i></div>
                     <span>New</span>
-                </div>
-                <div class="ig-highlight">
-                    <div class="ig-highlight-img"><img src="" alt="Highlight"></div>
-                    <span>Highlights</span>
                 </div>
             </div>
 
             <!-- TABS -->
             <div class="ig-tabs-container">
                 <div class="ig-tab active"><i class="fas fa-th"></i></div>
-                <div class="ig-tab"><i class="far fa-play-circle"></i></div>
-                <div class="ig-tab"><i class="far fa-user-circle"></i></div>
+                <div class="ig-tab" onclick="window.location.href='index.html?view=reelsView'"><i class="far fa-play-circle"></i></div>
+                <div class="ig-tab" onclick="showToast('Tagged posts coming soon')"><i class="far fa-user-circle"></i></div>
             </div>
 
             <!-- PHOTO GRID -->
             <div class="ig-photo-grid" id="profile-photo-grid">
-                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400">
-                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400">
-                <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400">
+                <div class="grid-empty"><i class="fas fa-camera" style="font-size:30px;margin-bottom:10px;display:block"></i>Loading posts...</div>
             </div>
         </div>
-
-    </div><!-- /.ig-container -->
+    </div>
 
     <!-- BOTTOM NAV -->
     <div class="ig-bottom-nav" id="bottom-nav-bar">
-        <i class="fas fa-home" onclick="window.location.href='index.html'"></i>
-        <i class="fas fa-search" id="ig-search-btn" style="cursor:pointer;"></i>
-        <i class="far fa-play-circle"></i>
-        <i class="far fa-plus-square"></i>
-        <div style="position:relative; display:inline-block;">
-            <i class="far fa-heart" id="ig-notif-btn" style="cursor:pointer;"></i>
-            <span id="ig-notif-badge" style="display:none; position:absolute; top:-6px; right:-8px; background:#ed4956; color:#fff; font-size:10px; font-weight:700; min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px;">0</span>
-        </div>
-        <a href="messages.html" style="color:#000;text-decoration:none;"><i class="far fa-paper-plane"></i></a>
-        <img src="" alt="Profile" class="ig-nav-profile" id="ig-profile-btn">
+        <i class="fas fa-home" onclick="window.location.href='index.html'" title="Home"></i>
+        <i class="fas fa-search" onclick="window.location.href='index.html?view=searchView'" title="Search"></i>
+        <i class="far fa-plus-square" id="ig-add-btn" onclick="openMediaPicker()" title="Add"></i>
+        <i class="fas fa-film" onclick="window.location.href='reels.html'" title="Reels"></i>
+        <img src="" alt="Profile" class="ig-nav-profile" id="ig-profile-btn" title="Profile"
+             style="border:2px solid #262626;" onclick="window.location.href='profile.html'">
     </div>
 </div>
 
-<!-- ===== NOTIFICATIONS PANEL (NEW FEATURE) ===== -->
-<div id="notifPanel" style="position:fixed; inset:0; z-index:99998; background:#fff; display:none; flex-direction:column;">
-    <div class="follow-sheet-header">
-        <div style="width:28px;"></div>
-        <span class="ftitle">Notifications</span>
-        <button class="fclose" onclick="document.getElementById('notifPanel').style.display='none';">&times;</button>
-    </div>
-    <div id="notifPanelBody" style="overflow-y:auto; flex:1; padding-bottom:24px;">
-        <div class="follow-empty"><i class="far fa-bell"></i>Koi notification nahi hai.</div>
-    </div>
-</div>
-
-<!-- ===== FOLLOW LIST MODAL (TOP) ===== -->
+<!-- FOLLOW LIST MODAL -->
 <div id="followListModal" onclick="if(event.target===this)closeFollowModal()">
-    <div class="follow-sheet">
+    <div class="follow-sheet" style="height:100%;display:flex;flex-direction:column">
         <div class="follow-sheet-header">
-            <div style="width:28px;"></div>
+            <div style="width:28px"></div>
             <span class="ftitle" id="followModalTitle">Followers</span>
-            <button class="fclose" onclick="closeFollowModal()">&times;</button>
+            <button class="fclose" onclick="closeFollowModal()">×</button>
         </div>
         <div class="follow-tabs">
             <button class="follow-tab active" id="ftab-followers" onclick="switchFollowTab('followers')">Followers</button>
             <button class="follow-tab inactive" id="ftab-following" onclick="switchFollowTab('following')">Following</button>
         </div>
         <div class="follow-list-body" id="followModalBody">
-            <div class="follow-empty">
-                <i class="fas fa-circle-notch fa-spin" style="color:#0095f6;"></i>
-                Loading...
-            </div>
+            <div class="follow-empty"><i class="fas fa-circle-notch fa-spin" style="color:#0095f6"></i><br><br>Loading...</div>
         </div>
     </div>
 </div>
 
-<script src="js/firebase-config.js"></script>
-<script src="js/app.js"></script>
+<!-- NOTIFICATIONS PANEL -->
+<div id="notifPanel">
+    <div class="follow-sheet-header">
+        <div style="width:28px"></div>
+        <span class="ftitle">Notifications</span>
+        <button class="fclose" onclick="document.getElementById('notifPanel').style.display='none'">×</button>
+    </div>
+    <div id="notifPanelBody" style="overflow-y:auto;flex:1;padding-bottom:24px">
+        <div class="follow-empty"><i class="far fa-bell"></i>No notifications yet.</div>
+    </div>
+</div>
 
-<script>
-    // ============================================================
-    //  GLOBAL STATE
-    // ============================================================
-    let _activeProfileUid = null;
-    let _userCacheMap = {};
-    
-    let _refFollowersCount = null;
-    let _refFollowingCount = null;
-    let _refPosts = null;
-    let _refFollowButton = null;
-    
-    // ============================================================
-    //  FOLLOW MODAL — open / close / tab switch
-    // ============================================================
-    window.openFollowModal = function(type) {
-        if (!_activeProfileUid) return;
-        document.getElementById('followModalTitle').textContent = type === 'followers' ? 'Followers' : 'Following';
-        document.getElementById('ftab-followers').className = 'follow-tab ' + (type === 'followers' ? 'active' : 'inactive');
-        document.getElementById('ftab-following').className = 'follow-tab ' + (type === 'following' ? 'active' : 'inactive');
-        document.getElementById('followListModal').classList.add('open');
-        _loadFollowList(_activeProfileUid, type);
-    };
-    
-    window.switchFollowTab = function(type) {
-        openFollowModal(type);
-    };
-    
-    window.closeFollowModal = function() {
-        document.getElementById('followListModal').classList.remove('open');
-    };
-    
-    window.goToUserProfileFromModal = function(uid, name) {
-        closeFollowModal();
-        setTimeout(function() {
-            if (typeof window.openUserProfile === 'function') {
-                window.openUserProfile(uid, name);
-            } else {
-                alert('Error: profile function load nahi hua. Page refresh karo.');
-            }
-        }, 150);
-    };
-    
-    window._loadFollowList = async function(uid, type) {
-        const body = document.getElementById('followModalBody');
-        body.innerHTML = '<div class="follow-empty"><i class="fas fa-circle-notch fa-spin" style="color:#0095f6;font-size:32px;"></i><br><br>Loading...</div>';
-        try {
-            const snap = await firebase.database().ref('users/' + uid + '/' + type).once('value');
-            const data = snap.val() || {};
-            const uids = Object.keys(data);
-            if (uids.length === 0) {
-                const msg = type === 'followers'
-                    ? 'Abhi tak koi follower nahi hai.'
-                    : 'Tumne abhi tak kisi ko follow nahi kiya.';
-                body.innerHTML = '<div class="follow-empty"><i class="far fa-user"></i>' + msg + '</div>';
-                return;
-            }
-            let html = '';
-            for (const tUid of uids) {
-                let name = 'User';
-                let username = 'user';
-                try {
-                    const uSnap = await firebase.database().ref('users/' + tUid).once('value');
-                    const uData = uSnap.val();
-                    if (uData && (uData.displayName || uData.name)) {
-                        name = uData.displayName || uData.name;
-                        username = uData.username || (uData.email ? uData.email.split('@')[0] : name.replace(/\s+/g, '').toLowerCase());
-                    }
-                } catch (e) {}
-                if (name === 'User' && _userCacheMap[tUid]) {
-                    const c = _userCacheMap[tUid];
-                    name = c.name || 'User';
-                    username = c.email ? c.email.split('@')[0] : name.replace(/\s+/g, '').toLowerCase();
-                }
-                const initial = name.charAt(0).toUpperCase();
-                html += '<div class="follow-user-row" onclick=\'goToUserProfileFromModal(' + JSON.stringify(tUid) + ',' + JSON.stringify(name) + ')\'>'
-                    + '<div class="follow-user-avatar">' + initial + '</div>'
-                    + '<div class="follow-user-info">'
-                    + '<div class="uname">' + username + '</div>'
-                    + '<div class="rname">' + name + '</div>'
-                    + '</div></div>';
-            }
-            body.innerHTML = html;
-        } catch (e) {
-            console.error('loadFollowList:', e);
-            body.innerHTML = '<div class="follow-empty" style="color:#ed4956;"><i class="fas fa-exclamation-circle"></i>Error loading. Try again.</div>';
-        }
-    };
-    
-    // ============================================================
-    //  REAL-TIME PROFILE STATS (isolated per viewed profile)
-    // ============================================================
-    function clearProfileStatsListeners() {
-        if (_refFollowersCount) {
-            _refFollowersCount.off();
-            _refFollowersCount = null;
-        }
-        if (_refFollowingCount) {
-            _refFollowingCount.off();
-            _refFollowingCount = null;
-        }
-    }
-    
-    function attachProfileStatsListener(uid) {
-        if (!uid) return;
-        clearProfileStatsListeners();
-        _activeProfileUid = uid;
-    
-        // 🔥 FIX: Ab count asli 'followers' node ke length se aata hai, fake/corrupt
-        // stats/followersCount pe bharosa nahi karte. Yeh khud-ba-khud purane galat
-        // counts ko sahi value se overwrite/reset kar deta hai.
-        _refFollowersCount = firebase.database().ref('users/' + uid + '/followers');
-        _refFollowersCount.on('value', function(snap) {
-            const realCount = snap.exists() ? snap.numChildren() : 0;
-            const el = document.getElementById('igRealFollowers');
-            if (el) el.textContent = realCount;
-            firebase.database().ref('users/' + uid + '/stats/followersCount').set(realCount);
-        });
-    
-        // 🔥 FIX: Same logic — 'following' node ke length se asli count
-        _refFollowingCount = firebase.database().ref('users/' + uid + '/following');
-        _refFollowingCount.on('value', function(snap) {
-            const realCount = snap.exists() ? snap.numChildren() : 0;
-            const el = document.getElementById('igRealFollowing');
-            if (el) el.textContent = realCount;
-            firebase.database().ref('users/' + uid + '/stats/followingCount').set(realCount);
-        });
-    }
-    window.attachProfileStatsListener = attachProfileStatsListener;
-    
-    function clearPostsListener() {
-        if (_refPosts) {
-            _refPosts.off();
-            _refPosts = null;
-        }
-    }
-    
-    function attachPostsListener(uid) {
-        clearPostsListener();
-        _refPosts = firebase.database().ref('submitted_prompts');
-        _refPosts.on('value', function(snap) {
-            let cnt = 0;
-            let photosHtml = '';
+<!-- MEDIA PICKER MODAL -->
+<div id="mediaPickerModal">
+    <div class="mp-header">
+        <button class="mp-header-btn" onclick="closeMediaPicker()">✕</button>
+        <span class="mp-header-title">New post</span>
+        <button class="mp-header-btn" style="font-size:14px;font-weight:700;color:#0095f6" onclick="triggerUploadNext()">Next</button>
+    </div>
+    <div class="mp-action-row">
+        <div class="mp-action-chip" onclick="showToast('Drafts coming soon!')">
+            <i class="fas fa-plus-circle"></i>
+            <span>Drafts</span>
+            <div class="mp-draft-dot">1</div>
+        </div>
+        <div class="mp-action-chip" onclick="showToast('Templates coming soon!')">
+            <i class="fas fa-layer-group"></i>
+            <span>Templates</span>
+        </div>
+    </div>
+    <div class="mp-recents-bar">
+        <div class="mp-recents-label"><span>Recents</span> <i class="fas fa-chevron-down" style="font-size:12px"></i></div>
+        <button class="mp-select-btn"><i class="far fa-clone"></i> Select</button>
+    </div>
+    <div class="mp-grid-wrap">
+        <div class="mp-photo-grid" id="mpPhotoGrid">
+            <div class="mp-camera-cell" onclick="document.getElementById('mpFileInput').click()">
+                <i class="fas fa-camera"></i>
+            </div>
+        </div>
+    </div>
+    <input type="file" id="mpFileInput" accept="image/*,video/*" multiple style="display:none" onchange="handleMpFileSelect(event)">
+    <div class="mp-bottom-tabs">
+        <div class="mp-tab active" onclick="switchMpTab(this,'post')">POST</div>
+        <div class="mp-tab" onclick="switchMpTab(this,'story')">STORY</div>
+        <div class="mp-tab" onclick="switchMpTab(this,'reel')">REEL</div>
+        <div class="mp-tab" onclick="switchMpTab(this,'live')">LIVE</div>
+    </div>
+</div>
 
-            // 🔥 FIX: Modal ko data dene ke liye global array setup karo
-            if (typeof window.prompts === 'undefined') {
-                window.prompts = [];
-            }
+<!-- UPLOAD SHEET (post submit) -->
+<div id="uploadSheet" style="position:fixed;inset:0;z-index:999997;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center">
+    <div style="background:#fff;width:100%;max-width:500px;border-radius:16px 16px 0 0;padding:20px;animation:slideUp .25s ease;max-height:85vh;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <strong style="font-size:16px">Create new post</strong>
+            <button onclick="closeUploadSheet()" style="background:none;border:none;font-size:22px;cursor:pointer">×</button>
+        </div>
+        <input type="text" id="uploadTitle" placeholder="Title" style="width:100%;padding:11px;border:1px solid #dbdbdb;border-radius:8px;margin-bottom:10px;font-size:14px">
+        <textarea id="uploadText" placeholder="Write your post..." rows="3" style="width:100%;padding:11px;border:1px solid #dbdbdb;border-radius:8px;margin-bottom:10px;font-size:14px;resize:vertical"></textarea>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+            <select id="uploadTool" style="flex:1;padding:10px;border:1px solid #dbdbdb;border-radius:8px;font-size:13px">
+                <option>Midjourney</option><option>ChatGPT</option><option>Leonardo</option><option>Gemini</option><option>Stable Diffusion</option>
+            </select>
+            <select id="uploadCategory" style="flex:1;padding:10px;border:1px solid #dbdbdb;border-radius:8px;font-size:13px">
+                <option>Portrait</option><option>Landscape</option><option>Logo & Brand</option><option>Anime</option><option>Marketing</option><option>Fantasy</option>
+            </select>
+        </div>
+        <input type="file" id="uploadImage" accept="image/*" style="width:100%;margin-bottom:12px;font-size:13px">
+        <div id="uploadPreviewBox" style="display:none;margin-bottom:12px"><img id="uploadPreviewImg" style="width:100%;max-height:220px;object-fit:contain;border-radius:8px;background:#f5f5f5"></div>
+        <button id="finalSubmitBtn" style="width:100%;padding:12px;background:#0095f6;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">Share</button>
+    </div>
+</div>
 
-            if (snap.exists()) {
-                let allPosts = [];
-                snap.forEach(function(child) {
-                    if (child.val().authorId === uid) {
-                        cnt++;
-                        allPosts.unshift({ key: child.key, data: child.val() }); 
-
-                        // 🔥 FIX: Popup (Modal) ko photo ka data yahan se milega
-                        let existing = window.prompts.find(p => p.id === child.key);
-                        if (!existing) {
-                            window.prompts.push({
-                                id: child.key,
-                                images: [child.val().imageUrl],
-                                author: child.val().authorName || (child.val().authorEmail ? child.val().authorEmail.split('@')[0] : 'User'),
-                                ai: child.val().aiTool || 'AI Image',
-                                prompts: [child.val().promptText],
-                                likes: child.val().likeCount || 0
-                            });
-                        } else {
-                            existing.likes = child.val().likeCount || 0;
-                        }
-                    }
-                });
-
-                allPosts.forEach(post => {
-                    let safeUrl = post.data.imageUrl ? post.data.imageUrl.replace(/"/g, '&quot;') : '';
-                    // Click lagaya: "openModal('id')"
-                    photosHtml += `<img src="${safeUrl}" onclick="openModal('${post.key}')" alt="Post">`;
-                });
-            }
-
-            const el = document.getElementById('igRealPosts');
-            if (el) el.textContent = cnt;
-
-            const grid = document.getElementById('profile-photo-grid');
-            if (grid) {
-                if (cnt === 0) {
-                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px 20px; color: #8e8e8e; font-size: 14px;"><i class="fas fa-camera" style="font-size: 30px; margin-bottom: 10px;"></i><br>Abhi tak koi prompt upload nahi kiya hai.</div>';
-                } else {
-                    grid.innerHTML = photosHtml;
-                }
-            }
-        });
-    }
-    
-    function clearFollowButtonListener() {
-        if (_refFollowButton) {
-            _refFollowButton.off();
-            _refFollowButton = null;
-        }
-    }
-    
-    function attachFollowButtonListener(myUid, targetUid) {
-        clearFollowButtonListener();
-        _refFollowButton = firebase.database().ref('users/' + myUid + '/following/' + targetUid);
-        _refFollowButton.on('value', function(snap) {
-            renderFollowButton(targetUid, snap.exists());
-        });
-    }
-    
-    function clearAllProfileListeners() {
-        clearProfileStatsListeners();
-        clearPostsListener();
-        clearFollowButtonListener();
-    }
-    
-   // ==========================================
-    // 🔥 FINAL INSTANT FOLLOW SYSTEM (NO GLITCH)
-    // ==========================================
-
-    // 1. RENDER BUTTONS
-    window.renderFollowButton = function(targetId, isFollowing) {
-        const c = document.getElementById('dynamic-action-buttons');
-        if (!c) return;
-        // 🔥 FIX: Get target user name from top-title or cache
-        let targetName = 'User';
-        if (typeof _userCacheMap !== 'undefined' && _userCacheMap[targetId]) {
-            targetName = _userCacheMap[targetId].name || _userCacheMap[targetId].email?.split('@')[0] || 'User';
-        } else {
-            const nameEl = document.getElementById('main-profile-name');
-            if (nameEl) targetName = nameEl.textContent || 'User';
-        }
-        const chatUrl = "messages.html?chatWith=" + encodeURIComponent(targetId) + "&chatName=" + encodeURIComponent(targetName);
-        if (isFollowing) {
-            c.innerHTML = '<button type="button" data-follow-target="'+targetId+'" data-follow-action="show-unfollow" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Following <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>'
-                        + '<button onclick="window.location.href=\'' + chatUrl + '\'" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
-        } else {
-            c.innerHTML = '<button type="button" data-follow-target="'+targetId+'" data-follow-action="follow" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#0095f6;font-weight:600;font-size:14px;cursor:pointer;color:#fff;">Follow</button>'
-                        + '<button onclick="window.location.href=\'' + chatUrl + '\'" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
-        }
-    };
-
-    // 2. RENDER UNFOLLOW & CANCEL (Popup style)
-    window.renderUnfollowButton = function(targetId) {
-        const c = document.getElementById('dynamic-action-buttons');
-        if (!c) return;
-        // 🔥 FIX: Get target user name for Message button
-        let targetName = 'User';
-        if (typeof _userCacheMap !== 'undefined' && _userCacheMap[targetId]) {
-            targetName = _userCacheMap[targetId].name || _userCacheMap[targetId].email?.split('@')[0] || 'User';
-        } else {
-            const nameEl = document.getElementById('main-profile-name');
-            if (nameEl) targetName = nameEl.textContent || 'User';
-        }
-        const chatUrl = "messages.html?chatWith=" + encodeURIComponent(targetId) + "&chatName=" + encodeURIComponent(targetName);
-        c.innerHTML = '<button type="button" data-follow-target="'+targetId+'" data-follow-action="unfollow" style="flex:1;padding:7px 0;border:1px solid #ed4956;border-radius:8px;background:#fff;font-weight:600;font-size:14px;cursor:pointer;color:#ed4956;">Unfollow</button>'
-                    + '<button onclick="window.location.href=\'' + chatUrl + '\'" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Message</button>';
-    };
-
-    // 3. SINGLE CLICK LISTENER
-    const actionBtnsContainer = document.getElementById('dynamic-action-buttons');
-    if (actionBtnsContainer) {
-        // Purane event listeners clear karne ke liye
-        let newContainer = actionBtnsContainer.cloneNode(true);
-        actionBtnsContainer.parentNode.replaceChild(newContainer, actionBtnsContainer);
-        
-        newContainer.addEventListener('click', e => {
-            const btn = e.target.closest('[data-follow-target]');
-            if (!btn || btn.disabled) return;
-            
-            e.preventDefault(); e.stopPropagation();
-            const tid = btn.dataset.followTarget;
-            const act = btn.dataset.followAction;
-            
-            if (act === 'show-unfollow') { window.renderUnfollowButton(tid); return; }
-            if (act === 'show-following') { window.renderFollowButton(tid, true); return; }
-            
-            // Execute Database logic
-            window.toggleFollow(tid);
-        });
-    }
-
-    // 4. INSTANT DATABASE SYNC — 🔥 FIXED: Ab Firebase transaction se ASLI sach check hota hai
-    // Pehle yahan parameter (isFollowingAction) pe seedha bharosa tha jisse double-click se
-    // double-follow ya count corrupt ho sakta tha. Ab atomic transaction use hota hai.
-    window.toggleFollow = async function(targetUserId) {
-        const me = firebase.auth().currentUser;
-        if (!me || !targetUserId || targetUserId === me.uid) return;
-
-        document.querySelectorAll('[data-follow-target="'+targetUserId+'"]').forEach(b => {
-            b.disabled = true; b.style.opacity = '0.6';
-        });
-
-        const myUid = me.uid;
-        const myFollowingRef = firebase.database().ref('users/'+myUid+'/following/'+targetUserId);
-        const theirFollowerRef = firebase.database().ref('users/'+targetUserId+'/followers/'+myUid);
-        const ts = firebase.database.ServerValue.TIMESTAMP;
-
-        try {
-            // ===== ATOMIC: server pe ek hi baar mein check + set/remove =====
-            const result = await myFollowingRef.transaction(currentVal => {
-                if (currentVal === null) {
-                    return { createdAt: ts, __pending: true }; // FOLLOW
-                } else {
-                    return null; // UNFOLLOW
-                }
-            });
-
-            const isNowFollowing = result.committed && result.snapshot.exists();
-            window.renderFollowButton(targetUserId, isNowFollowing);
-
-            if (isNowFollowing) {
-                await theirFollowerRef.set({ createdAt: ts });
-                let uName = me.email ? me.email.split('@')[0].toLowerCase() : (me.displayName || 'user');
-                firebase.database().ref('users/'+targetUserId+'/notifications').push().set({
-                    type: 'follow',
-                    fromUid: myUid,
-                    fromName: uName,
-                    timestamp: ts,
-                    read: false
-                });
-            } else {
-                await theirFollowerRef.remove();
-            }
-        } catch (err) {
-            console.error('toggleFollow error:', err);
-        } finally {
-            document.querySelectorAll('[data-follow-target="'+targetUserId+'"]').forEach(b => {
-                b.disabled = false; b.style.opacity = '1';
-            });
-        }
-    };
-
-    // 5. OPEN PROFILE
-    window.openUserProfile = function(authorId, authorName) {
-        const me = firebase.auth().currentUser;
-        if (!me) { alert('Pehle login karo!'); return; }
-
-        if (authorId === me.uid) {
-            const profileBtn = document.getElementById('ig-profile-btn');
-            if (profileBtn) profileBtn.click();
-            return;
-        }
-
-        document.getElementById('search-content-wrap').style.display = 'none';
-        document.getElementById('profile-content-wrap').style.display = 'block';
-        
-        const bottomNav = document.getElementById('bottom-nav-bar');
-        const proDashboard = document.getElementById('pro-dashboard');
-        const topLeftIcon = document.getElementById('top-left-icon');
-        const topRightIcon = document.getElementById('top-right-icon');
-        const topTitle = document.getElementById('top-title');
-        const mainProfileName = document.getElementById('main-profile-name');
-
-        if (bottomNav) bottomNav.style.display = 'none';
-        if (proDashboard) proDashboard.style.display = 'none';
-        if (topLeftIcon) topLeftIcon.style.display = 'none';
-        if (topRightIcon) topRightIcon.style.display = 'none';
-
-        let cleanName = 'user';
-        if (typeof _userCacheMap !== 'undefined' && _userCacheMap[authorId] && _userCacheMap[authorId].email) {
-            cleanName = _userCacheMap[authorId].email.split('@')[0].toLowerCase();
-        } else {
-            cleanName = (authorName || 'user').replace(/\s+/g,'').toLowerCase();
-        }
-
-        if (topTitle) topTitle.innerHTML = '<i class="fas fa-arrow-left" onclick="goBackToSearch()" style="margin-right:14px;cursor:pointer;"></i>' + cleanName;
-        if (mainProfileName) mainProfileName.textContent = authorName || 'User';
-
-        if (typeof attachProfileStatsListener === 'function') attachProfileStatsListener(authorId);
-        else if (typeof attachStats === 'function') attachStats(authorId);
-        if (typeof attachPostsListener === 'function') attachPostsListener(authorId);
-
-        // 🔥 FIX: Fetch target user's profile photo + bio from Realtime Database
-        firebase.database().ref('users/' + authorId).once('value', function(uSnap) {
-            if (uSnap.exists()) {
-                const uData = uSnap.val();
-                const profile = uData.profile || {};
-                // Update profile picture
-                const photoUrl = profile.photoURL || uData.photoURL || null;
-                const mainPic = document.getElementById('main-profile-pic');
-                if (mainPic && photoUrl) {
-                    mainPic.src = photoUrl;
-                } else if (mainPic && !photoUrl) {
-                    // No photo — show default gradient or initial
-                    mainPic.src = '';
-                    mainPic.style.background = 'linear-gradient(135deg, #f09433, #bc1888)';
-                }
-                // Update bio section
-                if (profile.displayName) {
-                    const nameEl = document.getElementById('main-profile-name');
-                    if (nameEl) nameEl.textContent = profile.displayName;
-                }
-                if (profile.bio) {
-                    const bioEl = document.querySelector('.ig-bio-text');
-                    if (bioEl) bioEl.textContent = profile.bio;
-                }
-                if (profile.website) {
-                    const catEl = document.getElementById('main-profile-category');
-                    if (catEl && profile.website) catEl.innerHTML = '<a href="' + profile.website + '" target="_blank" style="color:#0095f6;text-decoration:none;">' + profile.website + '</a>';
-                }
-            }
-        });
-
-        window.renderFollowButton(authorId, false);
-
-        // 🔥 YAHAN THI ASLI BIMARI 🔥
-        // .on() (live) ko hata kar .once() kar diya gaya hai. Ab click karte hi refresh ki zaroorat nahi padegi!
-        if (window.refFollowButton) window.refFollowButton.off();
-        firebase.database().ref('users/'+me.uid+'/following/'+authorId).once('value', s => {
-            window.renderFollowButton(authorId, s.exists());
-        });
-    };
-    
-    // ============================================================
-    //  🔥 AUTO-OPEN USER PROFILE FROM NOTIFICATION CLICK (URL PARAM)
-    // ============================================================
-    const urlParams = new URLSearchParams(window.location.search);
-    const viewUid = urlParams.get('viewUid');
-    const viewName = urlParams.get('viewName');
-
-    if (viewUid) {
-        // Clear the URL params so refresh doesn't re-trigger
-        window.history.replaceState({}, document.title, window.location.pathname);
-        // Wait for Firebase auth to be ready, then open the profile
-        const waitForAuthAndOpen = function() {
-            const me = firebase.auth().currentUser;
-            if (me) {
-                if (viewUid === me.uid) {
-                    // Agar khud ki profile hai toh normal profile dikhao
-                    const profileBtn = document.getElementById('ig-profile-btn');
-                    if (profileBtn) profileBtn.click();
-                } else {
-                    // Dusre user ki profile kholo
-                    setTimeout(function() {
-                        if (typeof window.openUserProfile === 'function') {
-                            window.openUserProfile(viewUid, decodeURIComponent(viewName || 'User'));
-                        } else {
-                            console.error('openUserProfile function not found');
-                        }
-                    }, 500);
-                }
-            } else {
-                // Auth not ready yet, retry
-                setTimeout(waitForAuthAndOpen, 300);
-            }
-        };
-        waitForAuthAndOpen();
-    }
-
-    // ============================================================
-    //  MAIN SCRIPT
-    // ============================================================
-    document.addEventListener('DOMContentLoaded', function() {
-    
-        const searchInput = document.getElementById('ig-search-input');
-        const exploreGrid = document.querySelector('.ig-explore-grid');
-        const bottomNav = document.getElementById('bottom-nav-bar');
-        const proDashboard = document.getElementById('pro-dashboard');
-        const topTitle = document.getElementById('top-title');
-        const mainProfileName = document.getElementById('main-profile-name');
-        const topLeftIcon = document.getElementById('top-left-icon');
-        const topRightIcon = document.getElementById('top-right-icon');
-    
-        let searchResultsList = document.createElement('div');
-        searchResultsList.id = 'ig-search-results-list';
-        searchResultsList.style.cssText = 'display:none; padding:0 16px;';
-        if (exploreGrid) exploreGrid.parentNode.insertBefore(searchResultsList, exploreGrid.nextSibling);
-    
-        function esc(v) {
-            return String(v || '').replace(/[&<>"']/g, function(c) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-            });
-        }
-    
-        firebase.database().ref('submitted_prompts').on('value', function(snap) {
-            if (!snap.exists()) return;
-            snap.forEach(function(child) {
-                const d = child.val();
-                if (d.authorId) {
-                    _userCacheMap[d.authorId] = { name: d.authorName || 'User', email: d.authorEmail || '' };
-                }
-            });
-        });
-    
-        function loadExplore() {
-            if (!exploreGrid) return;
-            firebase.database().ref('submitted_prompts').limitToLast(15).once('value', function(snap) {
-                if (!snap.exists()) return;
-                exploreGrid.innerHTML = '';
-                snap.forEach(function(child) {
-                    const d = child.val();
-                    const url = d.imageUrl || 'https://via.placeholder.com/400?text=AI';
-                    exploreGrid.innerHTML += '<img src="' + esc(url) + '" onclick=\'openUserProfile(' + JSON.stringify(d.authorId || '') + ',' + JSON.stringify(d.authorName || 'User') + ')\' style="width:100%;aspect-ratio:1/1;object-fit:cover;cursor:pointer;">';
-                });
-            });
-        }
-    
-        if (document.getElementById('ig-search-btn')) {
-            document.getElementById('ig-search-btn').addEventListener('click', function() {
-                document.getElementById('profile-content-wrap').style.display = 'none';
-                document.getElementById('search-content-wrap').style.display = 'block';
-                if (topTitle) topTitle.innerHTML = 'Explore';
-                if (topLeftIcon) topLeftIcon.style.display = 'none';
-                if (topRightIcon) topRightIcon.style.display = 'none';
-                loadExplore();
-                if (exploreGrid) exploreGrid.style.display = 'grid';
-                searchResultsList.style.display = 'none';
-                if (searchInput) searchInput.value = '';
-            });
-        }
-    
-        if (searchInput) {
-            searchInput.addEventListener('input', function(e) {
-                const q = e.target.value.toLowerCase().trim();
-                if (!q) {
-                    exploreGrid.style.display = 'grid';
-                    searchResultsList.style.display = 'none';
-                    return;
-                }
-                exploreGrid.style.display = 'none';
-                searchResultsList.style.display = 'block';
-                searchResultsList.innerHTML = '';
-                let found = false;
-                const seen = new Set();
-                Object.keys(_userCacheMap).forEach(function(uid) {
-                    const u = _userCacheMap[uid];
-                    if ((u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) && !seen.has(uid)) {
-                        seen.add(uid);
-                        found = true;
-                        const uname = u.email ? u.email.split('@')[0] : u.name.replace(/\s+/g, '').toLowerCase();
-                        searchResultsList.innerHTML += '<div onclick=\'openUserProfile(' + JSON.stringify(uid) + ',' + JSON.stringify(u.name) + ')\' style="display:flex;align-items:center;padding:10px 0;gap:14px;cursor:pointer;">'
-                            + '<div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-                            + esc(u.name.charAt(0).toUpperCase()) + '</div>'
-                            + '<div style="flex:1;border-bottom:1px solid #efefef;padding-bottom:10px;">'
-                            + '<div style="font-size:14px;font-weight:600;color:#000;">' + esc(uname) + '</div>'
-                            + '<div style="font-size:13px;color:#8e8e8e;">' + esc(u.name) + '</div>'
-                            + '</div></div>';
-                    }
-                });
-                if (!found) {
-                    searchResultsList.innerHTML = '<div style="text-align:center;color:#8e8e8e;padding:40px;font-size:14px;">Koi user nahi mila.</div>';
-                }
-            });
-        }
-    
-        // NOTE: openUserProfile yahan duplicate tha (purana .on() live-listener version
-        // jo "asli bimari" wala tha) — usse hata diya gaya hai. Asli working version
-        // upar global scope mein already define hai (line ~567), jo .once() use karta
-        // hai aur turant follow-state dikhata hai bina refresh ke.
-    
-        window.goBackToSearch = function() {
-            clearAllProfileListeners();
-            document.getElementById('profile-content-wrap').style.display = 'none';
-            document.getElementById('search-content-wrap').style.display = 'block';
-            if (topTitle) topTitle.innerHTML = 'Explore';
-            if (bottomNav) bottomNav.style.display = 'flex';
-        };
-    
-        document.getElementById('ig-profile-btn').addEventListener('click', function() {
-            const me = firebase.auth().currentUser;
-            document.getElementById('search-content-wrap').style.display = 'none';
-            document.getElementById('profile-content-wrap').style.display = 'block';
-            if (topTitle) {
-                let myUname = me && me.email ? me.email.split('@')[0].toLowerCase() : 'ankitburdakk';
-                topTitle.innerHTML = myUname + ' <i class="fas fa-chevron-down" style="font-size:12px;margin-left:4px;cursor:pointer;"></i>';
-            }
-            if (mainProfileName) mainProfileName.textContent = 'Ankit Burdak';
-            if (topLeftIcon) topLeftIcon.style.display = 'block';
-            if (topRightIcon) topRightIcon.style.display = 'block';
-            if (proDashboard) proDashboard.style.display = 'block';
-            if (bottomNav) bottomNav.style.display = 'flex';
-            clearFollowButtonListener();
-            if (me) {
-                attachProfileStatsListener(me.uid);
-                attachPostsListener(me.uid);
-
-                // 🔥 FIX: Load own profile photo + bio from Realtime Database (not just Auth)
-                firebase.database().ref('users/' + me.uid).once('value', function(uSnap) {
-                    if (uSnap.exists()) {
-                        const uData = uSnap.val();
-                        const profile = uData.profile || {};
-                        const photoUrl = profile.photoURL || uData.photoURL || me.photoURL || null;
-                        const mainPic = document.getElementById('main-profile-pic');
-                        if (mainPic && photoUrl) mainPic.src = photoUrl;
-                        if (profile.displayName) {
-                            if (mainProfileName) mainProfileName.textContent = profile.displayName;
-                        }
-                        if (profile.bio) {
-                            const bioEl = document.querySelector('.ig-bio-text');
-                            if (bioEl) bioEl.textContent = profile.bio;
-                        }
-                    }
-                });
-            }
-            const c = document.getElementById('dynamic-action-buttons');
-            if (c) {
-                c.innerHTML =
-                    '<button style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;margin-right:8px;">Edit profile</button>'
-                    + '<button style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000;">Share profile</button>';
-            }
-        });
-    
-        firebase.auth().onAuthStateChanged(function(user) {
-            if (user) {
-                attachProfileStatsListener(user.uid);
-                attachPostsListener(user.uid);
-                if (user.photoURL) {
-                    ['main-profile-pic', 'ig-profile-btn'].forEach(function(id) {
-                        const el = document.getElementById(id);
-                        if (el) el.src = user.photoURL;
-                    });
-                }
-                // 🔥 FIX: Also try to load photo from Realtime Database (more up-to-date)
-                firebase.database().ref('users/' + user.uid + '/profile/photoURL').once('value', function(snap) {
-                    if (snap.exists() && snap.val()) {
-                        ['main-profile-pic', 'ig-profile-btn'].forEach(function(id) {
-                            const el = document.getElementById(id);
-                            if (el) el.src = snap.val();
-                        });
-                    }
-                });
-                if (user.displayName) {
-                    const el = document.getElementById('main-profile-name');
-                    if (el) el.textContent = user.displayName;
-                    const tt = document.getElementById('top-title');
-                    if (tt) {
-                        let myUname = user.email ? user.email.split('@')[0].toLowerCase() : user.displayName.replace(/\s+/g, '').toLowerCase();
-                        tt.innerHTML = esc(myUname) + ' <i class="fas fa-chevron-down" style="font-size:12px;margin-left:4px;cursor:pointer;"></i>';
-                    }
-                }
-
-                // ===== NEW FEATURE: Real-time notifications (follow alerts) =====
-                firebase.database().ref('users/' + user.uid + '/notifications').on('value', function(snap) {
-                    const badge = document.getElementById('ig-notif-badge');
-                    const panelBody = document.getElementById('notifPanelBody');
-                    if (!snap.exists()) {
-                        if (badge) badge.style.display = 'none';
-                        if (panelBody) panelBody.innerHTML = '<div class="follow-empty"><i class="far fa-bell"></i>Koi notification nahi hai.</div>';
-                        return;
-                    }
-                    let items = [];
-                    let unreadCount = 0;
-                    snap.forEach(function(child) {
-                        const n = child.val();
-                        if (!n.read) unreadCount++;
-                        items.unshift({ key: child.key, data: n });
-                    });
-
-                    if (badge) {
-                        if (unreadCount > 0) {
-                            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-                            badge.style.display = 'flex';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-                    }
-
-                    if (panelBody) {
-                        let html = '';
-                        items.forEach(function(item) {
-                            const n = item.data;
-                            let label = 'activity';
-                            if (n.type === 'follow') label = 'aapko follow karne laga/lagi';
-                            else if (n.type === 'like') label = 'aapke prompt ko like kiya';
-                            else if (n.type === 'comment') label = 'aapke prompt pe comment kiya';
-                            let preview = '';
-                            if (n.type === 'comment' && n.commentText) {
-                                preview = '<div style="font-size:12px;color:#8e8e8e;margin-top:2px;font-style:italic;background:rgba(0,0,0,0.03);padding:4px 8px;border-radius:6px;border-left:3px solid #4285f4;">"' + esc(n.commentText) + (n.commentText.length >= 60 ? '...' : '') + '"</div>';
-                            }
-                            // 🔥 User handle + UID
-                            let fromHandle = '@user';
-                            if (n.fromName) fromHandle = '@' + n.fromName.toLowerCase().replace(/\s+/g, '');
-                            else if (n.fromUid) fromHandle = '@' + n.fromUid.substring(0, 8);
-                            let uidLine = '';
-                            if (n.fromUid) uidLine = '<div style="font-size:10px;color:#aaa;font-family:monospace;margin-top:1px;">ID: ' + esc(n.fromUid.substring(0,12)) + '...</div>';
-                            // 🔥 Click to view profile
-                            let clickHandler = n.fromUid ? ' onclick="openUserProfile(\'' + esc(n.fromUid) + '\', \'' + esc(n.fromName || 'User') + '\')"' : '';
-                        html += '<div class="follow-user-row"' + clickHandler + ' style="cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'transparent\'">'
-                                + '<div class="follow-user-avatar">' + esc((n.fromName || 'U').charAt(0).toUpperCase()) + '</div>'
-                                + '<div class="follow-user-info">'
-                                + '<div class="uname">' + esc(n.fromName || 'User') + ' <span style="font-size:11px;color:#aaa;font-weight:400;">' + esc(fromHandle) + '</span></div>'
-                                + '<div class="rname">' + esc(label) + '</div>'
-                                + preview
-                                + uidLine
-                                + '<div style="font-size:11px;color:#0095f6;font-weight:600;margin-top:3px;"><i class="fas fa-external-link-alt" style="font-size:9px;"></i> View Profile</div>'
-                                + '</div></div>';
-                        });
-                        panelBody.innerHTML = html || '<div class="follow-empty"><i class="far fa-bell"></i>Koi notification nahi hai.</div>';
-                    }
-                });
-
-                const notifBtn = document.getElementById('ig-notif-btn');
-                if (notifBtn) {
-                    notifBtn.addEventListener('click', function() {
-                        document.getElementById('notifPanel').style.display = 'flex';
-                        // Panel khulte hi sab notifications read mark karo
-                        firebase.database().ref('users/' + user.uid + '/notifications').once('value', function(snap) {
-                            if (!snap.exists()) return;
-                            const updates = {};
-                            snap.forEach(function(child) {
-                                if (!child.val().read) {
-                                    updates[child.key + '/read'] = true;
-                                }
-                            });
-                            if (Object.keys(updates).length > 0) {
-                                firebase.database().ref('users/' + user.uid + '/notifications').update(updates);
-                            }
-                        });
-                    });
-                }
-            }
-        });
-    
-    });
-    </script>
-<div class="modal-overlay" id="modalOverlay">
+<!-- POST MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
     <div class="advanced-modal" id="modal">
         <div class="modal-gallery">
             <div class="gallery-controls">
-                <div class="image-counter" id="modalImageCounter" style="display: none;">1 / 4</div>
-                <button class="gallery-btn"><i class="far fa-heart"></i> <span id="modalLikeCount">0</span></button>
-                <button class="gallery-btn close-btn" id="modalCloseDirectBtn" onclick="document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow = '';">esc &nbsp;<i class="fas fa-times"></i></button>
+                <div class="image-counter" id="modalImageCounter" style="display:none">1 / 1</div>
+                <div style="display:flex;gap:8px">
+                    <button class="gallery-btn"><i class="far fa-heart"></i> <span id="modalLikeCount">0</span></button>
+                    <button class="gallery-btn close-btn" onclick="closeModal()">✕</button>
+                </div>
             </div>
-            <img id="modalMainImage" src="" alt="Prompt Image">
-            <div class="gallery-thumbnails" id="modalThumbnails" style="display: none;"></div>
+            <img id="modalMainImage" src="" alt="Post">
+            <div class="gallery-thumbnails" id="modalThumbnails" style="display:none"></div>
         </div>
         <div class="modal-details">
             <div class="details-header">
@@ -1000,30 +469,998 @@
                         <div class="author-handle" id="modalAuthorHandle">@user</div>
                     </div>
                 </div>
-                <div class="modal-ai-tag-new" id="modalAiTag"><i class="fas fa-robot"></i> AI Image</div>
+                <div class="modal-ai-tag-new" id="modalAiTag"><i class="fas fa-robot"></i> AI</div>
             </div>
-            <div class="prompts-list" id="modalPromptsList"></div>
-            <!-- 🔥 COMMENTS SECTION -->
+            <div class="posts-list" id="modalPostsList"></div>
+            <!-- COMMENTS -->
             <div class="comments-section" id="modalCommentsSection">
                 <div class="comments-header">
-                    <span class="comments-title"><i class="far fa-comment-dots"></i> Comments</span>
+                    <span><i class="far fa-comment-dots"></i> Comments</span>
                     <span class="comments-count" id="modalCommentCount">0</span>
                 </div>
                 <div class="comments-list" id="modalCommentsList">
-                    <div class="comments-empty"><i class="far fa-comment"></i> Koi comment nahi hai. Pehla comment karo!</div>
+                    <div class="comments-empty"><i class="far fa-comment"></i>No comments yet.</div>
                 </div>
-                <div class="comments-input-area" id="modalCommentInputArea">
+                <div class="comments-input-area">
                     <div class="comment-input-avatar" id="commentInputAvatar">U</div>
                     <input type="text" id="modalCommentInput" placeholder="Add a comment..." maxlength="500" autocomplete="off">
-                    <button id="modalCommentSendBtn" class="comment-send-btn" title="Send"><i class="fas fa-paper-plane"></i></button>
+                    <button id="modalCommentSendBtn" class="comment-send-btn"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
-
             <div class="details-actions">
-                <button class="action-btn outline-btn"><i class="fas fa-retweet"></i> Use as Prompt</button>
+                <button class="action-btn outline-btn" onclick="copyCaptionFromModal()"><i class="fas fa-copy"></i> Copy Post</button>
             </div>
         </div>
     </div>
 </div>
-</body>
-</html>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   FIREBASE INIT - SAFE, with databaseURL
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
+  authDomain: "ankitstudioai.firebaseapp.com",
+  databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com",
+  projectId: "ankitstudioai",
+  storageBucket: "ankitstudioai.firebasestorage.app",
+  messagingSenderId: "450755070024",
+  appId: "1:450755070024:web:4bf14bc4da4caf1200b07d",
+  measurementId: "G-BJ44E7P08S"
+};
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+const db = firebase.database();
+
+/* ============================================================
+   GLOBAL STATE
+   ============================================================ */
+let _myUid = null;
+let _activeProfileUid = null;
+let _userCacheMap = {};
+let _refFollowersCount = null;
+let _refFollowingCount = null;
+let _refPosts = null;
+let _refFollowButton = null;
+window.posts = window.posts || [];
+
+// dark mode
+if (localStorage.getItem('ankitstudio_darkmode') === 'true') {
+    document.body.classList.add('dark-mode');
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function esc(s){ const d=document.createElement('div'); d.appendChild(document.createTextNode(s||'')); return d.innerHTML; }
+function escJS(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
+function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;
+    t.classList.add('show');
+    clearTimeout(t._to);
+    t._to=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function fmtTime(ts){
+    if(!ts) return '';
+    const diff=Date.now()-ts;
+    const mins=Math.floor(diff/60000);
+    if(mins<1) return 'now';
+    if(mins<60) return mins+'m';
+    const hrs=Math.floor(mins/60);
+    if(hrs<24) return hrs+'h';
+    const days=Math.floor(hrs/24);
+    if(days<7) return days+'d';
+    return new Date(ts).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+function setProfilePhoto(imgEl, initialEl, photoUrl, name){
+    if(!imgEl||!initialEl) return;
+    if(photoUrl){
+        imgEl.src = photoUrl;
+        imgEl.style.display='block';
+        initialEl.style.display='none';
+    } else {
+        imgEl.style.display='none';
+        initialEl.style.display='flex';
+        initialEl.textContent = (name||'U').charAt(0).toUpperCase();
+    }
+}
+function shareProfile(){
+    const url = window.location.origin + window.location.pathname + '?viewUid=' + encodeURIComponent(_activeProfileUid||_myUid||'');
+    if(navigator.share){ navigator.share({title:'Check my profile',url}).catch(()=>{}); }
+    else { navigator.clipboard.writeText(url).then(()=>showToast('Profile link copied!')).catch(()=>showToast(url)); }
+}
+
+/* ============================================================
+   URL PARAMS - direct profile open
+   ============================================================ */
+const urlParams = new URLSearchParams(window.location.search);
+const viewUidParam = urlParams.get('viewUid');
+const viewNameParam = urlParams.get('viewName');
+if(viewUidParam){
+    // clean URL immediately so back button works
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+firebase.auth().onAuthStateChanged(function(user){
+    if(!user){
+        // redirect to index to login
+        window.location.href = 'index.html';
+        return;
+    }
+    _myUid = user.uid;
+
+    // nav profile pic
+    const navPic=document.getElementById('ig-profile-btn');
+    if(navPic && user.photoURL) navPic.src=user.photoURL;
+
+    // load user cache
+    loadUserCache();
+
+    // decide which profile to show
+    if(viewUidParam && viewUidParam !== user.uid){
+        showOtherUserProfile(viewUidParam, viewNameParam || 'User');
+    } else {
+        showOwnProfile(user);
+    }
+
+    // notifications
+    listenNotifications(user.uid);
+
+    // highlights
+    loadUserHighlights(viewUidParam || user.uid);
+});
+
+function loadUserCache(){
+    db.ref('posts').once('value', snap=>{
+        if(!snap.exists())return;
+        snap.forEach(c=>{
+            const d=c.val();
+            if(d.authorId) _userCacheMap[d.authorId] = { name:d.authorName||'User', email:d.authorEmail||'' };
+        });
+    });
+    db.ref('users').once('value', snap=>{
+        if(!snap.exists())return;
+        snap.forEach(c=>{
+            const uid=c.key, d=c.val(), p=d.profile||{};
+            _userCacheMap[uid] = {
+                name: p.displayName || d.displayName || d.name || (d.email?d.email.split('@')[0]:'User'),
+                email: d.email||'',
+                photo: p.photoURL || d.photoURL || null
+            };
+        });
+    });
+}
+
+/* ============================================================
+   PROFILE RENDER - OWN
+   ============================================================ */
+function showOwnProfile(me){
+    _activeProfileUid = me.uid;
+    document.getElementById('search-content-wrap').style.display='none';
+    document.getElementById('profile-content-wrap').style.display='block';
+    document.getElementById('pro-dashboard').style.display='block';
+    document.getElementById('top-left-icon').style.display='block';
+    document.getElementById('top-right-icon').style.display='block';
+    document.getElementById('bottom-nav-bar').style.display='flex';
+
+    const uname = me.email ? me.email.split('@')[0].toLowerCase() : 'user';
+    document.getElementById('top-title-text').textContent = uname;
+
+    // load from DB
+    db.ref('users/' + me.uid).once('value', usnap=>{
+        const uData = usnap.val() || {};
+        const prof = uData.profile || {};
+        const displayName = prof.displayName || me.displayName || uname;
+        const bio = prof.bio || 'Welcome to ANKITSTUDIOAI ✨';
+        const photoUrl = prof.photoURL || me.photoURL || uData.photoURL || null;
+        const website = prof.website || '';
+
+        document.getElementById('main-profile-name').textContent = displayName;
+        document.getElementById('main-profile-bio').textContent = bio;
+        document.getElementById('main-profile-category').innerHTML = website ? `<a href="${esc(website)}" target="_blank" style="color:#0095f6;text-decoration:none">${esc(website)}</a>` : '';
+
+        setProfilePhoto(
+            document.getElementById('main-profile-pic'),
+            document.getElementById('main-profile-initial'),
+            photoUrl, displayName
+        );
+        const navPic = document.getElementById('ig-profile-btn');
+        if(navPic && photoUrl) navPic.src = photoUrl;
+    });
+
+    // buttons
+    const c = document.getElementById('dynamic-action-buttons');
+    c.innerHTML = `<button onclick="openSettingsSPA()">Edit profile</button><button onclick="shareProfile()">Share profile</button>`;
+    clearAllProfileListeners();
+    attachProfileStatsListener(me.uid);
+    attachPostsListener(me.uid);
+}
+
+/* ============================================================
+   PROFILE RENDER - OTHER USER
+   ============================================================ */
+function showOtherUserProfile(uid, fallbackName){
+    _activeProfileUid = uid;
+    document.getElementById('search-content-wrap').style.display='none';
+    document.getElementById('profile-content-wrap').style.display='block';
+    document.getElementById('pro-dashboard').style.display='none';
+    document.getElementById('top-left-icon').style.display='none';
+    document.getElementById('top-right-icon').style.display='none';
+    document.getElementById('bottom-nav-bar').style.display='flex'; // keep nav so user can go back
+
+    // back arrow in title
+    document.getElementById('top-title').innerHTML = `<i class="fas fa-arrow-left" onclick="history.back()" style="margin-right:12px;cursor:pointer"></i><span id="top-title-text">${esc(fallbackName.replace(/\s+/g,'').toLowerCase())}</span>`;
+
+    document.getElementById('main-profile-name').textContent = fallbackName;
+
+    // fetch user data
+    db.ref('users/' + uid).once('value', snap=>{
+        const uData = snap.val() || {};
+        const prof = uData.profile || {};
+        const name = prof.displayName || uData.displayName || fallbackName;
+        const bio = prof.bio || 'AI creator on ANKITSTUDIOAI';
+        const photo = prof.photoURL || uData.photoURL || null;
+        const website = prof.website || '';
+
+        document.getElementById('main-profile-name').textContent = name;
+        document.getElementById('main-profile-bio').textContent = bio;
+        document.getElementById('main-profile-category').innerHTML = website ? `<a href="${esc(website)}" target="_blank" style="color:#0095f6;text-decoration:none">${esc(website)}</a>` : '';
+        document.getElementById('top-title-text').textContent = (uData.email ? uData.email.split('@')[0] : name).toLowerCase().replace(/\s+/g,'');
+
+        setProfilePhoto(
+            document.getElementById('main-profile-pic'),
+            document.getElementById('main-profile-initial'),
+            photo, name
+        );
+    });
+
+    clearAllProfileListeners();
+    attachProfileStatsListener(uid);
+    attachPostsListener(uid);
+
+    // follow button
+    renderFollowButton(uid, false);
+    if(_myUid){
+        db.ref('users/' + _myUid + '/following/' + uid).once('value', s=>{
+            renderFollowButton(uid, s.exists());
+        });
+        // live follow state
+        attachFollowButtonListener(_myUid, uid);
+    }
+}
+
+/* ============================================================
+   STATS + POSTS LISTENERS
+   ============================================================ */
+function clearProfileStatsListeners(){
+    if(_refFollowersCount){ _refFollowersCount.off(); _refFollowersCount=null; }
+    if(_refFollowingCount){ _refFollowingCount.off(); _refFollowingCount=null; }
+}
+function attachProfileStatsListener(uid){
+    clearProfileStatsListeners();
+    _activeProfileUid = uid;
+    _refFollowersCount = db.ref('users/'+uid+'/followers');
+    _refFollowersCount.on('value', snap=>{
+        const n = snap.exists()?snap.numChildren():0;
+        document.getElementById('igRealFollowers').textContent = n;
+        // keep stats node in sync
+        db.ref('users/'+uid+'/stats/followersCount').set(n);
+    });
+    _refFollowingCount = db.ref('users/'+uid+'/following');
+    _refFollowingCount.on('value', snap=>{
+        const n = snap.exists()?snap.numChildren():0;
+        document.getElementById('igRealFollowing').textContent = n;
+        db.ref('users/'+uid+'/stats/followingCount').set(n);
+    });
+}
+function attachPostsListener(uid){
+    clearPostsListener();
+    _refPosts = db.ref('posts');
+    _refPosts.on('value', snap=>{
+        let count=0;
+        let html='';
+        window.posts = window.posts.filter(p=>p.authorId !== uid); // clear old for this user to avoid duplicates visually - but keep global array stable
+        // actually safer: rebuild partial
+        const grid = document.getElementById('profile-photo-grid');
+        if(snap.exists()){
+            const posts=[];
+            snap.forEach(child=>{
+                const d=child.val();
+                if(d.authorId===uid){
+                    count++;
+                    posts.unshift({key:child.key, data:d});
+                    // push to global posts for modal
+                    const exists = window.posts.find(p=>p.id===child.key);
+                    const postObj = {
+                        id: child.key,
+                        authorId: uid,
+                        images: [d.imageUrl],
+                        author: d.authorName || 'User',
+                        ai: d.aiTool || 'AI',
+                        posts: [d.caption],
+                        likes: d.likeCount||0,
+                        post: d.caption
+                    };
+                    if(exists){ Object.assign(exists, postObj); } else { window.posts.push(postObj); }
+                }
+            });
+            posts.forEach(p=>{
+                const url = p.data.imageUrl || 'https://via.placeholder.com/400?text=AI';
+                html += `<img src="${esc(url)}" loading="lazy" onclick="openModal('${escJS(p.key)}')" alt="post">`;
+            });
+        }
+        document.getElementById('igRealPosts').textContent = count;
+        if(grid){
+            grid.innerHTML = count ? html : `<div class="grid-empty"><i class="fas fa-camera" style="font-size:30px;margin-bottom:10px;display:block"></i>No posts yet.</div>`;
+        }
+    });
+}
+function clearFollowButtonListener(){
+    if(_refFollowButton){ _refFollowButton.off(); _refFollowButton=null; }
+}
+function attachFollowButtonListener(myUid, targetUid){
+    clearFollowButtonListener();
+    _refFollowButton = db.ref('users/'+myUid+'/following/'+targetUid);
+    _refFollowButton.on('value', snap=>{
+        renderFollowButton(targetUid, snap.exists());
+    });
+}
+function clearAllProfileListeners(){
+    clearProfileStatsListeners();
+    clearPostsListener();
+    clearFollowButtonListener();
+}
+
+/* ============================================================
+   FOLLOW / UNFOLLOW - transaction safe
+   ============================================================ */
+function renderFollowButton(targetId, isFollowing){
+    const c = document.getElementById('dynamic-action-buttons');
+    if(!c) return;
+    // get name for message button
+    let targetName = 'User';
+    if(_userCacheMap[targetId]) targetName = _userCacheMap[targetId].name || targetName;
+    else {
+        const el=document.getElementById('main-profile-name');
+        if(el) targetName = el.textContent || targetName;
+    }
+    const chatUrl = `messages.html?chatWith=${encodeURIComponent(targetId)}&chatName=${encodeURIComponent(targetName)}`;
+    if(isFollowing){
+        c.innerHTML = `
+            <button type="button" data-follow-target="${esc(targetId)}" data-follow-action="show-unfollow" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000">
+                Following <i class="fas fa-chevron-down" style="font-size:10px"></i>
+            </button>
+            <button onclick="window.location.href='${chatUrl}'" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000">Message</button>
+        `;
+    } else {
+        c.innerHTML = `
+            <button type="button" data-follow-target="${esc(targetId)}" data-follow-action="follow" class="primary-btn" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#0095f6;font-weight:600;font-size:14px;cursor:pointer;color:#fff">
+                Follow
+            </button>
+            <button onclick="window.location.href='${chatUrl}'" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000">Message</button>
+        `;
+    }
+}
+function renderUnfollowButton(targetId){
+    const c = document.getElementById('dynamic-action-buttons');
+    if(!c) return;
+    let targetName='User';
+    if(_userCacheMap[targetId]) targetName=_userCacheMap[targetId].name||targetName;
+    const chatUrl = `messages.html?chatWith=${encodeURIComponent(targetId)}&chatName=${encodeURIComponent(targetName)}`;
+    c.innerHTML = `
+        <button type="button" data-follow-target="${esc(targetId)}" data-follow-action="unfollow" class="danger-btn" style="flex:1;padding:7px 0;border:1px solid #ed4956;border-radius:8px;background:#fff;font-weight:600;font-size:14px;cursor:pointer;color:#ed4956">Unfollow</button>
+        <button type="button" data-follow-target="${esc(targetId)}" data-follow-action="show-following" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:#efefef;font-weight:600;font-size:14px;cursor:pointer;color:#000">Cancel</button>
+    `;
+}
+
+// single delegated click handler
+document.getElementById('dynamic-action-buttons').addEventListener('click', e=>{
+    const btn = e.target.closest('[data-follow-target]');
+    if(!btn || btn.disabled) return;
+    e.preventDefault(); e.stopPropagation();
+    const tid = btn.dataset.followTarget;
+    const act = btn.dataset.followAction;
+    if(act==='show-unfollow'){ renderUnfollowButton(tid); return; }
+    if(act==='show-following'){ renderFollowButton(tid, true); return; }
+    if(act==='follow' || act==='unfollow'){ toggleFollow(tid); }
+});
+
+async function toggleFollow(targetUserId){
+    const me = firebase.auth().currentUser;
+    if(!me || !targetUserId || targetUserId===me.uid){ showToast('Invalid action'); return; }
+    // disable buttons
+    document.querySelectorAll(`[data-follow-target="${targetUserId}"]`).forEach(b=>{ b.disabled=true; b.style.opacity=.6; });
+    const myUid = me.uid;
+    const myFollowingRef = db.ref(`users/${myUid}/following/${targetUserId}`);
+    const theirFollowerRef = db.ref(`users/${targetUserId}/followers/${myUid}`);
+    try{
+        const result = await myFollowingRef.transaction(current=>{
+            if(current===null){ return { createdAt: firebase.database.ServerValue.TIMESTAMP }; }
+            else { return null; }
+        });
+        const isNowFollowing = result.committed && result.snapshot.exists();
+        renderFollowButton(targetUserId, isNowFollowing);
+        if(isNowFollowing){
+            await theirFollowerRef.set({ createdAt: firebase.database.ServerValue.TIMESTAMP });
+            // notification
+            const myName = me.displayName || (me.email?me.email.split('@')[0]:'User');
+            db.ref(`users/${targetUserId}/notifications`).push({
+                type:'follow',
+                fromUid: myUid,
+                fromName: myName,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                read: false
+            }).catch(()=>{});
+            showToast('Followed ✓');
+        } else {
+            await theirFollowerRef.remove();
+            showToast('Unfollowed');
+        }
+    } catch(err){
+        console.error(err);
+        showToast('Error: '+err.message);
+    } finally {
+        document.querySelectorAll(`[data-follow-target="${targetUserId}"]`).forEach(b=>{ b.disabled=false; b.style.opacity=1; });
+    }
+}
+
+/* ============================================================
+   MODAL - open / close / comments
+   ============================================================ */
+let _currentModalId = null;
+let _commentsListenerRef = null;
+
+function openModal(id){
+    const p = window.posts.find(x=>x.id===id);
+    if(!p){ showToast('Post not found'); return; }
+    _currentModalId = id;
+
+    document.getElementById('modalMainImage').src = (p.images && p.images[0]) || '';
+    document.getElementById('modalAuthorAvatar').textContent = (p.author||'U').charAt(0).toUpperCase();
+    document.getElementById('modalAuthorName').textContent = p.author || 'User';
+    document.getElementById('modalAuthorHandle').textContent = '@' + (p.author||'user').toLowerCase().replace(/\s/g,'');
+    document.getElementById('modalAiTag').innerHTML = `<i class="fas fa-robot"></i> ${p.ai||'AI'}`;
+    document.getElementById('modalLikeCount').textContent = p.likes || 0;
+
+    // posts list
+    const list = document.getElementById('modalPostsList');
+    const texts = p.posts || [p.post||''];
+    list.innerHTML = '';
+    texts.forEach((t,i)=>{
+        list.innerHTML += `
+        <div class="post-box-item">
+          <div class="post-box-header"><i class="far fa-image"></i> POST ${i+1}</div>
+          <div class="post-box-text">${esc(t)}</div>
+          <div class="post-box-actions">
+            <button class="post-action-btn" onclick="copyText(\`${escJS(t)}\`, this)"><i class="far fa-copy"></i> Copy</button>
+          </div>
+        </div>`;
+    });
+
+    document.getElementById('modalOverlay').classList.add('open');
+    document.body.style.overflow='hidden';
+
+    loadCommentsForPost(id);
+    updateCommentInputAvatar();
+}
+function closeModal(){
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow='';
+    detachCommentsListener();
+    _currentModalId=null;
+}
+function copyText(text, btn){
+    navigator.clipboard.writeText(text).then(()=>{
+        if(btn){ const o=btn.innerHTML; btn.innerHTML='<i class="fas fa-check"></i> Copied'; setTimeout(()=>btn.innerHTML=o,1500); }
+        showToast('Copied!');
+    });
+}
+function copyCaptionFromModal(){
+    const box = document.querySelector('#modalPostsList .post-box-text');
+    if(box) copyText(box.textContent, null);
+}
+
+// comments
+function detachCommentsListener(){
+    if(_commentsListenerRef){ _commentsListenerRef.off(); _commentsListenerRef=null; }
+}
+function loadCommentsForPost(postKey){
+    detachCommentsListener();
+    const listEl=document.getElementById('modalCommentsList');
+    const countEl=document.getElementById('modalCommentCount');
+    const ref = db.ref('posts/'+postKey+'/comments').orderByChild('timestamp');
+    _commentsListenerRef = ref;
+    ref.on('value', snap=>{
+        if(!snap.exists()){
+            listEl.innerHTML = '<div class="comments-empty"><i class="far fa-comment"></i>No comments yet.</div>';
+            countEl.textContent='0';
+            return;
+        }
+        const comments=[];
+        snap.forEach(c=>comments.push({key:c.key, ...c.val()}));
+        comments.reverse();
+        countEl.textContent = comments.length;
+        const me = firebase.auth().currentUser;
+        let html='';
+        comments.forEach(cmt=>{
+            const initial=(cmt.authorName||'U').charAt(0).toUpperCase();
+            const isOwner = me && cmt.authorId===me.uid;
+            html += `<div class="comment-item">
+              <div class="comment-avatar">${esc(initial)}</div>
+              <div class="comment-body">
+                <div class="comment-meta"><span class="comment-author">${esc(cmt.authorName||'User')}</span><span class="comment-time">${fmtTime(cmt.timestamp)}</span></div>
+                <div class="comment-text">${esc(cmt.text||'')}</div>
+              </div>
+              ${isOwner?`<button class="comment-delete-btn" onclick="deleteComment('${escJS(postKey)}','${escJS(cmt.key)}')"><i class="fas fa-trash"></i></button>`:''}
+            </div>`;
+        });
+        listEl.innerHTML = html;
+        listEl.scrollTop = listEl.scrollHeight;
+    });
+}
+function submitComment(){
+    if(!_currentModalId) return;
+    const input=document.getElementById('modalCommentInput');
+    const text=input.value.trim();
+    if(!text) return;
+    const user=firebase.auth().currentUser;
+    if(!user){ showToast('Login required'); window.location.href='index.html'; return; }
+    const btn=document.getElementById('modalCommentSendBtn');
+    btn.disabled=true;
+    const authorName = user.displayName || (user.email?user.email.split('@')[0]:'User');
+    db.ref('posts/'+_currentModalId+'/comments').push({
+        text, authorId:user.uid, authorName, authorEmail:user.email||'',
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    }).then(()=>{
+        input.value='';
+        // increment commentCount
+        db.ref('posts/'+_currentModalId+'/commentCount').transaction(c=>(c||0)+1);
+        // notify author
+        db.ref('posts/'+_currentModalId).once('value', snap=>{
+            const p=snap.val();
+            if(p && p.authorId && p.authorId !== user.uid){
+                db.ref('users/'+p.authorId+'/notifications').push({
+                    type:'comment',
+                    postId:_currentModalId,
+                    fromUid:user.uid,
+                    fromName:authorName,
+                    commentText:text.substring(0,60),
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    read:false
+                }).catch(()=>{});
+            }
+        });
+    }).catch(e=>{ console.error(e); showToast('Failed to comment'); })
+      .finally(()=>{ btn.disabled=false; });
+}
+function deleteComment(postKey, commentKey){
+    if(!confirm('Delete comment?')) return;
+    db.ref(`posts/${postKey}/comments/${commentKey}`).remove()
+      .then(()=> db.ref(`posts/${postKey}/commentCount`).transaction(c=>Math.max((c||1)-1,0)))
+      .catch(e=>showToast('Delete failed'));
+}
+function updateCommentInputAvatar(){
+    const user=firebase.auth().currentUser;
+    const el=document.getElementById('commentInputAvatar');
+    if(!el) return;
+    if(user){
+        const n=user.displayName || (user.email?user.email.split('@')[0]:'U');
+        el.textContent = n.charAt(0).toUpperCase();
+    } else el.textContent='G';
+}
+document.getElementById('modalCommentSendBtn').addEventListener('click', submitComment);
+document.getElementById('modalCommentInput').addEventListener('keydown', e=>{
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submitComment(); }
+});
+
+/* ============================================================
+   FOLLOW LIST MODAL
+   ============================================================ */
+function openFollowModal(type){
+    if(!_activeProfileUid) return;
+    document.getElementById('followModalTitle').textContent = type==='followers' ? 'Followers' : 'Following';
+    document.getElementById('ftab-followers').className = 'follow-tab ' + (type==='followers'?'active':'inactive');
+    document.getElementById('ftab-following').className = 'follow-tab ' + (type==='following'?'active':'inactive');
+    document.getElementById('followListModal').classList.add('open');
+    loadFollowList(_activeProfileUid, type);
+}
+function switchFollowTab(type){ openFollowModal(type); }
+function closeFollowModal(){ document.getElementById('followListModal').classList.remove('open'); }
+
+async function loadFollowList(uid, type){
+    const body=document.getElementById('followModalBody');
+    body.innerHTML = '<div class="follow-empty"><i class="fas fa-circle-notch fa-spin" style="color:#0095f6"></i><br><br>Loading...</div>';
+    try{
+        const snap = await db.ref(`users/${uid}/${type}`).once('value');
+        const data = snap.val() || {};
+        const uids = Object.keys(data);
+        if(uids.length===0){
+            body.innerHTML = `<div class="follow-empty"><i class="far fa-user"></i>${type==='followers' ? 'No followers yet.' : 'Not following anyone yet.'}</div>`;
+            return;
+        }
+        let html='';
+        for(const tUid of uids){
+            let name='User', username='user', photo=null;
+            const c = _userCacheMap[tUid];
+            if(c){ name=c.name; username = c.email ? c.email.split('@')[0] : name.toLowerCase().replace(/\s+/g,''); photo=c.photo||null; }
+            // try live fetch
+            try{
+                const usnap = await db.ref('users/'+tUid).once('value');
+                const ud = usnap.val();
+                if(ud){
+                    const p = ud.profile||{};
+                    name = p.displayName || ud.displayName || name;
+                    username = p.username || (ud.email?ud.email.split('@')[0]:username);
+                    photo = p.photoURL || ud.photoURL || photo;
+                }
+            }catch(e){}
+            const initial = name.charAt(0).toUpperCase();
+            const avatar = photo ? `<img src="${esc(photo)}" alt="">` : initial;
+            html += `<div class="follow-user-row" onclick="goToUserFromModal('${escJS(tUid)}','${escJS(name)}')">
+                <div class="follow-user-avatar">${avatar}</div>
+                <div class="follow-user-info">
+                    <div class="uname">${esc(username)}</div>
+                    <div class="rname">${esc(name)}</div>
+                </div>
+            </div>`;
+        }
+        body.innerHTML = html;
+    }catch(e){
+        console.error(e);
+        body.innerHTML = '<div class="follow-empty" style="color:#ed4956">Failed to load</div>';
+    }
+}
+function goToUserFromModal(uid, name){
+    closeFollowModal();
+    setTimeout(()=>{ window.location.href = `profile.html?viewUid=${encodeURIComponent(uid)}&viewName=${encodeURIComponent(name)}`; }, 120);
+}
+
+/* ============================================================
+   SEARCH / EXPLORE
+   ============================================================ */
+document.getElementById('ig-search-btn').addEventListener('click', ()=>{
+    document.getElementById('profile-content-wrap').style.display='none';
+    document.getElementById('search-content-wrap').style.display='block';
+    document.getElementById('top-title').innerHTML = `<i class="fas fa-arrow-left" onclick="closeSearch()" style="margin-right:12px;cursor:pointer"></i><span>Explore</span>`;
+    document.getElementById('top-left-icon').style.display='none';
+    document.getElementById('top-right-icon').style.display='none';
+    loadExplore();
+});
+function closeSearch(){
+    document.getElementById('search-content-wrap').style.display='none';
+    document.getElementById('profile-content-wrap').style.display='block';
+    // restore title
+    const me=firebase.auth().currentUser;
+    const isOwn = _activeProfileUid === _myUid;
+    if(isOwn && me){
+        const uname = me.email ? me.email.split('@')[0].toLowerCase() : 'user';
+        document.getElementById('top-title').innerHTML = `<span id="top-title-text">${esc(uname)}</span> <i class="fas fa-chevron-down" style="font-size:12px"></i>`;
+    }
+    document.getElementById('top-left-icon').style.display='block';
+    document.getElementById('top-right-icon').style.display='block';
+}
+function loadExplore(){
+    const grid=document.getElementById('exploreGrid');
+    if(!grid) return;
+    db.ref('posts').limitToLast(18).once('value', snap=>{
+        if(!snap.exists()){ grid.innerHTML=''; return; }
+        let html='';
+        const arr=[];
+        snap.forEach(c=>arr.unshift({key:c.key,data:c.val()}));
+        arr.forEach(p=>{
+            const url=p.data.imageUrl || 'https://via.placeholder.com/300';
+            html += `<img src="${esc(url)}" onclick="openUserProfile('${escJS(p.data.authorId||'')}', '${escJS(p.data.authorName||'User')}')">`;
+        });
+        grid.innerHTML = html;
+    });
+}
+const searchInput = document.getElementById('ig-search-input');
+if(searchInput){
+    searchInput.addEventListener('input', e=>{
+        const q=e.target.value.toLowerCase().trim();
+        const results=document.getElementById('ig-search-results-list');
+        const grid=document.getElementById('exploreGrid');
+        if(!q){ grid.style.display='grid'; results.style.display='none'; return; }
+        grid.style.display='none'; results.style.display='block';
+        let html='', found=false, seen=new Set();
+        Object.keys(_userCacheMap).forEach(uid=>{
+            if(uid===_myUid) return;
+            const u=_userCacheMap[uid];
+            if((u.name.toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q)) && !seen.has(uid)){
+                seen.add(uid); found=true;
+                const uname = u.email ? u.email.split('@')[0] : u.name.replace(/\s+/g,'').toLowerCase();
+                const initial = u.name.charAt(0).toUpperCase();
+                const avatar = u.photo ? `<img src="${esc(u.photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : initial;
+                html += `<div onclick="openUserProfile('${escJS(uid)}','${escJS(u.name)}')" style="display:flex;align-items:center;padding:10px 0;gap:14px;cursor:pointer">
+                    <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${avatar}</div>
+                    <div style="flex:1;border-bottom:1px solid #efefef;padding-bottom:10px">
+                        <div style="font-size:14px;font-weight:600;color:#000">${esc(uname)}</div>
+                        <div style="font-size:13px;color:#8e8e8e">${esc(u.name)}</div>
+                    </div>
+                </div>`;
+            }
+        });
+        results.innerHTML = found ? html : '<div style="text-align:center;color:#8e8e8e;padding:40px;font-size:14px">No user found</div>';
+    });
+}
+function openUserProfile(uid, name){
+    if(!uid){ showToast('User ID missing'); return; }
+    window.location.href = `profile.html?viewUid=${encodeURIComponent(uid)}&viewName=${encodeURIComponent(name)}`;
+}
+
+/* ============================================================
+   MEDIA PICKER + UPLOAD
+   ============================================================ */
+function openMediaPicker(){
+    document.getElementById('mediaPickerModal').classList.add('open');
+    document.body.style.overflow='hidden';
+    loadMpDemo();
+}
+function closeMediaPicker(){
+    document.getElementById('mediaPickerModal').classList.remove('open');
+    document.body.style.overflow='';
+}
+function switchMpTab(el, type){
+    document.querySelectorAll('.mp-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    const title = document.querySelector('.mp-header-title');
+    const map={post:'New post', story:'New story', reel:'New reel', live:'Go live'};
+    if(title) title.textContent = map[type] || 'New post';
+}
+function loadMpDemo(){
+    const grid=document.getElementById('mpPhotoGrid');
+    if(!grid) return;
+    if(grid.querySelectorAll('.mp-photo-cell').length>0) return;
+    for(let i=0;i<6;i++){
+        const cell=document.createElement('div');
+        cell.className='mp-photo-cell empty';
+        cell.innerHTML='<i class="fas fa-image"></i>';
+        grid.appendChild(cell);
+    }
+}
+function handleMpFileSelect(e){
+    const files=Array.from(e.target.files||[]);
+    if(!files.length) return;
+    const grid=document.getElementById('mpPhotoGrid');
+    const cameraCell=grid.querySelector('.mp-camera-cell');
+    grid.innerHTML='';
+    if(cameraCell) grid.appendChild(cameraCell);
+    files.forEach(file=>{
+        const url=URL.createObjectURL(file);
+        const cell=document.createElement('div');
+        cell.className='mp-photo-cell';
+        if(file.type.startsWith('video')){
+            cell.innerHTML=`<video src="${url}" muted playsinline style="width:100%;height:100%;object-fit:cover"></video><div class="mp-video-badge"><i class="fas fa-play" style="font-size:8px"></i> Video</div>`;
+        } else {
+            cell.innerHTML=`<img src="${url}" alt="">`;
+        }
+        cell.onclick=()=>{ closeMediaPicker(); openUploadSheet(file, url); };
+        grid.appendChild(cell);
+    });
+    // auto open upload with first file
+    if(files[0]){
+        closeMediaPicker();
+        openUploadSheet(files[0], URL.createObjectURL(files[0]));
+    }
+}
+let _pendingUploadFile = null;
+function triggerUploadNext(){
+    document.getElementById('mpFileInput').click();
+}
+function openUploadSheet(file, previewUrl){
+    _pendingUploadFile = file || null;
+    document.getElementById('uploadSheet').style.display='flex';
+    const prevBox=document.getElementById('uploadPreviewBox');
+    const prevImg=document.getElementById('uploadPreviewImg');
+    if(previewUrl){ prevImg.src=previewUrl; prevBox.style.display='block'; }
+    else { prevBox.style.display='none'; }
+}
+function closeUploadSheet(){
+    document.getElementById('uploadSheet').style.display='none';
+    _pendingUploadFile=null;
+    document.getElementById('uploadTitle').value='';
+    document.getElementById('uploadText').value='';
+    document.getElementById('uploadImage').value='';
+    document.getElementById('uploadPreviewBox').style.display='none';
+}
+document.getElementById('uploadImage').addEventListener('change', function(){
+    const f=this.files && this.files[0];
+    if(f){
+        _pendingUploadFile=f;
+        const url=URL.createObjectURL(f);
+        document.getElementById('uploadPreviewImg').src=url;
+        document.getElementById('uploadPreviewBox').style.display='block';
+    }
+});
+document.getElementById('finalSubmitBtn').addEventListener('click', async ()=>{
+    const user=firebase.auth().currentUser;
+    if(!user){ showToast('Login required'); return; }
+    const title=document.getElementById('uploadTitle').value.trim();
+    const text=document.getElementById('uploadText').value.trim();
+    const tool=document.getElementById('uploadTool').value;
+    const cat=document.getElementById('uploadCategory').value;
+    const fileInput=document.getElementById('uploadImage');
+    const file = _pendingUploadFile || (fileInput.files && fileInput.files[0]);
+
+    if(!title || !text){ showToast('Title & post required'); return; }
+    if(!file){ showToast('Select an image'); return; }
+
+    const btn=document.getElementById('finalSubmitBtn');
+    btn.textContent='Uploading...'; btn.disabled=true;
+    try{
+        // imgbb upload
+        const fd=new FormData();
+        fd.append('image', file);
+        const res = await fetch('https://api.imgbb.com/1/upload?key=5f30b483ae91c03320748137616415d7', {method:'POST', body:fd});
+        const json = await res.json();
+        if(!json.success) throw new Error('ImgBB failed');
+        const imageUrl = json.data.url;
+        const authorName = user.displayName || (user.email?user.email.split('@')[0]:'User');
+        await db.ref('posts').push({
+            title, caption:text, imageUrl,
+            aiTool:tool, category:cat,
+            authorId:user.uid, authorName, authorEmail:user.email||'',
+            likeCount:0, commentCount:0,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        });
+        showToast('Post shared ✓');
+        closeUploadSheet();
+    }catch(err){
+        console.error(err);
+        showToast('Upload failed: '+err.message);
+    }finally{
+        btn.textContent='Share'; btn.disabled=false;
+    }
+});
+
+/* ============================================================
+   HIGHLIGHTS
+   ============================================================ */
+function loadUserHighlights(uid){
+    if(!uid) return;
+    const container=document.getElementById('highlightsContainer');
+    if(!container) return;
+    db.ref('users/'+uid+'/highlights').once('value', snap=>{
+        const newBtn = container.querySelector('.ig-highlight');
+        container.innerHTML='';
+        if(newBtn) container.appendChild(newBtn);
+        if(!snap.exists()) return;
+        snap.forEach(c=>{
+            const d=c.val();
+            const div=document.createElement('div');
+            div.className='ig-highlight';
+            div.onclick=()=> window.location.href=`stories.html?viewUid=${encodeURIComponent(uid)}&viewHighlight=${encodeURIComponent(c.key)}`;
+            div.innerHTML = `<div class="ig-highlight-img">${d.coverUrl?`<img src="${esc(d.coverUrl)}" alt="">`:`<i class="fas fa-bookmark" style="color:#dbdbdb;font-size:20px"></i>`}</div><span>${esc(d.name||'Highlight')}</span>`;
+            container.appendChild(div);
+        });
+    });
+}
+
+/* ============================================================
+   NOTIFICATIONS
+   ============================================================ */
+function listenNotifications(uid){
+    db.ref('users/'+uid+'/notifications').limitToLast(40).on('value', snap=>{
+        const body=document.getElementById('notifPanelBody');
+        if(!body) return;
+        if(!snap.exists()){
+            body.innerHTML='<div class="follow-empty"><i class="far fa-bell"></i>No notifications yet.</div>';
+            return;
+        }
+        const items=[];
+        snap.forEach(c=>items.unshift({key:c.key, ...c.val()}));
+        let html='';
+        items.forEach(n=>{
+            let label='activity';
+            if(n.type==='follow') label='started following you';
+            else if(n.type==='like') label='liked your post';
+            else if(n.type==='comment') label='commented on your post';
+            else if(n.type==='message') label='sent you a message';
+            const preview = n.commentText ? `<div style="font-size:12px;color:#666;margin-top:3px;font-style:italic">${esc(n.commentText)}</div>` : '';
+            const fromName = n.fromName || 'Someone';
+            const initial = fromName.charAt(0).toUpperCase();
+            const click = n.fromUid ? `onclick="window.location.href='profile.html?viewUid=${encodeURIComponent(n.fromUid)}&viewName=${encodeURIComponent(fromName)}'"` : '';
+            html += `<div class="follow-user-row" ${click} style="cursor:pointer">
+                <div class="follow-user-avatar">${initial}</div>
+                <div class="follow-user-info">
+                    <div class="uname">${esc(fromName)}</div>
+                    <div class="rname">${esc(label)}</div>
+                    ${preview}
+                </div>
+            </div>`;
+        });
+        body.innerHTML = html || '<div class="follow-empty"><i class="far fa-bell"></i>No notifications yet.</div>';
+    });
+}
+
+/* long-press on profile icon to open notifications (quick access) */
+document.getElementById('top-right-icon')?.parentElement?.addEventListener('click', e=>{
+    // normal settings link already there
+});
+/* add notif bell tap: double tap username */
+let _titleTap=0;
+document.getElementById('top-title')?.addEventListener('click', ()=>{
+    _titleTap++;
+    setTimeout(()=>_titleTap=0,400);
+    if(_titleTap>=2){
+        document.getElementById('notifPanel').style.display='flex';
+        _titleTap=0;
+        // mark read
+        if(_myUid){
+            db.ref('users/'+_myUid+'/notifications').once('value', snap=>{
+                if(!snap.exists())return;
+                const updates={};
+                snap.forEach(c=>{ if(!c.val().read) updates[c.key+'/read']=true; });
+                if(Object.keys(updates).length) db.ref('users/'+_myUid+'/notifications').update(updates);
+            });
+        }
+    }
+});
+
+/* ============================================================
+   INIT UI BINDINGS
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', ()=>{
+    // close modal on esc
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+    // Allow shared bottom nav fallback URLs to open the new media picker directly.
+    const params = new URLSearchParams(window.location.search);
+    if(params.get('openMediaPicker') === '1'){
+        setTimeout(()=>{
+            if(typeof openMediaPicker === 'function') openMediaPicker();
+        }, 250);
+    }
+});
+</script>
+<!-- ✅ Anti-flicker: nav bar instantly show hoga, content smooth aayega -->
+<style>
+  /* Bottom nav instantly render — firebase load ka wait nahi */
+  .ig-bottom-nav{
+    position:fixed;bottom:0;left:0;width:100%;
+    background:#fff;border-top:1px solid #dbdbdb;
+    display:flex;justify-content:space-around;align-items:center;
+    padding:9px 0 11px;z-index:9999;
+    transform:translateZ(0);will-change:transform;
+  }
+  /* Dark mode saved state instantly apply */
+  body.dark-mode .ig-bottom-nav{background:#000;border-top-color:#262626;}
+</style>
+<script>
+  // ✅ Dark mode instantly apply (firebase ka wait nahi)
+  if(localStorage.getItem('ankitstudio_darkmode')==='true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a111683c1b35627d',t:'MTc4MjM2MzYxMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></html>
+
+<div id="settingsSPAContainer" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 50px; z-index: 9998; background: #fff;">
+    <iframe id="settingsIframe" style="width: 100%; height: 100%; border: none;"></iframe>
+</div>
+
+<script>
+window.openSettingsSPA = function() {
+    var container = document.getElementById('settingsSPAContainer');
+    var iframe = document.getElementById('settingsIframe');
+    
+    container.style.display = 'block'; 
+    
+    // Iframe mein cleanly settings load karo
+    if (!iframe.src || iframe.src.indexOf('settings.html') === -1) {
+        iframe.src = 'settings.html?spa=true';
+    }
+    
+    // Yahan se nav bar ko hide karne wala code hata diya gaya hai!
+};
+
+window.closeSettingsSPA = function() {
+    document.getElementById('settingsSPAContainer').style.display = 'none';
+    
+    // Yahan se nav bar ko wapas show karne wala code bhi hata diya gaya hai kyunki ab wo hide hi nahi hoga!
+};
+</script>

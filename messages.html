@@ -14,15 +14,22 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; }
-        body {
-            padding: 0 !important;
-            background: #fff !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            color: #000;
-            overflow: hidden;
-        }
+       * { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+/* ✅ Anti-flicker: body instantly show hoga, no jump */
+body {
+    padding: 0 !important;
+    background: #fff !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #000;
+    overflow: hidden;
+    /* No opacity trick needed — bottom nav already fixed position hai */
+}
+/* ✅ Bottom nav instant load — content se pehle visible */
+.ig-bottom-nav {
+    will-change: transform;
+    transform: translateZ(0);
+}
 
         /* ===== TOP NAV ===== */
         .dm-header {
@@ -326,8 +333,8 @@
         .msg-sent .msg-read-receipt.read { color: #fff; }
         .msg-sent .msg-read-receipt.delivered { color: rgba(255,255,255,0.5); }
 
-        /* Shared Prompt in DM */
-        .msg-prompt-card {
+        /* Shared Post in DM */
+        .msg-post-card {
             background: rgba(255,255,255,0.15);
             border-radius: 10px;
             padding: 10px;
@@ -337,51 +344,25 @@
             gap: 10px;
             cursor: pointer;
         }
-        .msg-received .msg-prompt-card {
+        .msg-received .msg-post-card {
             background: rgba(0,0,0,0.05);
         }
-        .msg-prompt-card img {
+        .msg-post-card img {
             width: 40px;
             height: 40px;
             border-radius: 6px;
             object-fit: cover;
         }
-        .msg-prompt-card .prompt-card-info {
+        .msg-post-card .post-card-info {
             flex: 1;
         }
-        .msg-prompt-card .prompt-card-title {
+        .msg-post-card .post-card-title {
             font-size: 12px;
             font-weight: 700;
         }
-        .msg-prompt-card .prompt-card-sub {
+        .msg-post-card .post-card-sub {
             font-size: 10px;
             opacity: 0.7;
-        }
-
-        /* Typing Indicator */
-        .typing-indicator {
-            align-self: flex-start;
-            padding: 10px 14px;
-            background: #efefef;
-            border-radius: 18px;
-            border-bottom-left-radius: 4px;
-            display: none;
-            gap: 4px;
-            align-items: center;
-        }
-        .typing-indicator.active { display: flex; }
-        .typing-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #8e8e8e;
-            animation: typingBounce 1.4s infinite ease-in-out;
-        }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-6px); }
         }
 
         /* Chat Input */
@@ -597,8 +578,7 @@
         body.dark-mode .chat-header .chat-actions button { color: #fff; }
         body.dark-mode .chat-messages { background: #000; }
         body.dark-mode .msg-received { background: #262626; color: #fff; }
-        body.dark-mode .msg-received .msg-prompt-card { background: rgba(255,255,255,0.08); }
-        body.dark-mode .typing-indicator { background: #262626; }
+        body.dark-mode .msg-received .msg-post-card { background: rgba(255,255,255,0.08); }
         body.dark-mode .chat-input-area { background: #000; border-color: #262626; }
         body.dark-mode .chat-input-area .chat-input-wrapper { background: #262626; }
         body.dark-mode .chat-input-area textarea { color: #fff; }
@@ -614,10 +594,10 @@
     </style>
 </head>
 <body>
-
+<script>if(sessionStorage.getItem('splash_shown')){document.documentElement.style.setProperty('--splash-display','none');}</script>
 <!-- ===== HEADER ===== -->
 <div class="dm-header">
-    <button class="back-btn" onclick="window.location.href='profile.html'"><i class="fas fa-arrow-left"></i></button>
+    <button class="back-btn" id="dmBackBtn" onclick="goBackFromMessages()"><i class="fas fa-arrow-left"></i></button>
     <h1>Messages</h1>
     <button class="compose-btn" onclick="openCompose()"><i class="fas fa-pen-to-square"></i></button>
 </div>
@@ -631,7 +611,7 @@
         <div class="dm-empty" id="dmEmptyState">
             <i class="far fa-paper-plane"></i>
             <h3>Your Messages</h3>
-            <p>Send private messages to other creators. Share prompts, ideas & collaborate!</p>
+            <p>Send private messages to other creators. Share posts, ideas & collaborate!</p>
         </div>
     </div>
 </div>
@@ -655,16 +635,10 @@
         <!-- Messages will be rendered here -->
     </div>
 
-    <div class="typing-indicator" id="typingIndicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-    </div>
-
     <div class="chat-input-area">
         <div class="chat-input-wrapper">
             <button class="emoji-btn" onclick="showToast('Emoji picker coming soon! 😄')"><i class="far fa-smile"></i></button>
-            <textarea id="chatInput" placeholder="Message..." rows="1" oninput="autoResizeTextarea(this); handleTyping()"></textarea>
+            <textarea id="chatInput" placeholder="Message..." rows="1" oninput="autoResizeTextarea(this); toggleSendBtn()"></textarea>
         </div>
         <button class="send-btn" id="chatSendBtn" onclick="sendMessage()" disabled><i class="fas fa-paper-plane"></i></button>
     </div>
@@ -692,14 +666,17 @@
 <!-- ===== BOTTOM NAV — Shown only when opened directly, hidden when coming from profile ===== -->
 <div class="ig-bottom-nav" id="dmBottomNav">
     <i class="fas fa-home" onclick="window.location.href='index.html'"></i>
-    <i class="fas fa-search" onclick="window.location.href='profile.html'"></i>
-    <i class="far fa-plus-square" onclick="window.location.href='index.html'"></i>
+    <i class="fas fa-search" onclick="window.location.href='index.html?view=searchView'"></i>
+    <i class="far fa-plus-square" onclick="openMediaPicker()"></i>
     <i class="fas fa-paper-plane" style="color:#0095f6;"></i>
     <img src="" alt="Profile" class="ig-nav-profile" id="navProfileImg" onclick="window.location.href='profile.html'">
 </div>
 
 <script src="js/firebase-config.js"></script>
 <script>
+function openMediaPicker(){
+    window.location.href = 'index.html?openMediaPicker=1';
+}
 // ============================================================
 //  GLOBALS
 // ============================================================
@@ -709,13 +686,24 @@ let _chatPartnerName = null;
 let _chatListenerRef = null;
 let _chatListListenerRef = null;
 let _userCache = {};
-let _lastTypingTime = 0;
 let _allChatItems = [];
 let _cameFromProfile = false; // 🔥 FIX: Track if user came from profile page
 
 // Dark mode
 const savedDark = localStorage.getItem('ankitstudio_darkmode');
 if (savedDark === 'true') document.body.classList.add('dark-mode');
+
+// 🔥 FIX: Check URL params IMMEDIATELY on page load — don't wait for auth
+// If coming from profile (chatWith param), hide bottom nav right away
+(function() {
+    const _params = new URLSearchParams(window.location.search);
+    const _chatWith = _params.get('chatWith');
+    if (_chatWith) {
+        _cameFromProfile = true;
+        const _bNav = document.getElementById('dmBottomNav');
+        if (_bNav) _bNav.style.display = 'none';
+    }
+})();
 
 // ============================================================
 //  AUTH
@@ -742,16 +730,6 @@ firebase.auth().onAuthStateChanged(function(user) {
     const chatUid = params.get('chatWith');
     const chatName = params.get('chatName');
 
-    // 🔥 FIX: Agar profile se Message click karke aaye ho (chatWith param hai) toh bottom nav HIDE karo
-    // Direct messages.html open kiya toh bottom nav DIKHEGA
-    const bottomNav = document.getElementById('dmBottomNav');
-    const listPadding = document.querySelector('.dm-list-view');
-    if (chatUid && bottomNav) {
-        bottomNav.style.display = 'none';
-        _cameFromProfile = true;
-        if (listPadding) listPadding.style.paddingBottom = '20px';
-    }
-
     if (chatUid) {
         window.history.replaceState({}, document.title, window.location.pathname);
         setTimeout(() => openChatWith(chatUid, chatName || 'User'), 500);
@@ -759,10 +737,10 @@ firebase.auth().onAuthStateChanged(function(user) {
 });
 
 // ============================================================
-//  USER CACHE — Load all known users from submitted_prompts
+//  USER CACHE — Load all known users from posts
 // ============================================================
 function loadUserCache() {
-    firebase.database().ref('submitted_prompts').once('value', function(snap) {
+    firebase.database().ref('posts').once('value', function(snap) {
         if (!snap.exists()) return;
         snap.forEach(function(child) {
             const d = child.val();
@@ -831,7 +809,7 @@ function renderChatList(chats) {
         container.innerHTML = `<div class="dm-empty">
             <i class="far fa-paper-plane"></i>
             <h3>Your Messages</h3>
-            <p>Send private messages to other creators. Share prompts, ideas & collaborate!</p>
+            <p>Send private messages to other creators. Share posts, ideas & collaborate!</p>
         </div>`;
         return;
     }
@@ -855,7 +833,7 @@ function renderChatList(chats) {
         // Truncate message preview
         let preview = lastMsg;
         if (preview.length > 40) preview = preview.substring(0, 40) + '...';
-        if (preview === '[Shared Prompt]') preview = '📸 Shared a prompt';
+        if (preview === '[Shared Post]') preview = '📸 Shared a post';
 
         const isSentByMe = chat.lastSender === _myUid;
 
@@ -925,20 +903,20 @@ function openChatWith(uid, name) {
     // Reset unread count
     firebase.database().ref('users/' + _myUid + '/chats/' + uid + '/unreadCount').set(0);
 
-    // Listen for typing
-    listenForTyping(uid);
-
     // Listen for online status
     listenForOnlineStatus(uid);
 
     // Focus input
     setTimeout(() => document.getElementById('chatInput').focus(), 300);
+
+    // 🔥 FIX: Chat ke andar jaate hi bottom nav HIDE karo — full screen chat!
+    const bottomNav = document.getElementById('dmBottomNav');
+    if (bottomNav) bottomNav.style.display = 'none';
 }
 
 function closeChatView() {
     // Detach listeners
     if (_chatListenerRef) _chatListenerRef.off();
-    firebase.database().ref('users/' + _chatPartnerUid + '/typing/' + _myUid).set(false);
 
     _chatPartnerUid = null;
     _chatPartnerName = null;
@@ -946,13 +924,15 @@ function closeChatView() {
     document.getElementById('dmChatView').classList.remove('active');
     document.getElementById('dmListView').classList.remove('hidden');
 
-    // 🔥 FIX: Chat se wapas aaye toh bottom nav tabhi dikhao jab directly open kiya tha
-    const bottomNav = document.getElementById('dmBottomNav');
-    const listPadding = document.querySelector('.dm-list-view');
-    if (bottomNav && !_cameFromProfile) {
-        bottomNav.style.display = 'flex';
+    // 🔥 FIX: Agar profile se aaye the toh back se profile pe jaao
+    if (_cameFromProfile) {
+        window.location.href = 'profile.html';
+        return;
     }
-    if (listPadding) listPadding.style.paddingBottom = _cameFromProfile ? '20px' : '70px';
+
+    // Directly open kiya tha toh chat list pe bottom nav wapas dikhao
+    const bNav = document.getElementById('dmBottomNav');
+    if (bNav) bNav.style.display = 'flex';
 }
 
 // ============================================================
@@ -1000,15 +980,15 @@ function renderMessages(messages) {
         const timeStr = formatTime(msg.timestamp);
         const readReceipt = isSent ? (msg.read ? '<span class="msg-read-receipt read">✓✓</span>' : '<span class="msg-read-receipt delivered">✓✓</span>') : '';
 
-        if (msg.type === 'prompt') {
-            // Shared prompt message
+        if (msg.type === 'post') {
+            // Shared post message
             html += `<div class="msg-bubble ${isSent ? 'msg-sent' : 'msg-received'}">
-                <div>${escHTML(msg.text || 'Shared a prompt')}</div>
-                ${msg.promptImageUrl ? `<div class="msg-prompt-card" onclick="window.open('${escHTML(msg.promptImageUrl)}', '_blank')">
-                    <img src="${escHTML(msg.promptImageUrl)}" alt="Prompt">
-                    <div class="prompt-card-info">
-                        <div class="prompt-card-title">${escHTML(msg.promptTitle || 'View Prompt')}</div>
-                        <div class="prompt-card-sub">Tap to view</div>
+                <div>${escHTML(msg.text || 'Shared a post')}</div>
+                ${msg.postImageUrl ? `<div class="msg-post-card" onclick="window.open('${escHTML(msg.postImageUrl)}', '_blank')">
+                    <img src="${escHTML(msg.postImageUrl)}" alt="Post">
+                    <div class="post-card-info">
+                        <div class="post-card-title">${escHTML(msg.postTitle || 'View Post')}</div>
+                        <div class="post-card-sub">Tap to view</div>
                     </div>
                 </div>` : ''}
                 <div class="msg-meta">
@@ -1059,13 +1039,14 @@ function sendMessage() {
         autoResizeTextarea(input);
         sendBtn.disabled = false;
 
-        // Update chat metadata for both users
+        // 🔥 FIX: Removed broken 'updates' object (was not declared = caused ReferenceError = "Message not sent" toast)
         const myName = firebase.auth().currentUser?.displayName || (firebase.auth().currentUser?.email ? firebase.auth().currentUser.email.split('@')[0] : 'User');
         const myPhoto = firebase.auth().currentUser?.photoURL || null;
         const partnerCached = _userCache[_chatPartnerUid] || {};
         const partnerPhoto = partnerCached.photo || null;
 
-        updates['users/' + _myUid + '/chats/' + _chatPartnerUid] = {
+        // Update my chat metadata
+        firebase.database().ref('users/' + _myUid + '/chats/' + _chatPartnerUid).set({
             partnerUid: _chatPartnerUid,
             partnerName: _chatPartnerName,
             partnerPhoto: partnerPhoto,
@@ -1073,46 +1054,30 @@ function sendMessage() {
             lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
             lastSender: _myUid,
             unreadCount: 0
-        };
-        updates['users/' + _chatPartnerUid + '/chats/' + _myUid] = {
+        });
+
+        // Update partner's chat metadata
+        firebase.database().ref('users/' + _chatPartnerUid + '/chats/' + _myUid).set({
             partnerUid: _myUid,
             partnerName: myName,
             partnerPhoto: myPhoto,
             lastMessage: text,
             lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
-            lastSender: _myUid,
-            unreadCount: firebase.database.ServerValue.TIMESTAMP // Will be replaced
-        };
+            lastSender: _myUid
+        });
 
         // Increment unread count for partner
         firebase.database().ref('users/' + _chatPartnerUid + '/chats/' + _myUid + '/unreadCount').transaction(count => (count || 0) + 1);
-
-        // Update last message info
-        firebase.database().ref('users/' + _myUid + '/chats/' + _chatPartnerUid).update({
-            partnerName: _chatPartnerName,
-            lastMessage: text,
-            lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
-            lastSender: _myUid
-        });
-        firebase.database().ref('users/' + _chatPartnerUid + '/chats/' + _myUid).update({
-            partnerName: firebase.auth().currentUser?.displayName || (firebase.auth().currentUser?.email ? firebase.auth().currentUser.email.split('@')[0] : 'User'),
-            lastMessage: text,
-            lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
-            lastSender: _myUid
-        });
 
         // Send notification
         firebase.database().ref('users/' + _chatPartnerUid + '/notifications').push({
             type: 'message',
             fromUid: _myUid,
-            fromName: firebase.auth().currentUser?.displayName || (firebase.auth().currentUser?.email ? firebase.auth().currentUser.email.split('@')[0] : 'User'),
+            fromName: myName,
             commentText: text.substring(0, 60),
             timestamp: firebase.database.ServerValue.TIMESTAMP,
             read: false
-        });
-
-        // Stop typing
-        firebase.database().ref('users/' + _chatPartnerUid + '/typing/' + _myUid).set(false);
+        }).catch(e => console.log('Notif write skipped:', e));
 
     }).catch(err => {
         console.error('Send message error:', err);
@@ -1142,37 +1107,17 @@ function markMessagesAsRead(partnerUid) {
 }
 
 // ============================================================
-//  TYPING INDICATOR
+//  TOGGLE SEND BUTTON (replaces handleTyping — no more typing indicator)
 // ============================================================
-function handleTyping() {
+function toggleSendBtn() {
     const input = document.getElementById('chatInput');
     const sendBtn = document.getElementById('chatSendBtn');
     sendBtn.disabled = !input.value.trim();
-
-    if (!_chatPartnerUid) return;
-
-    const now = Date.now();
-    if (now - _lastTypingTime > 2000) {
-        _lastTypingTime = now;
-        firebase.database().ref('users/' + _chatPartnerUid + '/typing/' + _myUid).set(true);
-        setTimeout(() => {
-            firebase.database().ref('users/' + _chatPartnerUid + '/typing/' + _myUid).set(false);
-        }, 3000);
-    }
 }
 
-function listenForTyping(partnerUid) {
-    firebase.database().ref('users/' + _myUid + '/typing/' + partnerUid).on('value', function(snap) {
-        const indicator = document.getElementById('typingIndicator');
-        const statusEl = document.getElementById('chatUserStatus');
-        if (snap.val() === true) {
-            indicator.classList.add('active');
-            if (statusEl) { statusEl.textContent = 'typing...'; statusEl.classList.add('online'); }
-        } else {
-            indicator.classList.remove('active');
-            // Status will be updated by online status listener
-        }
-    });
+// 🔥 FIX: Back button logic — profile se aaye toh profile pe jaao, warna profile pe jaao
+function goBackFromMessages() {
+    window.location.href = 'profile.html';
 }
 
 // ============================================================
@@ -1237,7 +1182,7 @@ function searchComposeUsers(query) {
     });
 
     if (!html) {
-        html = '<div style="text-align:center; padding:40px; color:#8e8e8e;">Koi user nahi mila. Others will appear once they upload prompts.</div>';
+        html = '<div style="text-align:center; padding:40px; color:#8e8e8e;">Koi user nahi mila. Others will appear once they upload posts.</div>';
     }
 
     list.innerHTML = html;
@@ -1249,11 +1194,11 @@ function startChat(uid, name) {
 }
 
 // ============================================================
-//  SHARE PROMPT IN DM (called from other pages)
+//  SHARE POST IN DM (called from other pages)
 // ============================================================
-window.sharePromptInDM = function(promptId, promptTitle, promptImageUrl) {
+window.sharePostInDM = function(postId, postTitle, postImageUrl) {
     // Navigate to messages with share intent
-    window.location.href = 'messages.html?sharePrompt=' + encodeURIComponent(promptId) + '&shareTitle=' + encodeURIComponent(promptTitle) + '&shareImg=' + encodeURIComponent(promptImageUrl || '');
+    window.location.href = 'messages.html?sharePost=' + encodeURIComponent(postId) + '&shareTitle=' + encodeURIComponent(postTitle) + '&shareImg=' + encodeURIComponent(postImageUrl || '');
 };
 
 // ============================================================
@@ -1319,69 +1264,87 @@ document.getElementById('chatInput')?.addEventListener('keydown', function(e) {
     }
 });
 
-// Handle share prompt from URL
+// Handle share post from URL
 firebase.auth().onAuthStateChanged(function(user) {
     if (!user) return;
     const params = new URLSearchParams(window.location.search);
-    const sharePromptId = params.get('sharePrompt');
+    const sharePostId = params.get('sharePost');
     const shareTitle = params.get('shareTitle');
     const shareImg = params.get('shareImg');
     
-    if (sharePromptId) {
+    if (sharePostId) {
         window.history.replaceState({}, document.title, window.location.pathname);
         // Show compose to pick a user, then auto-send
         // For now, open compose and let user pick
         openCompose();
-        showToast('Select a user to share: ' + (shareTitle || 'Prompt'));
+        showToast('Select a user to share: ' + (shareTitle || 'Post'));
         // Store share data temporarily
-        window._pendingSharePrompt = { id: sharePromptId, title: shareTitle, imageUrl: shareImg };
+        window._pendingSharePost = { id: sharePostId, title: shareTitle, imageUrl: shareImg };
     }
 });
 
-// Override startChat to handle prompt sharing
+// Override startChat to handle post sharing
 const _origStartChat = window.startChat;
 window.startChat = function(uid, name) {
     closeCompose();
     openChatWith(uid, name);
 
-    // If sharing a prompt, auto-send it
-    if (window._pendingSharePrompt) {
-        const share = window._pendingSharePrompt;
+    // If sharing a post, auto-send it
+    if (window._pendingSharePost) {
+        const share = window._pendingSharePost;
         const chatId = getChatId(_myUid, uid);
 
         setTimeout(() => {
             firebase.database().ref('chats/' + chatId + '/messages').push({
-                text: '📸 Shared a prompt',
+                text: '📸 Shared a post',
                 senderId: _myUid,
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
                 read: false,
-                type: 'prompt',
-                promptId: share.id,
-                promptTitle: share.title,
-                promptImageUrl: share.imageUrl
+                type: 'post',
+                postId: share.id,
+                postTitle: share.title,
+                postImageUrl: share.imageUrl
             }).then(() => {
                 // Update chat metadata
                 firebase.database().ref('users/' + _myUid + '/chats/' + uid).update({
                     partnerName: name,
-                    lastMessage: '[Shared Prompt]',
+                    lastMessage: '[Shared Post]',
                     lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
                     lastSender: _myUid
                 });
                 firebase.database().ref('users/' + uid + '/chats/' + _myUid).update({
                     partnerName: firebase.auth().currentUser?.displayName || 'User',
-                    lastMessage: '[Shared Prompt]',
+                    lastMessage: '[Shared Post]',
                     lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
                     lastSender: _myUid
                 });
                 firebase.database().ref('users/' + uid + '/chats/' + _myUid + '/unreadCount').transaction(c => (c || 0) + 1);
-                showToast('✅ Prompt shared!');
+                showToast('✅ Post shared!');
             });
-            window._pendingSharePrompt = null;
+            window._pendingSharePost = null;
         }, 1000);
     }
 };
 
 </script>
-
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0f81fbceb03d341',t:'MTc4MjA5ODQ5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
-</html>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a10130ba39b5d439',t:'MTc4MjE5MzU2NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<!-- ✅ Anti-flicker: nav bar instantly show hoga, content smooth aayega -->
+<style>
+  /* Bottom nav instantly render — firebase load ka wait nahi */
+  .ig-bottom-nav{
+    position:fixed;bottom:0;left:0;width:100%;
+    background:#fff;border-top:1px solid #dbdbdb;
+    display:flex;justify-content:space-around;align-items:center;
+    padding:9px 0 11px;z-index:9999;
+    transform:translateZ(0);will-change:transform;
+  }
+  /* Dark mode saved state instantly apply */
+  body.dark-mode .ig-bottom-nav{background:#000;border-top-color:#262626;}
+</style>
+<script>
+  // ✅ Dark mode instantly apply (firebase ka wait nahi)
+  if(localStorage.getItem('ankitstudio_darkmode')==='true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1116f2d3db10531',t:'MTc4MjM2Mzg5NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></html>
