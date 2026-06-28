@@ -240,23 +240,13 @@
     </div>
 </div>
 
-<script src="firebase-config.js"></script>
-<script src="bottom-nav.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/bottom-nav.js"></script>
 <script>
 function openMediaPicker(){
     window.location.href = 'index.html?openMediaPicker=1';
 }
-// ===== FIREBASE INIT =====
-const firebaseConfig = {
-    apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
-    authDomain: "ankitstudioai.firebaseapp.com",
-    databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com", // <-- YE ADD KAREIN
-    projectId: "ankitstudioai",
-    storageBucket: "ankitstudioai.firebasestorage.app",
-    messagingSenderId: "450755070024",
-    appId: "1:450755070024:web:4bf14bc4da4caf1200b07d"
-};
-firebase.initializeApp(firebaseConfig);
+// Firebase initialized via firebase-config.js
 const db=firebase.database();
 
 let _myUid=null,_currentStoryUser=null,_currentStoryIndex=0,_storyTimer=null,_storiesData={},_selectedHlStories=[];
@@ -653,4 +643,5 @@ window.openStoryViewer=openStoryViewer;
 window.openHighlightCreate=openHighlightCreate;
 </script>
 
+</body>
 </html>

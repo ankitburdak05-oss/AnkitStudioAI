@@ -343,6 +343,7 @@ function openModal(id) {
     const dataset = (typeof posts !== 'undefined') ? posts : [];
     const p = dataset.find(x => x.id === id);
     if (!p) return;
+    if (!document.getElementById('modalOverlay')) return; // Guard: modal elements not found on this page
     
     let photoArray = p.images || []; 
     if (photoArray.length === 0) {

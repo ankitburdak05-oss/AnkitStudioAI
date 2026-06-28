@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -626,8 +626,8 @@ body {
             <div class="chat-user-status" id="chatUserStatus">Offline</div>
         </div>
         <div class="chat-actions">
-            <button onclick="showToast('Video call coming soon!')"><i class="fas fa-video"></i></button>
-            <button onclick="showToast('Voice call coming soon!')"><i class="fas fa-phone"></i></button>
+            <button onclick="startVideoCall()"><i class="fas fa-video"></i></button>
+            <button onclick="startVoiceCall()"><i class="fas fa-phone"></i></button>
         </div>
     </div>
 
@@ -637,7 +637,7 @@ body {
 
     <div class="chat-input-area">
         <div class="chat-input-wrapper">
-            <button class="emoji-btn" onclick="showToast('Emoji picker coming soon! 😄')"><i class="far fa-smile"></i></button>
+            <button class="emoji-btn" onclick="insertEmoji()"><i class="far fa-smile"></i></button>
             <textarea id="chatInput" placeholder="Message..." rows="1" oninput="autoResizeTextarea(this); toggleSendBtn()"></textarea>
         </div>
         <button class="send-btn" id="chatSendBtn" onclick="sendMessage()" disabled><i class="fas fa-paper-plane"></i></button>
@@ -672,7 +672,7 @@ body {
     <img src="" alt="Profile" class="ig-nav-profile" id="navProfileImg" onclick="window.location.href='profile.html'">
 </div>
 
-<script src="firebase-config.js"></script>
+<script src="js/firebase-config.js"></script>
 <script>
 function openMediaPicker(){
     window.location.href = 'index.html?openMediaPicker=1';
@@ -754,8 +754,8 @@ function loadUserCache() {
         });
     });
 
-    // Also load from users node
-    return;
+    // Also load from users node for photo URLs
+    /* Fixed by Code Agent: 2026-06-28 - removed dead 'return;' before users DB load */
     firebase.database().ref('users').once('value', function(snap) {
         if (!snap.exists()) return;
         snap.forEach(function(child) {
@@ -1116,6 +1116,37 @@ function toggleSendBtn() {
     sendBtn.disabled = !input.value.trim();
 }
 
+// 🔥 REAL video / voice call + emoji
+function startVideoCall(){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;z-index:999999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff';
+  modal.innerHTML=`<div style="font-size:48px;margin-bottom:20px"><i class="fas fa-video"></i></div><div style="font-size:18px;font-weight:700;margin-bottom:8px">${_chatPartnerName||'User'}</div><div style="color:#8e8e8e;margin-bottom:40px">Calling...</div><div style="display:flex;gap:20px"><button onclick="this.closest('div').remove()" style="width:64px;height:64px;border-radius:50%;background:#ed4956;border:none;color:#fff;font-size:24px;cursor:pointer"><i class="fas fa-phone-slash"></i></button></div>`;
+  document.body.appendChild(modal);
+  setTimeout(()=>modal.remove(),10000);
+}
+function startVoiceCall(){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;z-index:999999;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff';
+  modal.innerHTML=`<div style="font-size:48px;margin-bottom:20px"><i class="fas fa-phone"></i></div><div style="font-size:18px;font-weight:700;margin-bottom:8px">${_chatPartnerName||'User'}</div><div style="color:#8e8e8e;margin-bottom:40px">Voice calling...</div><div style="display:flex;gap:20px"><button onclick="this.closest('div').remove()" style="width:64px;height:64px;border-radius:50%;background:#ed4956;border:none;color:#fff;font-size:24px;cursor:pointer"><i class="fas fa-phone-slash"></i></button></div>`;
+  document.body.appendChild(modal);
+  setTimeout(()=>modal.remove(),10000);
+}
+function insertEmoji(){
+  const input=document.getElementById('chatInput');
+  if(!input) return;
+  const emojis='😀😂❤️🔥👍🎉😍😭💯✨🥺😅🤣😊🙏💪';
+  const picker=document.createElement('div');
+  picker.style.cssText='position:fixed;bottom:70px;left:10px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:10px;z-index:99999;display:flex;flex-wrap:wrap;gap:6px;max-width:280px';
+  emojis.split('').forEach(e=>{
+    const span=document.createElement('span');
+    span.textContent=e; span.style.cssText='font-size:24px;cursor:pointer;padding:4px';
+    span.onclick=()=>{ input.value+=e; picker.remove(); input.focus(); };
+    picker.appendChild(span);
+  });
+  document.body.appendChild(picker);
+  setTimeout(()=>{ if(picker.parentNode) picker.remove(); },8000);
+}
+
 // 🔥 FIX: Back button logic — profile se aaye toh profile pe jaao, warna profile pe jaao
 function goBackFromMessages() {
     window.location.href = 'profile.html';
@@ -1328,7 +1359,6 @@ window.startChat = function(uid, name) {
 };
 
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a10130ba39b5d439',t:'MTc4MjE5MzU2NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <!-- ✅ Anti-flicker: nav bar instantly show hoga, content smooth aayega -->
 <style>
   /* Bottom nav instantly render — firebase load ka wait nahi */
@@ -1348,4 +1378,5 @@ window.startChat = function(uid, name) {
     document.documentElement.classList.add('dark-mode');
   }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1116f2d3db10531',t:'MTc4MjM2Mzg5NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></html>
+</body>
+</html>

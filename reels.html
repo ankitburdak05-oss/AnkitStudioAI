@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="js/firebase-config.js"></script>
     <style>
         *{box-sizing:border-box;margin:0;padding:0}
         html,body{height:100%;overflow:hidden}
@@ -199,17 +200,7 @@
 function openMediaPicker(){
     window.location.href = 'index.html?openMediaPicker=1';
 }
-// ===== FIREBASE INIT =====
-const firebaseConfig = {
-    apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
-    authDomain: "ankitstudioai.firebaseapp.com",
-    databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com", // <-- YE ADD KAREIN
-    projectId: "ankitstudioai",
-    storageBucket: "ankitstudioai.firebasestorage.app",
-    messagingSenderId: "450755070024",
-    appId: "1:450755070024:web:4bf14bc4da4caf1200b07d"
-};
-firebase.initializeApp(firebaseConfig);
+// Firebase initialized via firebase-config.js
 const db=firebase.database();
 
 let _myUid=null,_reelsCache=[],_currentReelId=null;
@@ -540,4 +531,5 @@ document.addEventListener('play',function(e){
     document.documentElement.classList.add('dark-mode');
   }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a11173415ebcc9e4',t:'MTc4MjM2NDA2Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></html>
+</body>
+</html>

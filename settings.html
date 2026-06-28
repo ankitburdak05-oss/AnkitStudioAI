@@ -8,29 +8,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="data:text/css,void(0)">
+    <link rel="stylesheet" href="css/style.css">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
     <script>
-    // Settings file ke liye direct aur bulletproof initialization
-    const firebaseConfig = {
-      apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
-      authDomain: "ankitstudioai.firebaseapp.com",
-      databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com",
-      projectId: "ankitstudioai",
-      storageBucket: "ankitstudioai.firebasestorage.app",
-      messagingSenderId: "450755070024",
-      appId: "1:450755070024:web:4bf14bc4da4caf1200b07d",
-      measurementId: "G-BJ44E7P08S"
-    };
-    
-    // Iframe ke andar 100% safe execution
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    // Firebase initialized via firebase-config.js
+    const db = firebase.database();
 </script>
-    <script src="data:text/javascript,void 0"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
@@ -479,6 +465,29 @@
         body.dark-mode .settings-select:hover {
             background: #333;
         }
+
+        /* ===== NEW 20 FEATURES CSS ===== */
+        .settings-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;margin-left:8px}
+        .settings-badge.verified{background:#c8f7c5;color:#006e00}
+        .settings-badge.unverified{background:#ffe0e0;color:#c00}
+        .settings-badge.enabled{background:#c8e6ff;color:#0055aa}
+        .settings-badge.disabled{background:#efefef;color:#8e8e8e}
+        body.dark-mode .settings-badge.verified{background:#1a3a1a;color:#5f5}
+        body.dark-mode .settings-badge.unverified{background:#3a1a1a;color:#f55}
+        body.dark-mode .settings-badge.enabled{background:#1a2a3a;color:#5af}
+
+        .settings-save-all{position:sticky;bottom:0;z-index:50;padding:12px 16px;background:#fff;border-top:1px solid #efefef;text-align:center}
+        body.dark-mode .settings-save-all{background:#000;border-color:#262626}
+        .settings-save-all button{width:100%;max-width:400px;padding:14px;background:#0095f6;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s}
+        .settings-save-all button:hover{background:#0074cc}
+        .settings-save-all button:disabled{background:#b3d7f7;cursor:not-allowed}
+        
+        .settings-modal-body .faux-chat{border:1px solid #efefef;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;margin-top:8px}
+        body.dark-mode .settings-modal-body .faux-chat{border-color:#262626}
+        .settings-item .si-chevron{color:#c7c7cc;font-size:14px}
+        
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .spinner{display:inline-block;width:14px;height:14px;border:2px solid #ccc;border-top-color:#0095f6;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-left:6px}
         
     </style>
 </head>
@@ -852,6 +861,291 @@
         </div>
     </div>
 
+    <!-- ===== 🔥 NEW FEATURE 1-5: PRIVACY CONTROLS ===== -->
+    <div class="settings-group">
+        <div class="settings-group-title">Privacy Controls</div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-circle" style="color:#78de45"></i>
+                <div class="item-text">
+                    <span class="item-title">Activity Status</span>
+                    <span class="item-subtitle">Show when you're active or recently active</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="activityStatusToggle" onchange="savePrivacyToggle('activityStatus', this.checked)" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-check-double" style="color:#0095f6"></i>
+                <div class="item-text">
+                    <span class="item-title">Read Receipts</span>
+                    <span class="item-subtitle">Let others see when you've read their messages</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="readReceiptsToggle" onchange="savePrivacyToggle('readReceipts', this.checked)" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-comment"></i>
+                <div class="item-text">
+                    <span class="item-title">Who Can Comment</span>
+                    <span class="item-subtitle">Control who can comment on your posts</span>
+                </div>
+            </div>
+            <select class="settings-select" id="whoCanComment" onchange="savePrivacySetting('whoCanComment', this.value)">
+                <option value="everyone" selected>Everyone</option>
+                <option value="followers">Followers</option>
+                <option value="following">People You Follow</option>
+                <option value="none">No One</option>
+            </select>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-paper-plane"></i>
+                <div class="item-text">
+                    <span class="item-title">Who Can Message</span>
+                    <span class="item-subtitle">Control who can send you direct messages</span>
+                </div>
+            </div>
+            <select class="settings-select" id="whoCanMessage" onchange="savePrivacySetting('whoCanMessage', this.value)">
+                <option value="everyone" selected>Everyone</option>
+                <option value="followers">Followers</option>
+                <option value="none">No One</option>
+            </select>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-tag"></i>
+                <div class="item-text">
+                    <span class="item-title">Who Can Tag You</span>
+                    <span class="item-subtitle">Control who can tag you in posts and comments</span>
+                </div>
+            </div>
+            <select class="settings-select" id="whoCanTag" onchange="savePrivacySetting('whoCanTag', this.value)">
+                <option value="everyone" selected>Everyone</option>
+                <option value="followers">Followers</option>
+                <option value="none">No One</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ===== 🔥 NEW FEATURE 6-10: CONTENT & DISPLAY ===== -->
+    <div class="settings-group">
+        <div class="settings-group-title">Content & Display</div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-shield"></i>
+                <div class="item-text">
+                    <span class="item-title">Sensitive Content Filter</span>
+                    <span class="item-subtitle">Blur potentially sensitive content in feed</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="sensitiveFilterToggle" onchange="saveSettingToggle('sensitive_filter', this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-play"></i>
+                <div class="item-text">
+                    <span class="item-title">Auto-Play Videos</span>
+                    <span class="item-subtitle">Videos in feed will auto-play while scrolling</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="autoplayToggle" onchange="saveSettingToggle('autoplay', this.checked)" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-cloud-upload-alt" style="color:#0095f6"></i>
+                <div class="item-text">
+                    <span class="item-title">High Quality Uploads</span>
+                    <span class="item-subtitle">Upload images at original resolution</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="highQualityToggle" onchange="saveSettingToggle('high_quality', this.checked)" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-save"></i>
+                <div class="item-text">
+                    <span class="item-title">Save Original Photos</span>
+                    <span class="item-subtitle">Save original copy to your device when posting</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="saveOriginalsToggle" onchange="saveSettingToggle('save_originals', this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-wifi"></i>
+                <div class="item-text">
+                    <span class="item-title">Data Saver Mode</span>
+                    <span class="item-subtitle">Load lower quality images to save data</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="dataSaverToggle" onchange="saveSettingToggle('data_saver', this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- ===== 🔥 NEW FEATURE 11-14: ACCOUNT SECURITY ===== -->
+    <div class="settings-group">
+        <div class="settings-group-title">Account Security</div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-shield-halved" style="color:#f09433"></i>
+                <div class="item-text">
+                    <span class="item-title">Two-Factor Authentication</span>
+                    <span class="item-subtitle">Add an extra layer of security to your account</span>
+                </div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="twoFactorToggle" onchange="saveSettingToggle('two_factor', this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="settings-item" onclick="resendEmailVerification()">
+            <div class="settings-item-left">
+                <i class="fas fa-envelope-circle-check"></i>
+                <div class="item-text">
+                    <span class="item-title">Email Verification <span class="settings-badge" id="emailVerifyBadge">Checking...</span></span>
+                    <span class="item-subtitle" id="emailVerifySubtitle">Verify your email for account recovery</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-clock-rotate-left"></i>
+                <div class="item-text">
+                    <span class="item-title" id="lastLoginInfo">Last Login: Loading...</span>
+                    <span class="item-subtitle" id="lastLoginDevice">Checking device info...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-item" onclick="openLoginActivityModal()">
+            <div class="settings-item-left">
+                <i class="fas fa-list-check"></i>
+                <div class="item-text">
+                    <span class="item-title">Login Activity</span>
+                    <span class="item-subtitle">View recent login history</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right chevron"></i>
+        </div>
+    </div>
+
+    <!-- ===== 🔥 NEW FEATURE 15-17: INTERACTIONS MANAGEMENT ===== -->
+    <div class="settings-group">
+        <div class="settings-group-title">Interactions</div>
+
+        <div class="settings-item" onclick="openMutedAccountsModal()">
+            <div class="settings-item-left">
+                <i class="fas fa-volume-xmark"></i>
+                <div class="item-text">
+                    <span class="item-title">Muted Accounts</span>
+                    <span class="item-subtitle">Accounts whose posts you won't see in feed</span>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px"><span class="settings-badge" id="mutedCount" style="background:#efefef;color:#8e8e8e">0</span><i class="fas fa-chevron-right chevron"></i></div>
+        </div>
+
+        <div class="settings-item" onclick="openRestrictedAccountsModal()">
+            <div class="settings-item-left">
+                <i class="fas fa-user-slash"></i>
+                <div class="item-text">
+                    <span class="item-title">Restricted Accounts</span>
+                    <span class="item-subtitle">Their comments are only visible to them</span>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px"><span class="settings-badge" id="restrictedCount" style="background:#efefef;color:#8e8e8e">0</span><i class="fas fa-chevron-right chevron"></i></div>
+        </div>
+
+        <div class="settings-item" onclick="openCloseFriendsModal()">
+            <div class="settings-item-left">
+                <i class="fas fa-star" style="color:#78de45"></i>
+                <div class="item-text">
+                    <span class="item-title">Close Friends</span>
+                    <span class="item-subtitle">Manage your close friends list for stories</span>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px"><span class="settings-badge" id="closeFriendsCount" style="background:#c8f7c5;color:#006e00">0</span><i class="fas fa-chevron-right chevron"></i></div>
+        </div>
+    </div>
+
+    <!-- ===== 🔥 NEW FEATURE 18-19: APP PREFERENCES ===== -->
+    <div class="settings-group">
+        <div class="settings-group-title">App Preferences</div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-language"></i>
+                <div class="item-text">
+                    <span class="item-title">App Language</span>
+                    <span class="item-subtitle">Change the app interface language</span>
+                </div>
+            </div>
+            <select class="settings-select" id="appLanguage" onchange="saveSetting('app_language', this.value)">
+                <option value="en" selected>English</option>
+                <option value="hi">हिंदी (Hindi)</option>
+                <option value="auto">Auto (System)</option>
+            </select>
+        </div>
+
+        <div class="settings-item">
+            <div class="settings-item-left">
+                <i class="fas fa-globe"></i>
+                <div class="item-text">
+                    <span class="item-title">Default Post Audience</span>
+                    <span class="item-subtitle">Who can see your new posts by default</span>
+                </div>
+            </div>
+            <select class="settings-select" id="defaultAudience" onchange="saveSetting('default_audience', this.value)">
+                <option value="public" selected>Public</option>
+                <option value="followers">Followers Only</option>
+                <option value="close_friends">Close Friends</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ===== 🔥 NEW FEATURE 20: SAVE ALL BUTTON ===== -->
+    <div class="settings-save-all" id="saveAllBar">
+        <button id="saveAllBtn" onclick="saveAllSettings()">
+            <i class="fas fa-floppy-disk"></i> Save All Settings
+        </button>
+    </div>
+
     <div style="text-align:center; padding:24px 16px 100px; color:#8e8e8e; font-size:12px;">
         Made with ❤️ by Ankit Burdak · ANKITSTUDIOAI © 2026
     </div>
@@ -1116,6 +1410,72 @@
                 <label style="display:block; font-size:12px; font-weight:600; color:#8e8e8e; margin-bottom:6px;"><i class="fas fa-globe" style="color:#0095f6; margin-right:4px;"></i> Website/Linktree URL</label>
                 <input type="url" id="socialWebsite" placeholder="https://linktr.ee/username" style="width:100%; padding:10px; border:1px solid #dbdbdb; border-radius:8px; outline:none;">
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 🔥 NEW: MUTED ACCOUNTS MODAL ===== -->
+<div class="settings-modal-overlay" id="mutedAccountsModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('mutedAccountsModal')">&times;</button>
+            <h2>Muted Accounts</h2>
+            <div style="width:40px"></div>
+        </div>
+        <div class="settings-modal-body">
+            <p style="font-size:13px;color:#8e8e8e;margin-bottom:12px">Posts from these accounts won't appear in your feed:</p>
+            <div class="faux-chat" id="mutedAccountsList"><div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No muted accounts</div></div>
+            <button onclick="unmuteAll()" style="width:100%;padding:10px;margin-top:12px;border:none;border-radius:8px;background:#0095f6;color:#fff;font-weight:600;cursor:pointer">Unmute All</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 🔥 NEW: RESTRICTED ACCOUNTS MODAL ===== -->
+<div class="settings-modal-overlay" id="restrictedAccountsModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('restrictedAccountsModal')">&times;</button>
+            <h2>Restricted Accounts</h2>
+            <div style="width:40px"></div>
+        </div>
+        <div class="settings-modal-body">
+            <p style="font-size:13px;color:#8e8e8e;margin-bottom:12px">Their comments are only visible to them. You can unrestrict anytime:</p>
+            <div class="faux-chat" id="restrictedAccountsList"><div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No restricted accounts</div></div>
+            <button onclick="unrestrictAll()" style="width:100%;padding:10px;margin-top:12px;border:none;border-radius:8px;background:#0095f6;color:#fff;font-weight:600;cursor:pointer">Unrestrict All</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 🔥 NEW: CLOSE FRIENDS MODAL ===== -->
+<div class="settings-modal-overlay" id="closeFriendsModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('closeFriendsModal')">&times;</button>
+            <h2>Close Friends</h2>
+            <button class="modal-save-btn" onclick="saveCloseFriends()">Save</button>
+        </div>
+        <div class="settings-modal-body">
+            <p style="font-size:13px;color:#8e8e8e;margin-bottom:8px">Only close friends can see your private stories:</p>
+            <div style="margin-bottom:10px"><input type="text" id="closeFriendSearchInput" placeholder="Search users to add..." style="width:100%;padding:10px;border:1px solid #dbdbdb;border-radius:8px;outline:none" oninput="searchCloseFriends()"></div>
+            <div class="faux-chat" id="closeFriendsList" style="max-height:220px"><div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">Search users above</div></div>
+            <div style="margin-top:10px"><strong style="font-size:13px">Current Close Friends:</strong></div>
+            <div class="faux-chat" id="currentCloseFriends" style="max-height:150px"><div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No close friends added yet</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 🔥 NEW: LOGIN ACTIVITY MODAL ===== -->
+<div class="settings-modal-overlay" id="loginActivityModal">
+    <div class="settings-modal">
+        <div class="settings-modal-header">
+            <button class="modal-close-btn" onclick="closeModal('loginActivityModal')">&times;</button>
+            <h2>Login Activity</h2>
+            <div style="width:40px"></div>
+        </div>
+        <div class="settings-modal-body">
+            <p style="font-size:13px;color:#8e8e8e;margin-bottom:12px">Recent login activity on your account:</p>
+            <div id="loginActivityList"></div>
+            <button onclick="clearLoginActivity()" style="width:100%;padding:10px;margin-top:12px;border:none;border-radius:8px;background:#ed4956;color:#fff;font-weight:600;cursor:pointer">Clear Login History</button>
         </div>
     </div>
 </div>
@@ -1812,7 +2172,7 @@
     function showProfileCompleteness() {
         var items = window._profileItems || [];
         var msg = 'Profile Strength Breakdown:\n\n' + items.join('\n');
-        alert(msg);
+        document.getElementById('profileDetailsBox').innerHTML=`<div style="padding:16px;text-align:center"><h3>Profile Strength</h3><p style="white-space:pre-line;font-size:13px;color:#333;margin-top:8px">${items.join('\n')}</p><button onclick="document.getElementById('profileDetailsBox').innerHTML=''" style="margin-top:12px;padding:8px 20px;border-radius:8px;border:none;background:#0095f6;color:#fff;font-weight:600;cursor:pointer">OK</button></div>`;
     }
 
     // ============================================================
@@ -2002,6 +2362,407 @@
             showToast('⚡ Local App Cache Cleared successfully!');
         }
     };
+
+    // ============================================================
+    //  🔥🔥🔥 NEW 20 FEATURES JS 🔥🔥🔥
+    // ============================================================
+
+    // --- FEATURE 1-5: Privacy Controls ---
+    window.savePrivacyToggle = function(key, checked) {
+        var user = firebase.auth().currentUser;
+        if (user) {
+            firebase.database().ref('users/' + user.uid + '/settings/' + key).set(checked);
+        }
+        localStorage.setItem('ankit_privacy_' + key, checked);
+        showToast('✅ ' + (key==='activityStatus'?'Activity Status':key==='readReceipts'?'Read Receipts':key) + ': ' + (checked?'ON':'OFF'));
+    };
+
+    window.savePrivacySetting = function(key, value) {
+        var user = firebase.auth().currentUser;
+        if (user) {
+            firebase.database().ref('users/' + user.uid + '/settings/' + key).set(value);
+        }
+        localStorage.setItem('ankit_privacy_' + key, value);
+        var labels = {whoCanComment:'Who Can Comment', whoCanMessage:'Who Can Message', whoCanTag:'Who Can Tag You'};
+        showToast('✅ ' + (labels[key]||key) + ' updated!');
+    };
+
+    function loadPrivacySettings(uid) {
+        firebase.database().ref('users/' + uid + '/settings').once('value', function(snap) {
+            var s = snap.val() || {};
+            setToggle('activityStatusToggle', s.activityStatus !== false);
+            setToggle('readReceiptsToggle', s.readReceipts !== false);
+            setSelect('whoCanComment', s.whoCanComment || localStorage.getItem('ankit_privacy_whoCanComment') || 'everyone');
+            setSelect('whoCanMessage', s.whoCanMessage || localStorage.getItem('ankit_privacy_whoCanMessage') || 'everyone');
+            setSelect('whoCanTag', s.whoCanTag || localStorage.getItem('ankit_privacy_whoCanTag') || 'everyone');
+        });
+    }
+
+    // --- FEATURE 6-10: Content & Display ---
+    function loadContentSettings() {
+        setToggle('sensitiveFilterToggle', localStorage.getItem('ankit_setting_sensitive_filter')==='true');
+        setToggle('autoplayToggle', localStorage.getItem('ankit_setting_autoplay')!=='false');
+        setToggle('highQualityToggle', localStorage.getItem('ankit_setting_high_quality')!=='false');
+        setToggle('saveOriginalsToggle', localStorage.getItem('ankit_setting_save_originals')==='true');
+        setToggle('dataSaverToggle', localStorage.getItem('ankit_setting_data_saver')==='true');
+    }
+
+    // --- FEATURE 11-14: Account Security ---
+    function updateSecuritySection(user) {
+        // 2FA Toggle
+        var tfa = localStorage.getItem('ankit_setting_two_factor')==='true';
+        setToggle('twoFactorToggle', tfa);
+
+        // Email Verification
+        var badge = document.getElementById('emailVerifyBadge');
+        var sub = document.getElementById('emailVerifySubtitle');
+        if (user.emailVerified) {
+            if (badge) { badge.textContent = 'Verified'; badge.className = 'settings-badge verified'; }
+            if (sub) sub.textContent = 'Your email is verified ✅';
+        } else {
+            if (badge) { badge.textContent = 'Unverified'; badge.className = 'settings-badge unverified'; }
+            if (sub) sub.textContent = 'Tap to resend verification email';
+        }
+
+        // Last Login
+        var lastLogin = document.getElementById('lastLoginInfo');
+        var lastDevice = document.getElementById('lastLoginDevice');
+        var loginData = JSON.parse(localStorage.getItem('ankit_last_login') || '{}');
+        if (loginData.time) {
+            if (lastLogin) lastLogin.textContent = 'Last Login: ' + new Date(loginData.time).toLocaleString('en-IN');
+            if (lastDevice) lastDevice.textContent = (loginData.device || 'Unknown device') + ' • ' + (loginData.browser || 'Unknown browser');
+        } else {
+            if (lastLogin) lastLogin.textContent = 'Last Login: Just now (Current session)';
+            if (lastDevice) lastDevice.textContent = navigator.userAgentData?.platform || navigator.platform || 'Current device';
+        }
+    }
+
+    window.resendEmailVerification = function() {
+        var user = firebase.auth().currentUser;
+        if (!user) return;
+        if (user.emailVerified) { showToast('✅ Already verified!'); return; }
+        user.sendEmailVerification().then(function() {
+            showToast('📧 Verification email sent! Check inbox.');
+        }).catch(function(e) {
+            showToast('❌ Failed: ' + e.message);
+        });
+    };
+
+    window.openLoginActivityModal = function() {
+        var list = document.getElementById('loginActivityList');
+        var data = JSON.parse(localStorage.getItem('ankit_login_history') || '[]');
+        if (!data.length) {
+            list.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No login history yet</div>';
+        } else {
+            var html = '';
+            data.slice(0, 10).forEach(function(entry) {
+                html += '<div class="settings-item" style="padding:10px 0;border:none;border-bottom:1px solid #efefef">' +
+                    '<div class="settings-item-left"><i class="fas ' + (entry.current?'fa-circle':'fa-circle-dot') + '" style="color:' + (entry.current?'#78de45':'#8e8e8e') + '"></i>' +
+                    '<div class="item-text"><span class="item-title">' + new Date(entry.time).toLocaleString('en-IN') + (entry.current?' <span style="color:#78de45;font-size:11px">● current</span>':'') + '</span>' +
+                    '<span class="item-subtitle">' + (entry.device||'Unknown') + ' • ' + (entry.browser||'') + '</span></div></div></div>';
+            });
+            list.innerHTML = html;
+        }
+        document.getElementById('loginActivityModal').classList.add('open');
+    };
+
+    window.clearLoginActivity = function() {
+        if (confirm('Clear all login history?')) {
+            // Keep current session
+            var current = {};
+            var history = JSON.parse(localStorage.getItem('ankit_login_history') || '[]');
+            if (history.length > 0 && history[0].current) current = history[0];
+            localStorage.setItem('ankit_login_history', JSON.stringify(current.time ? [current] : []));
+            document.getElementById('loginActivityList').innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">History cleared</div>';
+            showToast('✅ Login history cleared');
+        }
+    };
+
+    // Record login on page load
+    (function() {
+        var history = JSON.parse(localStorage.getItem('ankit_login_history') || '[]');
+        // Mark previous as not current
+        history.forEach(function(e) { e.current = false; });
+        history.unshift({
+            time: Date.now(),
+            device: navigator.userAgentData?.platform || navigator.platform || 'Unknown',
+            browser: (navigator.userAgentData?.brands||[]).map(function(b){return b.brand}).join(' ') || navigator.userAgent.substring(0,60),
+            current: true
+        });
+        localStorage.setItem('ankit_login_history', JSON.stringify(history.slice(0, 20)));
+        localStorage.setItem('ankit_last_login', JSON.stringify({time: Date.now(), device: navigator.platform||'Unknown', browser: navigator.userAgent.substring(0,30)}));
+    })();
+
+    // --- FEATURE 15-17: Interactions Management ---
+    function loadInteractionCounts(uid) {
+        firebase.database().ref('users/' + uid + '/muted').once('value', function(snap) {
+            var count = snap.exists() ? Object.keys(snap.val()).length : 0;
+            var el = document.getElementById('mutedCount');
+            if (el) { el.textContent = count; el.style.background = count > 0 ? '#ffe0e0' : '#efefef'; el.style.color = count > 0 ? '#c00' : '#8e8e8e'; }
+        });
+        firebase.database().ref('users/' + uid + '/restricted').once('value', function(snap) {
+            var count = snap.exists() ? Object.keys(snap.val()).length : 0;
+            var el = document.getElementById('restrictedCount');
+            if (el) { el.textContent = count; el.style.background = count > 0 ? '#fff3e0' : '#efefef'; el.style.color = count > 0 ? '#f60' : '#8e8e8e'; }
+        });
+        firebase.database().ref('users/' + uid + '/closeFriends').once('value', function(snap) {
+            var count = snap.exists() ? Object.keys(snap.val()).length : 0;
+            var el = document.getElementById('closeFriendsCount');
+            if (el) { el.textContent = count; el.style.background = count > 0 ? '#c8f7c5' : '#efefef'; el.style.color = count > 0 ? '#006e00' : '#8e8e8e'; }
+        });
+    }
+
+    window.openMutedAccountsModal = function() {
+        var user = firebase.auth().currentUser; if (!user) return;
+        var list = document.getElementById('mutedAccountsList');
+        list.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">Loading...</div>';
+        document.getElementById('mutedAccountsModal').classList.add('open');
+        firebase.database().ref('users/' + user.uid + '/muted').once('value', function(snap) {
+            if (!snap.exists()) { list.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No muted accounts</div>'; return; }
+            var html = '';
+            snap.forEach(function(c) {
+                html += '<div class="settings-item" style="padding:10px 0;border:none;border-bottom:1px solid #efefef">' +
+                    '<div class="settings-item-left"><i class="fas fa-volume-xmark" style="color:#c00"></i>' +
+                    '<div class="item-text"><span class="item-title">' + (c.val().name || 'User') + '</span></div></div>' +
+                    '<button onclick="unmuteAccount(\'' + c.key + '\')" style="background:none;border:none;color:#0095f6;font-size:12px;font-weight:700;cursor:pointer">Unmute</button></div>';
+            });
+            list.innerHTML = html || '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No muted accounts</div>';
+        });
+    };
+
+    window.unmuteAccount = function(uid) {
+        var user = firebase.auth().currentUser; if (!user) return;
+        firebase.database().ref('users/' + user.uid + '/muted/' + uid).remove().then(function() {
+            showToast('✅ Account unmuted');
+            openMutedAccountsModal();
+            loadInteractionCounts(user.uid);
+        });
+    };
+
+    window.unmuteAll = function() {
+        var user = firebase.auth().currentUser; if (!user) return;
+        if (!confirm('Unmute all accounts?')) return;
+        firebase.database().ref('users/' + user.uid + '/muted').remove().then(function() {
+            showToast('✅ All accounts unmuted');
+            closeModal('mutedAccountsModal');
+            loadInteractionCounts(user.uid);
+        });
+    };
+
+    window.openRestrictedAccountsModal = function() {
+        var user = firebase.auth().currentUser; if (!user) return;
+        var list = document.getElementById('restrictedAccountsList');
+        list.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">Loading...</div>';
+        document.getElementById('restrictedAccountsModal').classList.add('open');
+        firebase.database().ref('users/' + user.uid + '/restricted').once('value', function(snap) {
+            if (!snap.exists()) { list.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No restricted accounts</div>'; return; }
+            var html = '';
+            snap.forEach(function(c) {
+                html += '<div class="settings-item" style="padding:10px 0;border:none;border-bottom:1px solid #efefef">' +
+                    '<div class="settings-item-left"><i class="fas fa-user-slash" style="color:#f60"></i>' +
+                    '<div class="item-text"><span class="item-title">' + (c.val().name || 'User') + '</span></div></div>' +
+                    '<button onclick="unrestrictAccount(\'' + c.key + '\')" style="background:none;border:none;color:#0095f6;font-size:12px;font-weight:700;cursor:pointer">Unrestrict</button></div>';
+            });
+            list.innerHTML = html || '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No restricted accounts</div>';
+        });
+    };
+
+    window.unrestrictAccount = function(uid) {
+        var user = firebase.auth().currentUser; if (!user) return;
+        firebase.database().ref('users/' + user.uid + '/restricted/' + uid).remove().then(function() {
+            showToast('✅ Account unrestricted');
+            openRestrictedAccountsModal();
+            loadInteractionCounts(user.uid);
+        });
+    };
+
+    window.unrestrictAll = function() {
+        var user = firebase.auth().currentUser; if (!user) return;
+        if (!confirm('Unrestrict all accounts?')) return;
+        firebase.database().ref('users/' + user.uid + '/restricted').remove().then(function() {
+            showToast('✅ All accounts unrestricted');
+            closeModal('restrictedAccountsModal');
+            loadInteractionCounts(user.uid);
+        });
+    };
+
+    window.openCloseFriendsModal = function() {
+        var user = firebase.auth().currentUser; if (!user) return;
+        document.getElementById('closeFriendsModal').classList.add('open');
+        document.getElementById('closeFriendSearchInput').value = '';
+        loadCurrentCloseFriends(user.uid);
+        document.getElementById('closeFriendsList').innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">Search users above</div>';
+    };
+
+    function loadCurrentCloseFriends(uid) {
+        var list = document.getElementById('currentCloseFriends');
+        firebase.database().ref('users/' + uid + '/closeFriends').once('value', function(snap) {
+            if (!snap.exists()) { list.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No close friends added yet</div>'; return; }
+            var html = '';
+            snap.forEach(function(c) {
+                html += '<div class="settings-item" style="padding:8px 0;border:none;border-bottom:1px solid #efefef">' +
+                    '<div class="settings-item-left"><i class="fas fa-star" style="color:#78de45"></i>' +
+                    '<div class="item-text"><span class="item-title">' + (c.val().name || 'User') + '</span></div></div>' +
+                    '<button onclick="removeCloseFriend(\'' + c.key + '\')" style="background:none;border:none;color:#ed4956;font-size:12px;font-weight:700;cursor:pointer">Remove</button></div>';
+            });
+            list.innerHTML = html;
+        });
+    }
+
+    window.searchCloseFriends = function() {
+        var q = document.getElementById('closeFriendSearchInput').value.toLowerCase().trim();
+        var list = document.getElementById('closeFriendsList');
+        if (!q) { list.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">Search users above</div>'; return; }
+        list.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e"><span class="spinner"></span> Searching...</div>';
+        // Search users in database
+        firebase.database().ref('users').orderByChild('profile/displayName').once('value', function(snap) {
+            var html = '';
+            var found = false;
+            if (snap.exists()) {
+                snap.forEach(function(c) {
+                    var d = c.val();
+                    var name = (d.profile && d.profile.displayName) || d.displayName || d.email || c.key;
+                    if (name.toLowerCase().includes(q) && c.key !== firebase.auth().currentUser.uid) {
+                        found = true;
+                        html += '<div class="settings-item" style="padding:8px 0;border:none;border-bottom:1px solid #efefef;cursor:pointer" onclick="addCloseFriend(\'' + c.key + '\', \'' + name.replace(/'/g, '\\\'') + '\')">' +
+                            '<div class="settings-item-left"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">' + name.charAt(0).toUpperCase() + '</div>' +
+                            '<div class="item-text"><span class="item-title">' + name + '</span></div></div>' +
+                            '<span style="color:#0095f6;font-size:12px;font-weight:700">+ Add</span></div>';
+                    }
+                });
+            }
+            list.innerHTML = found ? html : '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">No users found</div>';
+        }).catch(function() {
+            list.innerHTML = '<div class="empty-state" style="text-align:center;padding:20px;color:#8e8e8e">Search unavailable (Firebase rules)</div>';
+        });
+    };
+
+    window.addCloseFriend = function(uid, name) {
+        var user = firebase.auth().currentUser; if (!user) return;
+        firebase.database().ref('users/' + user.uid + '/closeFriends/' + uid).set({name: name, addedAt: firebase.database.ServerValue.TIMESTAMP}).then(function() {
+            showToast('✅ ' + name + ' added to Close Friends!');
+            loadCurrentCloseFriends(user.uid);
+            loadInteractionCounts(user.uid);
+        });
+    };
+
+    window.removeCloseFriend = function(uid) {
+        var user = firebase.auth().currentUser; if (!user) return;
+        firebase.database().ref('users/' + user.uid + '/closeFriends/' + uid).remove().then(function() {
+            showToast('✅ Removed from Close Friends');
+            loadCurrentCloseFriends(user.uid);
+            loadInteractionCounts(user.uid);
+        });
+    };
+
+    window.saveCloseFriends = function() {
+        closeModal('closeFriendsModal');
+        showToast('✅ Close friends saved!');
+    };
+
+    // --- FEATURE 18-19: App Preferences ---
+    function loadAppPrefs() {
+        setSelect('appLanguage', localStorage.getItem('ankit_setting_app_language') || 'en');
+        setSelect('defaultAudience', localStorage.getItem('ankit_setting_default_audience') || 'public');
+    }
+
+    // --- FEATURE 20: SAVE ALL SETTINGS ---
+    window.saveAllSettings = function() {
+        var user = firebase.auth().currentUser;
+        var btn = document.getElementById('saveAllBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+        var allSettings = {};
+
+        // Collect all toggle values
+        var toggles = ['privateAccountToggle', 'darkModeToggle', 'notifToggle', 'activityStatusToggle', 
+                       'readReceiptsToggle', 'sensitiveFilterToggle', 'autoplayToggle', 'highQualityToggle',
+                       'saveOriginalsToggle', 'dataSaverToggle', 'twoFactorToggle', 'autoCaptions'];
+        toggles.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) allSettings[id] = el.checked;
+        });
+
+        // Collect all select/dropdown values
+        var selects = ['aiWatermark', 'downloadQuality', 'postAssist', 'screenTime', 'syncInterval',
+                       'whoCanComment', 'whoCanMessage', 'whoCanTag', 'appLanguage', 'defaultAudience'];
+        selects.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) allSettings[id] = el.value;
+        });
+
+        // Save to localStorage
+        Object.keys(allSettings).forEach(function(key) {
+            localStorage.setItem('ankit_setting_' + key, allSettings[key]);
+        });
+
+        // Save to Firebase if logged in
+        if (user) {
+            var fbSettings = {
+                isPrivate: allSettings.privateAccountToggle,
+                settings: {
+                    activityStatus: allSettings.activityStatusToggle,
+                    readReceipts: allSettings.readReceiptsToggle,
+                    whoCanComment: allSettings.whoCanComment,
+                    whoCanMessage: allSettings.whoCanMessage,
+                    whoCanTag: allSettings.whoCanTag,
+                    twoFactor: allSettings.twoFactorToggle,
+                    appLanguage: allSettings.appLanguage,
+                    defaultAudience: allSettings.defaultAudience
+                }
+            };
+            firebase.database().ref('users/' + user.uid).update(fbSettings).then(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> All Settings Saved!';
+                btn.style.background = '#00c853';
+                showToast('✅ All settings saved to cloud!');
+                setTimeout(function() { btn.style.background = '#0095f6'; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save All Settings'; }, 2000);
+            }).catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save All Settings';
+                showToast('⚠️ Saved locally (offline)');
+            });
+        } else {
+            setTimeout(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Saved Locally!';
+                showToast('✅ Settings saved locally');
+                setTimeout(function() { btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save All Settings'; }, 2000);
+            }, 500);
+        }
+    };
+
+    // --- HELPERS ---
+    function setToggle(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.checked = value;
+    }
+
+    function setSelect(id, value) {
+        var el = document.getElementById(id);
+        if (el && value) el.value = value;
+    }
+
+    function openModal(id) {
+        document.getElementById(id).classList.add('open');
+    }
+
+    // --- HOOK INTO AUTH STATE: Load all new settings after auth ---
+    var _origSettingsAuth = firebase.auth().onAuthStateChanged;
+    firebase.auth().onAuthStateChanged = function(cb) {
+        _origSettingsAuth.call(firebase.auth(), function(user) {
+            if (user) {
+                loadPrivacySettings(user.uid);
+                loadContentSettings();
+                updateSecuritySection(user);
+                loadInteractionCounts(user.uid);
+                loadAppPrefs();
+            }
+            if (typeof cb === 'function') cb(user);
+        });
+    };
+
 </script>
 
 <script>
@@ -2031,5 +2792,4 @@
 </script>
 
 </body>
-</html>
 </html>

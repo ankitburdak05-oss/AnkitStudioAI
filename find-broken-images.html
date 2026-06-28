@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Broken Images - ANKITSTUDIOAI</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000;padding:20px;max-width:700px;margin:0 auto}
+        h2{font-size:18px;margin-bottom:16px}
+        button{padding:12px 24px;background:#0095f6;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;margin-bottom:16px}
+        button.delete-btn{background:#ed4956;padding:6px 14px;font-size:12px;margin:0}
+        .post-row{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid #efefef;border-radius:8px;margin-bottom:8px}
+        .post-row img{width:60px;height:60px;object-fit:cover;border-radius:6px;background:#f5f5f5}
+        .post-row .info{flex:1}
+        .post-row .info .pid{font-size:11px;color:#8e8e8e;word-break:break-all}
+        .post-row .info .status{font-size:13px;font-weight:600}
+        .status-ok{color:#00c853}
+        .status-broken{color:#ed4956}
+        .status-checking{color:#f09433}
+        #log{padding:16px;background:#fafafa;border-radius:8px;font-size:13px;margin-top:16px;max-height:400px;overflow-y:auto;white-space:pre-wrap}
+        #summary{font-size:14px;margin-bottom:12px;padding:12px;background:#f0f0f0;border-radius:8px;display:none}
+    </style>
+</head>
+<body>
+    <h2>🔍 Find Broken Images in Firebase Posts</h2>
+    <p style="color:#8e8e8e;margin-bottom:16px;font-size:14px">Yeh tool saare posts scan karega aur batayega kaun-kaun si posts ki images broken hain.</p>
+    
+    <button id="scanBtn" onclick="scanPosts()">Scan All Posts</button>
+    <div id="summary"></div>
+    <div id="results"></div>
+    <div id="log">Ready. "Scan All Posts" button dabao.</div>
+
+<script>
+const db = firebase.database();
+let brokenCount = 0, okCount = 0, totalCount = 0;
+
+function log(msg) {
+    document.getElementById('log').textContent += '\n' + msg;
+}
+
+async function scanPosts() {
+    const btn = document.getElementById('scanBtn');
+    btn.disabled = true;
+    btn.textContent = 'Scanning...';
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('summary').style.display = 'none';
+    document.getElementById('log').textContent = 'Starting scan...\n';
+    brokenCount = 0; okCount = 0; totalCount = 0;
+
+    try {
+        const snap = await db.ref('posts').once('value');
+        if (!snap.exists()) {
+            log('No posts found in database.');
+            btn.disabled = false;
+            btn.textContent = 'Scan All Posts';
+            return;
+        }
+
+        const posts = [];
+        snap.forEach(c => posts.push({ key: c.key, data: c.val() }));
+        totalCount = posts.length;
+        log('Found ' + totalCount + ' posts. Checking images...\n');
+
+        let html = '';
+        for (const post of posts) {
+            const d = post.data;
+            const imageUrl = d.imageUrl || '';
+            const caption = (d.caption || '').substring(0, 50);
+            const author = d.authorName || 'Unknown';
+
+            if (!imageUrl) {
+                okCount++;
+                html += buildRow(post.key, imageUrl, caption, author, 'ok', 'No image');
+                continue;
+            }
+
+            // Check if image loads
+            html += buildRow(post.key, imageUrl, caption, author, 'checking', 'Checking...');
+            updateResults(html);
+            
+            const isBroken = await checkImage(imageUrl);
+            if (isBroken) {
+                brokenCount++;
+                html = html.replace(
+                    'status-checking">Checking...',
+                    'status-broken">❌ BROKEN'
+                );
+                log('BROKEN: ' + post.key + ' -> ' + imageUrl);
+            } else {
+                okCount++;
+                html = html.replace(
+                    'status-checking">Checking...',
+                    'status-ok">✅ OK'
+                );
+            }
+            updateResults(html);
+        }
+
+        // Summary
+        const summary = document.getElementById('summary');
+        summary.style.display = 'block';
+        summary.innerHTML = `
+            <strong>Scan Complete!</strong><br>
+            Total Posts: <strong>${totalCount}</strong> | 
+            ✅ OK: <strong>${okCount}</strong> | 
+            ❌ Broken: <strong style="color:#ed4956">${brokenCount}</strong>
+        `;
+        log('\n=== DONE ===');
+        log('Total: ' + totalCount + ' | OK: ' + okCount + ' | Broken: ' + brokenCount);
+
+    } catch (err) {
+        log('Error: ' + err.message);
+    }
+    btn.disabled = false;
+    btn.textContent = 'Scan All Posts';
+}
+
+function checkImage(url) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(false);
+        img.onerror = () => resolve(true);
+        img.src = url;
+        setTimeout(() => resolve(true), 5000);
+    });
+}
+
+function buildRow(key, url, caption, author, statusClass, statusText) {
+    const imgSrc = url && !url.includes('placeholder') ? url : 'https://via.placeholder.com/60?text=No+Img';
+    return `<div class="post-row" id="row-${key}">
+        <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/60/eee/999?text=Broken'">
+        <div class="info">
+            <div class="status ${statusClass}">${statusText}</div>
+            <div style="font-size:13px">${escHTML(caption)}</div>
+            <div style="font-size:11px;color:#8e8e8e">by ${escHTML(author)}</div>
+            <div class="pid">${key}</div>
+        </div>
+        <button class="delete-btn" onclick="deleteThisPost('${key}')">🗑 Delete</button>
+    </div>`;
+}
+
+function updateResults(html) {
+    document.getElementById('results').innerHTML = html;
+}
+
+function escHTML(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+}
+
+async function deleteThisPost(postId) {
+    if (!confirm('Delete this post permanently?')) return;
+    try {
+        await db.ref('posts/' + postId).remove();
+        const row = document.getElementById('row-' + postId);
+        if (row) row.style.display = 'none';
+        log('Deleted: ' + postId);
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+</script>
+</body>
+</html>

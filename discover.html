@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Discover People - ANKITSTUDIOAI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#000;overflow-x:hidden}
+        body.dark-mode{background:#000!important;color:#fff!important}
+        .disc-top{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #efefef;position:sticky;top:0;background:#fff;z-index:100;gap:12px}
+        body.dark-mode .disc-top{background:#000;border-color:#262626}
+        .disc-top .back-btn{font-size:20px;cursor:pointer;background:none;border:none;color:inherit}
+        .disc-top h2{font-size:16px;font-weight:700;flex:1}
+        .disc-container{max-width:600px;margin:0 auto;padding:0;padding-bottom:80px}
+        .disc-section{padding:16px}
+        .disc-section-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+        .disc-section-title .see-all{font-size:13px;color:#0095f6;font-weight:600;cursor:pointer}
+        .disc-user-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #fafafa}
+        body.dark-mode .disc-user-row{border-color:#1a1a1a}
+        .disc-user-av{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+        .disc-user-av img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+        .disc-user-info{flex:1;min-width:0}
+        .disc-user-name{font-size:14px;font-weight:600}
+        .disc-user-sub{font-size:12px;color:#8e8e8e;margin-top:2px}
+        .disc-follow-btn{padding:6px 16px;background:#0095f6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
+        .disc-follow-btn.following{background:#efefef;color:#000}
+        body.dark-mode .disc-follow-btn.following{background:#262626;color:#fff}
+        .disc-categories{display:flex;gap:8px;overflow-x:auto;padding:4px 0;margin-bottom:8px;scrollbar-width:none}
+        .disc-categories::-webkit-scrollbar{display:none}
+        .disc-chip{padding:8px 16px;background:#efefef;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;border:none;color:#000;transition:.15s}
+        body.dark-mode .disc-chip{background:#262626;color:#fff}
+        .disc-chip.active{background:#0095f6;color:#fff}
+        .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#262626;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:999999;opacity:0;transition:.3s}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    </style>
+</head>
+<body>
+<div class="disc-top">
+    <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+    <h2>Discover People</h2>
+</div>
+
+<div class="disc-container">
+    <div class="disc-section">
+        <div class="disc-categories" id="discChips">
+            <button class="disc-chip active" onclick="filterDiscover('all',this)">All</button>
+            <button class="disc-chip" onclick="filterDiscover('ai',this)">AI Creators</button>
+            <button class="disc-chip" onclick="filterDiscover('photo',this)">Photographers</button>
+            <button class="disc-chip" onclick="filterDiscover('design',this)">Designers</button>
+            <button class="disc-chip" onclick="filterDiscover('reel',this)">Reel Makers</button>
+        </div>
+    </div>
+    <div class="disc-section">
+        <div class="disc-section-title">Suggested for you <span class="see-all" onclick="refreshSuggestions()">Refresh</span></div>
+        <div id="suggestedUsers">
+            <div style="text-align:center;padding:40px;color:#8e8e8e"><i class="fas fa-circle-notch fa-spin"></i><br><br>Loading suggestions...</div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="discToast"></div>
+
+<script>
+if(localStorage.getItem('ankitstudio_darkmode')==='true')document.body.classList.add('dark-mode');
+const db=firebase.database();
+let _myUid=null,_allUsers=[],_filter='all';
+
+function esc(s){const d=document.createElement('div');d.appendChild(document.createTextNode(s||''));return d.innerHTML}
+function toast(msg){const t=document.getElementById('discToast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+
+firebase.auth().onAuthStateChanged(function(user){
+    if(!user){window.location.href='index.html';return}
+    _myUid=user.uid;
+    loadAllUsers();
+});
+
+function loadAllUsers(){
+    db.ref('users').once('value',function(snap){
+        if(!snap.exists()){document.getElementById('suggestedUsers').innerHTML='<div style="text-align:center;padding:40px;color:#8e8e8e">No users found</div>';return}
+        _allUsers=[];
+        snap.forEach(function(c){
+            if(c.key===_myUid)return;
+            var d=c.val(),p=d.profile||{};
+            _allUsers.push({
+                uid:c.key,
+                name:p.displayName||d.displayName||d.name||(d.email?d.email.split('@')[0]:'User'),
+                bio:p.bio||'',
+                photo:p.photoURL||d.photoURL||null,
+                category:d.category||'ai',
+                followersCount:d.followers?Object.keys(d.followers).length:0
+            });
+        });
+        _allUsers.sort(function(a,b){return b.followersCount-a.followersCount});
+        renderDiscoverUsers();
+    });
+}
+
+function renderDiscoverUsers(){
+    var list=document.getElementById('suggestedUsers');
+    var filtered=_filter==='all'?_allUsers:_allUsers.filter(function(u){return u.category===_filter});
+    if(filtered.length===0){list.innerHTML='<div style="text-align:center;padding:40px;color:#8e8e8e"><i class="fas fa-users"></i><br><br>No users in this category</div>';return}
+    var html='';
+    filtered.slice(0,30).forEach(function(u){
+        var initial=u.name.charAt(0).toUpperCase();
+        var avHtml=u.photo?'<img src="'+esc(u.photo)+'" alt="">':initial;
+        html+='<div class="disc-user-row">'+
+            '<div class="disc-user-av">'+avHtml+'</div>'+
+            '<div class="disc-user-info"><div class="disc-user-name">'+esc(u.name)+'</div>'+
+            '<div class="disc-user-sub">'+esc(u.bio||'AI Creator on ANKITSTUDIOAI')+' · '+u.followersCount+' followers</div></div>'+
+            '<button class="disc-follow-btn" id="follow-'+u.uid+'" onclick="toggleFollow(\''+u.uid+'\',this)">Follow</button></div>';
+    });
+    list.innerHTML=html;
+    checkFollowingStatus();
+}
+
+function checkFollowingStatus(){
+    db.ref('users/'+_myUid+'/following').once('value',function(snap){
+        if(!snap.exists())return;
+        snap.forEach(function(c){
+            var btn=document.getElementById('follow-'+c.key);
+            if(btn){btn.textContent='Following';btn.classList.add('following')}
+        });
+    });
+}
+
+window.toggleFollow=function(uid,btn){
+    if(btn.classList.contains('following')){
+        btn.classList.remove('following');btn.textContent='Follow';
+        db.ref('users/'+_myUid+'/following/'+uid).remove();
+        db.ref('users/'+uid+'/followers/'+_myUid).remove();
+    }else{
+        btn.classList.add('following');btn.textContent='Following';
+        db.ref('users/'+_myUid+'/following/'+uid).set({createdAt:firebase.database.ServerValue.TIMESTAMP});
+        db.ref('users/'+uid+'/followers/'+_myUid).set({createdAt:firebase.database.ServerValue.TIMESTAMP});
+    }
+    toast(btn.classList.contains('following')?'✅ Following!':'Unfollowed');
+};
+
+window.filterDiscover=function(cat,chip){
+    _filter=cat;
+    document.querySelectorAll('.disc-chip').forEach(function(c){c.classList.remove('active')});
+    chip.classList.add('active');
+    renderDiscoverUsers();
+};
+
+window.refreshSuggestions=function(){
+    document.getElementById('suggestedUsers').innerHTML='<div style="text-align:center;padding:40px;color:#8e8e8e"><i class="fas fa-circle-notch fa-spin"></i><br><br>Loading...</div>';
+    _allUsers.sort(function(){return Math.random()-0.5});
+    setTimeout(function(){renderDiscoverUsers()},500);
+};
+</script>
+</body>
+</html>

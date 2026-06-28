@@ -12,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
 
     <style>
         *{box-sizing:border-box;margin:0;padding:0}
@@ -285,7 +286,7 @@ window.closeSettingsSPA = function() {
                         <img src="" alt="Avatar" id="main-profile-pic" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:none">
                         <div class="ig-avatar-initial" id="main-profile-initial">U</div>
                     </div>
-                    <div class="ig-add-story" onclick="showToast('Story upload coming soon!')"><i class="fas fa-plus"></i></div>
+                    <div class="ig-add-story" onclick="window.location.href='stories.html'"><i class="fas fa-plus"></i></div>
                 </div>
                 <div class="ig-stats-box">
                     <div class="ig-stat" id="stat-posts">
@@ -335,7 +336,7 @@ window.closeSettingsSPA = function() {
             <div class="ig-tabs-container">
                 <div class="ig-tab active"><i class="fas fa-th"></i></div>
                 <div class="ig-tab" onclick="window.location.href='index.html?view=reelsView'"><i class="far fa-play-circle"></i></div>
-                <div class="ig-tab" onclick="showToast('Tagged posts coming soon')"><i class="far fa-user-circle"></i></div>
+                <div class="ig-tab" onclick="SPA.navigate('collectionsView')"><i class="far fa-user-circle"></i></div>
             </div>
 
             <!-- PHOTO GRID -->
@@ -394,12 +395,12 @@ window.closeSettingsSPA = function() {
         <button class="mp-header-btn" style="font-size:14px;font-weight:700;color:#0095f6" onclick="triggerUploadNext()">Next</button>
     </div>
     <div class="mp-action-row">
-        <div class="mp-action-chip" onclick="showToast('Drafts coming soon!')">
+        <div class="mp-action-chip" onclick="openMediaPicker()">
             <i class="fas fa-plus-circle"></i>
             <span>Drafts</span>
             <div class="mp-draft-dot">1</div>
         </div>
-        <div class="mp-action-chip" onclick="showToast('Templates coming soon!')">
+        <div class="mp-action-chip" onclick="openMediaPicker()">
             <i class="fas fa-layer-group"></i>
             <span>Templates</span>
         </div>
@@ -498,20 +499,7 @@ window.closeSettingsSPA = function() {
 <div class="toast" id="toast"></div>
 
 <script>
-/* ============================================================
-   FIREBASE INIT - SAFE, with databaseURL
-   ============================================================ */
-const firebaseConfig = {
-  apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
-  authDomain: "ankitstudioai.firebaseapp.com",
-  databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com",
-  projectId: "ankitstudioai",
-  storageBucket: "ankitstudioai.firebasestorage.app",
-  messagingSenderId: "450755070024",
-  appId: "1:450755070024:web:4bf14bc4da4caf1200b07d",
-  measurementId: "G-BJ44E7P08S"
-};
-if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+/* Firebase initialized via firebase-config.js */
 const db = firebase.database();
 
 /* ============================================================
@@ -577,12 +565,7 @@ function shareProfile(){
    URL PARAMS - direct profile open
    ============================================================ */
 
-
-
-
-
-
-}
+/* Fixed by Code Agent: 2026-06-28 - removed orphan '}' that caused JS syntax error */
 
 /* ============================================================
    AUTH
@@ -741,10 +724,7 @@ function showOwnProfile(me){
     }
 }
 
-/* ============================================================
-*/
-
-*/
+/* Fixed by Code Agent: 2026-06-28 - removed orphan '*/' that caused JS syntax error */
 /*   STATS + POSTS LISTENERS
    ============================================================ */
 function clearProfileStatsListeners(){
@@ -1474,7 +1454,6 @@ window.closeSettingsSPA = function() {
 };
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a113012359adb68f',t:'MTc4MjM4MDM2MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 <script src="profile-patch.js"></script>
 </body>
 </html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Saved · Collections - ANKITSTUDIOAI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fff;color:#000;overflow-x:hidden}
+        body.dark-mode{background:#000!important;color:#fff!important}
+        .coll-top{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #efefef;position:sticky;top:0;background:#fff;z-index:100;gap:12px}
+        body.dark-mode .coll-top{background:#000;border-color:#262626}
+        .coll-top .back-btn{font-size:20px;cursor:pointer;background:none;border:none;color:inherit}
+        .coll-top h2{font-size:16px;font-weight:700;flex:1}
+        .coll-top .add-btn{font-size:20px;cursor:pointer;background:none;border:none;color:#0095f6}
+        .coll-container{max-width:600px;margin:0 auto;padding:16px;padding-bottom:80px}
+        .coll-section-title{font-size:13px;font-weight:700;color:#8e8e8e;text-transform:uppercase;letter-spacing:.5px;margin:20px 0 10px}
+        .coll-folders{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+        .coll-folder{background:#fafafa;border:1px solid #efefef;border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+        body.dark-mode .coll-folder{background:#1a1a1a;border-color:#262626}
+        .coll-folder:active{transform:scale(.97)}
+        .coll-folder-icon{font-size:32px}
+        .coll-folder-name{font-size:13px;font-weight:600}
+        .coll-folder-count{font-size:11px;color:#8e8e8e}
+        .coll-new-folder{background:#fff;border:2px dashed #dbdbdb;display:flex;align-items:center;justify-content:center;min-height:100px}
+        body.dark-mode .coll-new-folder{background:#111;border-color:#333}
+        .coll-all-posts{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+        .coll-all-posts img{width:100%;aspect-ratio:1/1;object-fit:cover;cursor:pointer;background:#f5f5f5}
+        body.dark-mode .coll-all-posts img{background:#1a1a1a}
+        .coll-empty{text-align:center;padding:50px 20px;color:#8e8e8e}
+        .coll-empty i{font-size:48px;display:block;margin-bottom:12px;color:#dbdbdb}
+        /* Create folder modal */
+        .coll-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:none;align-items:flex-end;justify-content:center}
+        .coll-modal-overlay.open{display:flex}
+        .coll-modal{background:#fff;width:100%;max-width:500px;border-radius:16px 16px 0 0;padding:24px 20px;animation:slideUp .25s ease}
+        body.dark-mode .coll-modal{background:#000}
+        @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .coll-modal h3{font-size:16px;font-weight:700;margin-bottom:16px}
+        .coll-modal input{width:100%;padding:12px;border:1px solid #dbdbdb;border-radius:8px;font-size:14px;outline:none;margin-bottom:12px}
+        body.dark-mode .coll-modal input{background:#1a1a1a;border-color:#333;color:#fff}
+        .coll-modal-btns{display:flex;gap:10px}
+        .coll-modal-btns button{flex:1;padding:12px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;border:none}
+        .coll-modal-btns .btn-create{background:#0095f6;color:#fff}
+        .coll-modal-btns .btn-cancel{background:#efefef;color:#000}
+        body.dark-mode .coll-modal-btns .btn-cancel{background:#262626;color:#fff}
+        .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#262626;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:999999;opacity:0;transition:.3s;pointer-events:none}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    </style>
+</head>
+<body>
+<div class="coll-top">
+    <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+    <h2>Saved</h2>
+    <button class="add-btn" onclick="openCreateCollection()"><i class="fas fa-plus"></i></button>
+</div>
+
+<div class="coll-container">
+    <div class="coll-section-title">Your Collections</div>
+    <div class="coll-folders" id="collectionsList">
+        <div class="coll-folder coll-new-folder" onclick="openCreateCollection()">
+            <div class="coll-folder-icon">➕</div>
+            <div class="coll-folder-name">New Collection</div>
+        </div>
+    </div>
+
+    <div class="coll-section-title">All Saved Posts</div>
+    <div class="coll-all-posts" id="allSavedPosts">
+        <div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>
+    </div>
+</div>
+
+<div class="coll-modal-overlay" id="createFolderModal">
+    <div class="coll-modal">
+        <h3>New Collection</h3>
+        <input type="text" id="folderNameInput" placeholder="Collection name..." maxlength="30">
+        <div class="coll-modal-btns">
+            <button class="btn-cancel" onclick="closeCreateCollection()">Cancel</button>
+            <button class="btn-create" onclick="createCollection()">Create</button>
+        </div>
+    </div>
+</div>
+
+<div class="coll-modal-overlay" id="addToFolderModal">
+    <div class="coll-modal">
+        <h3>Save to Collection</h3>
+        <div id="folderSelectList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+        <div class="coll-modal-btns">
+            <button class="btn-cancel" onclick="closeAddToFolder()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="collToast"></div>
+
+<script>
+if(localStorage.getItem('ankitstudio_darkmode')==='true')document.body.classList.add('dark-mode');
+const db=firebase.database();
+let _myUid=null,_collections={},_savedPosts=[],_pendingSavePostId=null;
+
+function esc(s){const d=document.createElement('div');d.appendChild(document.createTextNode(s||''));return d.innerHTML}
+function toast(msg){const t=document.getElementById('collToast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+
+firebase.auth().onAuthStateChanged(function(user){
+    if(!user){window.location.href='index.html';return}
+    _myUid=user.uid;
+    loadCollections();
+    loadSavedPosts();
+});
+
+function loadCollections(){
+    db.ref('users/'+_myUid+'/collections').on('value',function(snap){
+        _collections=snap.val()||{};
+        renderCollections();
+    });
+}
+
+function renderCollections(){
+    var list=document.getElementById('collectionsList');
+    var html='';
+    var keys=Object.keys(_collections);
+    keys.forEach(function(k){
+        var c=_collections[k];
+        var count=c.posts?Object.keys(c.posts).length:0;
+        html+='<div class="coll-folder" onclick="viewCollection(\''+k+'\')">'+
+            '<div class="coll-folder-icon">📁</div>'+
+            '<div class="coll-folder-name">'+esc(c.name||'Collection')+'</div>'+
+            '<div class="coll-folder-count">'+count+' posts</div></div>';
+    });
+    html+='<div class="coll-folder coll-new-folder" onclick="openCreateCollection()"><div class="coll-folder-icon">➕</div><div class="coll-folder-name">New Collection</div></div>';
+    list.innerHTML=html;
+}
+
+function loadSavedPosts(collId){
+    var grid=document.getElementById('allSavedPosts');
+    var refPath=collId?'users/'+_myUid+'/collections/'+collId+'/posts':'users/'+_myUid+'/savedPosts';
+    db.ref(refPath).once('value',function(snap){
+        if(!snap.exists()){grid.innerHTML='<div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>';return}
+        var ids=[];
+        snap.forEach(function(c){ids.push(c.key)});
+        _savedPosts=ids;
+        if(ids.length===0){grid.innerHTML='<div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>';return}
+        grid.innerHTML='<div class="coll-empty" style="grid-column:1/-1"><i class="fas fa-circle-notch fa-spin"></i><p>Loading posts...</p></div>';
+        var loaded=0,html='';
+        ids.forEach(function(pid){
+            db.ref('posts/'+pid).once('value',function(psnap){
+                loaded++;
+                if(psnap.exists()){
+                    var p=psnap.val();
+                    html+='<img src="'+(p.imageUrl||'https://via.placeholder.com/300')+'" alt="post" onclick="window.open(\''+(p.imageUrl||'#')+'\',\'_blank\')" onerror="this.style.background=\'#f5f5f5\'">';
+                }
+                if(loaded===ids.length)grid.innerHTML=html||'<div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>';
+            });
+        });
+    });
+}
+
+function viewCollection(collId){
+    var top=document.querySelector('.coll-top h2');
+    if(top)top.textContent=_collections[collId]?.name||'Collection';
+    document.querySelector('.coll-section-title:first-of-type').style.display='none';
+    document.getElementById('collectionsList').style.display='none';
+    loadSavedPosts(collId);
+}
+
+function openCreateCollection(){
+    document.getElementById('folderNameInput').value='';
+    document.getElementById('createFolderModal').classList.add('open');
+}
+
+function closeCreateCollection(){
+    document.getElementById('createFolderModal').classList.remove('open');
+}
+
+function createCollection(){
+    var name=document.getElementById('folderNameInput').value.trim();
+    if(!name){toast('⚠️ Enter a name!');return}
+    var ref=db.ref('users/'+_myUid+'/collections').push();
+    ref.set({name:name,createdAt:firebase.database.ServerValue.TIMESTAMP,posts:{}}).then(function(){
+        toast('✅ Collection created!');
+        closeCreateCollection();
+    });
+}
+
+window.saveToCollection=function(postId){
+    var keys=Object.keys(_collections);
+    if(keys.length===0){toast('Create a collection first!');return}
+    _pendingSavePostId=postId;
+    var list=document.getElementById('folderSelectList');
+    var html='';
+    keys.forEach(function(k){
+        html+='<button onclick="addToCollection(\''+k+'\')" style="padding:12px;border:1px solid #dbdbdb;border-radius:8px;background:#fafafa;cursor:pointer;font-size:14px;font-weight:600;text-align:left">📁 '+esc(_collections[k].name||'Collection')+'</button>';
+    });
+    list.innerHTML=html;
+    document.getElementById('addToFolderModal').classList.add('open');
+};
+
+window.addToCollection=function(collId){
+    if(!_pendingSavePostId)return;
+    db.ref('users/'+_myUid+'/collections/'+collId+'/posts/'+_pendingSavePostId).set({savedAt:firebase.database.ServerValue.TIMESTAMP}).then(function(){
+        toast('✅ Saved to collection!');
+        closeAddToFolder();
+    });
+};
+
+window.closeAddToFolder=function(){
+    document.getElementById('addToFolderModal').classList.remove('open');
+    _pendingSavePostId=null;
+};
+
+document.querySelectorAll('.coll-modal-overlay').forEach(function(o){
+    o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')});
+});
+</script>
+</body>
+</html>
