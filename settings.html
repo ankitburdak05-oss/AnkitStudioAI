@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="data:text/css,void(0)">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -30,7 +30,7 @@
         firebase.initializeApp(firebaseConfig);
     }
 </script>
-    <script src="bottom-nav.js"></script>
+    <script src="data:text/javascript,void 0"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; }
@@ -2010,8 +2010,7 @@
     document.documentElement.classList.add('dark-mode');
   }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a10877147baf68cb',t:'MTc4MjI2OTg0Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1117d3ccac4c9cf',t:'MTc4MjM2NDQ3MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
-</html>
+
 <script>
   function navigateBack() {
     // Agar SPA/Iframe mode active hai, toh direct parent window ka function call karo
@@ -2023,74 +2022,14 @@
     }
     
     // Fallback agar direct open kiya ho
-    window.location.replace("profile.html"); 
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.replace("profile.html");
+    }
   }
 </script>
 
-<style>
-    .settings-bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: #fff;
-        border-top: 1px solid #dbdbdb;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        padding: 10px 0 15px;
-        z-index: 999999; /* Sabse aage rakhne ke liye */
-    }
-    .settings-bottom-nav i {
-        font-size: 24px;
-        color: #262626;
-        cursor: pointer;
-    }
-    .settings-bottom-nav .profile-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        border: 2px solid #000;
-        object-fit: cover;
-        cursor: pointer;
-    }
-    
-    /* Dark Mode Settings */
-    body.dark-mode .settings-bottom-nav {
-        background: #000;
-        border-top-color: #262626;
-    }
-    body.dark-mode .settings-bottom-nav i {
-        color: #fff;
-    }
-    body.dark-mode .settings-bottom-nav .profile-icon {
-        border-color: #fff;
-    }
-</style>
-
-<div class="settings-bottom-nav">
-    <div onclick="window.location.href='index.html'">
-        <i class="fas fa-home"></i>
-    </div>
-    <div onclick="window.location.href='index.html?view=searchView'">
-        <i class="fas fa-search"></i>
-    </div>
-    <div onclick="window.location.href='index.html?openMediaPicker=1'">
-        <i class="far fa-plus-square"></i>
-    </div>
-    <div onclick="window.location.href='reels.html'">
-        <i class="fas fa-film"></i>
-    </div>
-    <div onclick="window.location.href='profile.html'">
-        <img src="https://ui-avatars.com/api/?name=User&background=random" id="settingsNavProfilePic" class="profile-icon" alt="Profile">
-    </div>
-</div>
-
-<script>
-    // Bottom nav bar mein aapki profile photo live dikhane ke liye
-    firebase.auth().onAuthStateChanged(function(user) {
-        if (user && user.photoURL) {
-            document.getElementById('settingsNavProfilePic').src = user.photoURL;
-        }
-    });
-</script>
+</body>
+</html>
+</html>

@@ -165,14 +165,9 @@
         window.location.href = 'index.html?openMediaPicker=1';
     }
 
-    // ✅ SINGLE click handler — sirf non-SPA pages ke liye
-    // index.html pe spa.js apna bindBottomNav() chalata hai,
-    // isliye yahan skip karo agar SPA already bound hai
     function bindNavClicks() {
         document.querySelectorAll('#sharedBottomNav .nav-item').forEach(function(item) {
-            // Skip if spa.js ne pehle se bind kar diya
             if (item.hasAttribute('data-spa-bound')) return;
-            // Skip if already bound by us
             if (item.hasAttribute('data-nav-bound')) return;
             item.setAttribute('data-nav-bound', 'true');
 
@@ -189,7 +184,6 @@
                 var view = this.getAttribute('data-view');
                 var currentPage = getCurrentPage();
 
-                // Already active tab pe hain toh kuch mat karo
                 if (view === PAGE_TO_VIEW[currentPage]) return;
 
                 var dest = DESTINATIONS[view] || 'index.html';
@@ -198,11 +192,10 @@
         });
     }
 
-    // Profile pic update — FIXED: correct ID 'navProfilePic'
     function updateNavProfile() {
         if (typeof firebase === 'undefined' || !firebase.auth) return;
         var user = firebase.auth().currentUser;
-        var navPic = document.getElementById('navProfilePic'); // ✅ FIXED ID
+        var navPic = document.getElementById('navProfilePic');
         if (!navPic) return;
 
         if (user && user.photoURL) {
@@ -213,11 +206,8 @@
         }
     }
 
-    // Auth listener — sirf non-SPA pages pe setup karo
-    // index.html pe spa.js apna auth listener khud chalata hai
     function setupAuthListener() {
         if (typeof firebase === 'undefined' || !firebase.auth) return;
-        // Agar SPA initialized hai toh duplicate auth listener mat banao
         if (window._spaInitialized) return;
 
         firebase.auth().onAuthStateChanged(function() {
@@ -225,9 +215,6 @@
         });
     }
 
-    // ============================================================
-    //  INITIALIZE
-    // ============================================================
     function initialize() {
         if (!document.getElementById('sharedBottomNav')) {
             injectBottomNav();
@@ -247,17 +234,14 @@
         }
     }
 
-    // SPA ready hone ke baad bhi initialize karo (index.html)
     window.addEventListener('spa:ready', safeInitialize);
 
-    // DOM ready check
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', safeInitialize);
     } else {
         safeInitialize();
     }
 
-    // Public API
     window.SharedNav = {
         refresh: function() {
             updateActiveState();

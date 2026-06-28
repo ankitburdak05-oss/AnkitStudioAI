@@ -200,7 +200,15 @@ function openMediaPicker(){
     window.location.href = 'index.html?openMediaPicker=1';
 }
 // ===== FIREBASE INIT =====
-const firebaseConfig={apiKey:"AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",authDomain:"ankitstudioai.firebaseapp.com",projectId:"ankitstudioai",storageBucket:"ankitstudioai.firebasestorage.app",messagingSenderId:"450755070024",appId:"1:450755070024:web:4bf14bc4da4caf1200b07d"};
+const firebaseConfig = {
+    apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
+    authDomain: "ankitstudioai.firebaseapp.com",
+    databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com", // <-- YE ADD KAREIN
+    projectId: "ankitstudioai",
+    storageBucket: "ankitstudioai.firebasestorage.app",
+    messagingSenderId: "450755070024",
+    appId: "1:450755070024:web:4bf14bc4da4caf1200b07d"
+};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
@@ -363,9 +371,10 @@ function sendReelComment(){
     var text=input.value.trim();if(!text)return;
     var user=firebase.auth().currentUser;
     var name=user?(user.displayName||(user.email?user.email.split('@')[0]:'User')):'User';
-    db.ref('reels/'+_currentReelId+'/comments').push({authorId:_myUid,authorName:name,text:text,timestamp:firebase.database.ServerValue.TIMESTAMP}).then(function(){
+    db.ref('reels/'+_currentReelId+'/comments').push({uid:_myUid,authorId:_myUid,authorName:name,text:text,timestamp:firebase.database.ServerValue.TIMESTAMP}).then(function(){
         input.value='';loadReelComments(_currentReelId);
-        db.ref('reels/'+_currentReelId+'/comments').transaction(function(c){return(c||0)+1});
+        // Sahi code:
+db.ref('reels/'+_currentReelId+'/commentCount').transaction(function(c){return(c||0)+1});
     });
 }
 
@@ -472,6 +481,7 @@ function saveReelToDb(url,isVideo,caption,audioName,audioArtist,authorName){
         caption:caption,
         audioName:audioName,
         audioArtist:audioArtist,
+        uid:_myUid,
         authorId:_myUid,
         authorName:authorName,
         likes:0,

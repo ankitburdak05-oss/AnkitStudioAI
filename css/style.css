@@ -2,11 +2,11 @@
    PREMIUM WHITE THEME CONFIGURATION
    ========================================= */
 :root {
-    --red: #ff2233;
-    --red2: #cc0011;
-    --red-glow: rgba(255,34,51,0.05);
-    --gold: #ffaa00;
-    --gold2: #e69500;
+    --red: #ed4956;
+    --red2: #ed4956;
+    --red-glow: rgba(237,73,86,0.1);
+    --gold: #f09433;
+    --gold2: #e6683c;
     --dark: #ffffff;       /* Poori website ka background white */
     --dark2: #f8f9fa;      /* Cards ke liye cool light gray */
     --dark3: #e9ecef;
@@ -23,10 +23,10 @@
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--dark); }
-::-webkit-scrollbar-thumb { background: var(--red2); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 body {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--dark);
     color: var(--text);
     min-height: 100vh;
@@ -36,7 +36,7 @@ body {
 
 /* BG Effects */
 .bg-grid {
-    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    display: none !important; position: fixed; inset: 0; pointer-events: none; z-index: 0;
     background-image:
         linear-gradient(rgba(255,34,51,0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,34,51,0.03) 1px, transparent 1px);
@@ -45,8 +45,8 @@ body {
 }
 @keyframes gridScroll { to { background-position: 0 60px; } }
 
-.bg-glow1 { position:fixed; top:-200px; left:50%; transform:translateX(-50%); width:800px; height:500px; background:radial-gradient(ellipse, rgba(255,34,51,0.08) 0%, transparent 70%); pointer-events:none; z-index:0; }
-.bg-glow2 { position:fixed; bottom:-100px; right:-100px; width:500px; height:500px; background:radial-gradient(ellipse, rgba(255,215,0,0.05) 0%, transparent 70%); pointer-events:none; z-index:0; }
+.bg-glow1 { display: none !important; position:fixed; top:-200px; left:50%; transform:translateX(-50%); width:800px; height:500px; background:radial-gradient(ellipse, rgba(255,34,51,0.08) 0%, transparent 70%); pointer-events:none; z-index:0; }
+.bg-glow2 { display: none !important; position:fixed; bottom:-100px; right:-100px; width:500px; height:500px; background:radial-gradient(ellipse, rgba(255,215,0,0.05) 0%, transparent 70%); pointer-events:none; z-index:0; }
 
 /* ===== EXPANDED LEFT SIDEBAR ===== */
 .sidebar {
@@ -65,7 +65,7 @@ body {
     justify-content: flex-start;
     font-size: 15px;
     font-weight: 600;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     transition: all 0.2s ease;
     width: 100%;
     padding: 12px 16px;
@@ -182,7 +182,7 @@ nav {
 }
 
 .nav-logo {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 1.6rem;
     letter-spacing: 4px;
     /* 🔥 Naya Gradient: Dark Black se Gold ki taraf (White background ke liye perfect) */
@@ -195,7 +195,7 @@ nav {
 
 .nav-logo span {
     font-size: 0.55rem;
-    font-family: 'Orbitron', monospace;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     letter-spacing: 3px;
     color: var(--red);
     -webkit-text-fill-color: var(--red);
@@ -222,7 +222,7 @@ nav {
     border: 1px solid var(--border2);
     border-radius: 8px;
     padding: 9px 14px 9px 38px;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 14px; font-weight: 500;
     color: var(--text); outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -240,7 +240,7 @@ nav {
     font-size: 13px; font-weight: 700;
     letter-spacing: 1px; text-transform: uppercase;
     cursor: pointer; border: none;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     transition: all 0.2s ease;
 }
 
@@ -321,7 +321,7 @@ nav {
     padding: 5px 14px; border-radius: 20px;
     background: rgba(255,34,51,0.1);
     border: 1px solid rgba(255,34,51,0.3);
-    font-family: 'Orbitron', monospace;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 10px; font-weight: 700;
     letter-spacing: 3px; color: var(--red);
     text-transform: uppercase;
@@ -332,7 +332,7 @@ nav {
 .hero-badge i { font-size: 10px; }
 
 .hero h1 {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: clamp(3rem, 6vw, 4.5rem);
     letter-spacing: 4px;
     line-height: 1;
@@ -376,12 +376,12 @@ nav {
 .hero-search i { padding: 16px 20px; color: var(--red); font-size: 18px; }
 .hero-search input {
     flex: 1; background: transparent; border: none;
-    color: var(--text); font-family: 'Rajdhani', sans-serif;
+    color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 15px; font-weight: 600; outline: none;
 }
 .hero-search button {
     background: var(--red); color: #fff;
-    border: none; padding: 0 24px; font-family: 'Orbitron', monospace;
+    border: none; padding: 0 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-weight: 700; font-size: 12px; letter-spacing: 2px;
     cursor: pointer; transition: 0.2s;
 }
@@ -400,7 +400,7 @@ nav {
 
 .trust-item {
     display: flex; align-items: center; gap: 8px;
-    font-size: 14px; font-weight: 600; color: #ffaa00; /* Gold color */
+    font-size: 14px; font-weight: 600; color: #f09433; /* Gold color */
     letter-spacing: 1px;
 }
 
@@ -434,7 +434,7 @@ nav {
 }
 
 .featured-text h3 {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 18px;
     font-weight: 700;
     color: #111;
@@ -457,7 +457,7 @@ nav {
 }
 
 .section-title {
-    font-family: 'Orbitron', monospace; font-size: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 20px;
     letter-spacing: 3px; font-weight: 700; color: var(--text);
     display: flex; align-items: center; gap: 10px;
 }
@@ -625,7 +625,7 @@ nav {
 }
 
 .post-price {
-    font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px;
 }
 .price-free { color: var(--green); }
 .price-paid { color: var(--red); }
@@ -644,7 +644,7 @@ footer {
     color: var(--muted); font-size: 13px; font-weight: 600;
     margin-top: 40px;
 }
-footer span { color: var(--red); font-family: 'Orbitron', monospace; letter-spacing: 2px; }
+footer span { color: var(--red); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; letter-spacing: 2px; }
 
 /* ===== NEW REDIRECT BOX ===== */
 .post-redirect-box-wrapper {
@@ -682,7 +682,7 @@ footer span { color: var(--red); font-family: 'Orbitron', monospace; letter-spac
 }
 
 .post-redirect-title {
-    font-family: 'Orbitron', monospace;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 12px;
     font-weight: 700;
     color: var(--red);
@@ -914,7 +914,7 @@ footer span { color: var(--red); font-family: 'Orbitron', monospace; letter-spac
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #ff2233, #ffaa00);
+    background: linear-gradient(135deg, #ed4956, #f09433);
     color: #fff;
     display: flex;
     align-items: center;
@@ -1134,7 +1134,7 @@ footer span { color: var(--red); font-family: 'Orbitron', monospace; letter-spac
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, #ff2233, #ffaa00);
+    background: linear-gradient(90deg, #ed4956, #f09433);
 }
 
 .auth-close {
@@ -1150,17 +1150,17 @@ footer span { color: var(--red); font-family: 'Orbitron', monospace; letter-spac
 .auth-header { text-align: center; margin-bottom: 30px; }
 
 .auth-logo {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 2rem;
     letter-spacing: 2px;
-    background: linear-gradient(135deg, #111 20%, #ffaa00 80%);
+    background: linear-gradient(135deg, #111 20%, #f09433 80%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 5px;
 }
 
 .auth-title {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 22px; font-weight: 700;
     color: #111; margin-bottom: 5px;
 }
@@ -1182,7 +1182,7 @@ footer span { color: var(--red); font-family: 'Orbitron', monospace; letter-spac
     border: 1px solid var(--border);
     padding: 14px 16px 14px 42px;
     border-radius: 10px;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 15px; color: #111;
     outline: none; transition: all 0.2s;
 }
@@ -1197,7 +1197,7 @@ footer span { color: var(--red); font-family: 'Orbitron', monospace; letter-spac
     background: var(--red);
     color: #fff; border: none;
     padding: 14px; border-radius: 10px;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 16px; font-weight: 700;
     cursor: pointer; transition: all 0.2s;
     margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;
@@ -1222,7 +1222,7 @@ footer span { color: var(--red); font-family: 'Orbitron', monospace; letter-spac
 .auth-google-btn {
     background: #fff; color: #333;
     border: 1px solid var(--border); padding: 12px; border-radius: 10px;
-    font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 700;
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
     transition: all 0.2s;
 }
@@ -1290,7 +1290,7 @@ footer span { color: var(--red); font-family: 'Orbitron', monospace; letter-spac
     gap: 10px;
     font-size: 14px;
     font-weight: 600;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     transition: 0.2s;
 }
 

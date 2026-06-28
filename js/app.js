@@ -134,10 +134,10 @@ function toggleFavoritesPageView(enable) {
         if (featuredSection) featuredSection.style.paddingTop = '40px';
         if (sectionHead) {
             sectionHead.innerHTML = `
-                <div class="section-title" id="favBackBtn" style="cursor:pointer; color:var(--red); font-family:'Orbitron',sans-serif; font-size:16px; letter-spacing:2px; display:flex; align-items:center; gap:10px; transition:0.2s;">
+                <div class="section-title" id="favBackBtn" style="cursor:pointer; color:var(--red); font-family: inherit; font-size:16px; letter-spacing:2px; display:flex; align-items:center; gap:10px; transition:0.2s;">
                     <i class="fas fa-arrow-left"></i> BACK TO HOME
                 </div>
-                <div class="see-all" style="color:var(--muted); font-family:'Orbitron',sans-serif; font-size:12px;">🌟 MY FAVORITES PORTAL</div>
+                <div class="see-all" style="color:var(--muted); font-family: inherit; font-size:12px;">🌟 SAVED POSTS</div>
             `;
             document.getElementById('favBackBtn')?.addEventListener('click', () => {
                 toggleFavoritesPageView(false);
@@ -201,7 +201,7 @@ function renderCards(data) {
             grid.innerHTML = `
                 <div class="favorites-empty-fallback" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--muted); border: 1px dashed rgba(255,255,255,0.05); border-radius: 12px; background: rgba(15,10,30,0.2);">
                     <i class="far fa-heart" style="font-size: 3rem; color: var(--red); margin-bottom: 15px; display: block; animation: pulse 2s infinite;"></i>
-                    <h4 style="font-family: 'Orbitron', sans-serif; font-size: 14px; letter-spacing: 2px; color: #fff; margin-bottom: 8px;">PORTAL EMPTY</h4>
+                    <h4 style="font-family: inherit; font-size: 14px; letter-spacing: 2px; color: #fff; margin-bottom: 8px;">No Saved Posts</h4>
                     <p style="font-size: 12px; max-width: 400px; margin: 0 auto 20px; line-height: 1.6;">Bhai, tumne abhi tak koi bhi post bookmark nahi kiya hai! Home par jaakar kisi bhi card ke heart icon par click karo.</p>
                     <button class="nav-link primary" id="backToHomeFromEmpty" style="margin: 0 auto; padding: 10px 24px; font-size: 11px; letter-spacing: 2px;">DISCOVER POSTS</button>
                 </div>
@@ -983,9 +983,9 @@ function loadCommunityPostsOriginal() {
             container.innerHTML = `
             <div style="text-align: center; padding: 80px 20px; width: 100%; grid-column: 1/-1;">
                 <i class="far fa-bookmark" style="font-size: 4rem; color: #ffaa00; margin-bottom: 20px; display: block;"></i>
-                <h4 style="font-family: 'Orbitron', sans-serif; font-size: 18px; letter-spacing: 2px; color: #fff; margin-bottom: 12px;">NO SAVED POSTS</h4>
+                <h4 style="font-family: inherit; font-size: 18px; letter-spacing: 2px; color: #fff; margin-bottom: 12px;">NO SAVED POSTS</h4>
                 <p style="font-size: 14px; max-width: 400px; margin: 0 auto 24px; line-height: 1.6; color: #6a7090;">Tumne abhi tak koi post save nahi kiya hai! Home par jaakar kisi bhi card ke bookmark icon par click karo.</p>
-                <button onclick="toggleFavoritesPageView(false)" style="background: #ff2233; color: white; border: none; padding: 12px 28px; border-radius: 8px; cursor: pointer; font-weight: bold; letter-spacing: 1px; transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">BROWSE POSTS</button>
+                <button onclick="toggleFavoritesPageView(false)" style="background: #0095f6; color: white; border: none; padding: 12px 28px; border-radius: 8px; cursor: pointer; font-weight: bold; letter-spacing: 1px; transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">BROWSE POSTS</button>
             </div>`;
         }
     });
@@ -1364,9 +1364,9 @@ loadCommunityPosts = function() {
             container.innerHTML = `
             <div style="text-align: center; padding: 80px 20px; width: 100%; grid-column: 1/-1;">
                 <i class="far fa-bookmark" style="font-size: 4rem; color: #ffaa00; margin-bottom: 20px; display: block;"></i>
-                <h4 style="font-family: 'Orbitron', sans-serif; font-size: 18px; letter-spacing: 2px; color: #fff; margin-bottom: 12px;">NO SAVED POSTS</h4>
+                <h4 style="font-family: inherit; font-size: 18px; letter-spacing: 2px; color: #fff; margin-bottom: 12px;">NO SAVED POSTS</h4>
                 <p style="font-size: 14px; max-width: 400px; margin: 0 auto 24px; line-height: 1.6; color: #6a7090;">Tumne abhi tak koi post save nahi kiya hai! Home par jaakar kisi bhi card ke bookmark icon par click karo.</p>
-                <button onclick="toggleFavoritesPageView(false)" style="background: #ff2233; color: white; border: none; padding: 12px 28px; border-radius: 8px; cursor: pointer; font-weight: bold; letter-spacing: 1px; transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">BROWSE POSTS</button>
+                <button onclick="toggleFavoritesPageView(false)" style="background: #0095f6; color: white; border: none; padding: 12px 28px; border-radius: 8px; cursor: pointer; font-weight: bold; letter-spacing: 1px; transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">BROWSE POSTS</button>
             </div>`;
         }
     });
@@ -1461,7 +1461,7 @@ function listenForNotifications(uid) {
             let isLike = n.type === 'like';
             let isComment = n.type === 'comment';
             let isFollow = n.type === 'follow';
-            let icon = isLike ? '<i class="fas fa-heart" style="color:#ff2233"></i>' : isComment ? '<i class="fas fa-comment" style="color:#4285f4"></i>' : '<i class="fas fa-user-plus" style="color:#0095f6"></i>';
+            let icon = isLike ? '<i class="fas fa-heart" style="color:#ed4956"></i>' : isComment ? '<i class="fas fa-comment" style="color:#4285f4"></i>' : '<i class="fas fa-user-plus" style="color:#0095f6"></i>';
             let text = isLike ? 'liked your post.' : isComment ? 'commented on your post.' : 'started following you.';
             
             // 🔥 Comment preview with styled box

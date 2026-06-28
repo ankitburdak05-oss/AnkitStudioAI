@@ -316,12 +316,12 @@ body.dark-mode .settings-select:hover { background: #333; }
 <body>
 
 <!-- SPLASH -->
-<div id="splashScreen"><div class="splash-logo">ANKITSTUDIOAI</div><div class="splash-loader"><div class="splash-loader-bar"></div></div></div>
+<div id="splashScreen"><div class="splash-logo">AnkitStudioAI</div><div class="splash-loader"><div class="splash-loader-bar"></div></div></div>
 
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
-    <div class="login-logo">ANKITSTUDIOAI</div>
+    <div class="login-logo">AnkitStudioAI</div>
     <div class="login-error" id="loginError"></div>
     <input type="email" class="login-input" id="loginEmail" placeholder="Email">
     <input type="password" class="login-input" id="loginPassword" placeholder="Password">
@@ -340,7 +340,7 @@ body.dark-mode .settings-select:hover { background: #333; }
 <!-- HOME VIEW -->
 <div class="spa-view active" id="homeView">
   <div class="ig-top-header">
-    <div class="header-logo">ANKITSTUDIOAI</div>
+    <div class="header-logo">AnkitStudioAI</div>
     <div class="header-icons">
       <i class="far fa-heart" onclick="SPA.navigate('notificationsView')" title="Notifications"></i>
       <i class="far fa-paper-plane" onclick="SPA.navigate('messagesView')" title="Messages"></i>
@@ -738,6 +738,7 @@ function loadUserCache(){
     });
     loadStoriesBar();
   });
+  return;
   db.ref('users').once('value', snap=>{
     if(!snap.exists())return;
     snap.forEach(c=>{
@@ -1188,7 +1189,23 @@ function shareProfile(){
   else { navigator.clipboard.writeText(url).then(()=>toast('Link copied')); }
 }
 function openSettings(){
+  const container = document.getElementById('settingsSPAContainer');
+  const iframe = document.getElementById('settingsIframe');
+
+  if (container && iframe) {
+    container.style.display = 'block';
+    if (!iframe.src || iframe.src.indexOf('settings.html') === -1) {
+      iframe.src = 'settings.html?spa=true';
+    }
+    return;
+  }
+
   window.location.href = 'settings.html';
+}
+
+function closeSettingsSPA(){
+  const container = document.getElementById('settingsSPAContainer');
+  if (container) container.style.display = 'none';
 }
 
 /* follow list modal */
@@ -1274,7 +1291,11 @@ function submitModalComment(){
   $('#modalCommentSendBtn').disabled=true;
   const authorName = _myUser.displayName || (_myUser.email?_myUser.email.split('@')[0]:'User');
   db.ref('posts/'+_modalPostId+'/comments').push({
-    text, authorId:_myUid, authorName,
+    text,
+    uid: _myUid,
+    postOwner: (_feedCache.find(x => x.key === _modalPostId)?.data?.authorId) || '',
+    authorId:_myUid,
+    authorName,
     timestamp: firebase.database.ServerValue.TIMESTAMP
   }).then(()=>{
     input.value='';
@@ -1390,9 +1411,13 @@ $('#upSubmitBtn').onclick = async ()=>{
     const imageUrl=j.data.url;
     const authorName=_myUser.displayName || (_myUser.email?_myUser.email.split('@')[0]:'User');
     await db.ref('posts').push({
-      title, caption, imageUrl,
-      category:cat,
-      authorId:_myUid, authorName, authorEmail:_myUser.email||'',
+      title,
+      caption,
+      imageUrl,
+      imageURL: imageUrl,
+      uid: _myUid,
+      category: cat,
+      authorId: _myUid, authorName, authorEmail: _myUser.email||'',
       likeCount:0, commentCount:0,
       timestamp: firebase.database.ServerValue.TIMESTAMP
     });
@@ -1449,7 +1474,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     SPA.navigate(initialView, {}, false);
   }
 
-  // Cross-page fallback for the + button: open media picker inside index.html.
+    // Cross-page fallback for the + button: open media picker inside index.html.
   if(params.get('openMediaPicker') === '1'){
     setTimeout(()=>{
       if(typeof openMediaPicker === 'function') openMediaPicker();
@@ -1457,7 +1482,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1088e90ebdd391d',t:'MTc4MjI3MDgwOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 <!-- SETTINGS SPA OVERLAY (Iframe Approach) -->
 <div id="settingsSPAContainer" style="display: none; position: fixed; inset: 0; z-index: 9999999; background: var(--dark, #fff);">
@@ -1465,4 +1489,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
     <iframe id="settingsIframe" style="width: 100%; height: 100%; border: none;"></iframe>
 </div>
 
+<!-- 🔥 YAHAN DAALNA HAI APP.JS KA LINK 🔥 -->
+
+
+</body>
+</body>
 </html>

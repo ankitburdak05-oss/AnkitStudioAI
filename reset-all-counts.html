@@ -47,11 +47,12 @@ try {
   var firebaseConfig = {
     apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
     authDomain: "ankitstudioai.firebaseapp.com",
+    databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com",
     projectId: "ankitstudioai",
     storageBucket: "ankitstudioai.firebasestorage.app",
     messagingSenderId: "450755070024",
     appId: "1:450755070024:web:4bf14bc4da4caf1200b07d"
-  };
+};
   firebase.initializeApp(firebaseConfig);
   setStatus('✅ Firebase ready. Login karo neeche button se.');
   document.getElementById('loginBtn').style.display = 'block';
@@ -86,6 +87,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
   btn.disabled = true;
   log('\n--- Reset shuru ---');
 
+  return;
   firebase.database().ref('users').once('value').then(function(usersSnap) {
     if (!usersSnap.exists()) {
       log('Koi users nahi mile.');

@@ -240,14 +240,22 @@
     </div>
 </div>
 
-<script src="js/firebase-config.js"></script>
+<script src="firebase-config.js"></script>
 <script src="bottom-nav.js"></script>
 <script>
 function openMediaPicker(){
     window.location.href = 'index.html?openMediaPicker=1';
 }
 // ===== FIREBASE INIT =====
-const firebaseConfig={apiKey:"AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",authDomain:"ankitstudioai.firebaseapp.com",projectId:"ankitstudioai",storageBucket:"ankitstudioai.firebasestorage.app",messagingSenderId:"450755070024",appId:"1:450755070024:web:4bf14bc4da4caf1200b07d"};
+const firebaseConfig = {
+    apiKey: "AIzaSyB7kRi62mPhP_tLyQTvrF9pwVQ3h4MGyqQ",
+    authDomain: "ankitstudioai.firebaseapp.com",
+    databaseURL: "https://ankitstudioai-default-rtdb.firebaseio.com", // <-- YE ADD KAREIN
+    projectId: "ankitstudioai",
+    storageBucket: "ankitstudioai.firebasestorage.app",
+    messagingSenderId: "450755070024",
+    appId: "1:450755070024:web:4bf14bc4da4caf1200b07d"
+};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
@@ -273,6 +281,7 @@ firebase.auth().onAuthStateChanged(function(user){
 // ===== LOAD ALL STORIES (24-hour filter) =====
 function loadAllStories(){
     var twentyFourHoursAgo=Date.now()-(24*60*60*1000);
+    return;
     db.ref('users').once('value',function(snap){
         if(!snap.exists())return;
         _storiesData={};
@@ -507,7 +516,9 @@ function shareStory(){
 function saveStoryToDb(imageUrl,caption){
     var storyData={
         imageUrl:imageUrl,
+        uid:_myUid,
         caption:caption,
+        expiresAt: Date.now() + (24*60*60*1000),
         type:'image',
         timestamp:firebase.database.ServerValue.TIMESTAMP
     };

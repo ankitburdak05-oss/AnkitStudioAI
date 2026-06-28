@@ -222,6 +222,7 @@
 <!-- SETTINGS SPA OVERLAY (Bina reload ke settings open karne ke liye) -->
 <div id="settingsSPAContainer" style="display: none; position: fixed; inset: 0; z-index: 9999999; background: #fff;">
     <iframe id="settingsIframe" style="width: 100%; height: 100%; border: none;"></iframe>
+
 </div>
 
 <script>
@@ -567,7 +568,7 @@ function setProfilePhoto(imgEl, initialEl, photoUrl, name){
     }
 }
 function shareProfile(){
-    const url = window.location.origin + window.location.pathname + '?viewUid=' + encodeURIComponent(_activeProfileUid||_myUid||'');
+    const url = window.location.origin + window.location.pathname;
     if(navigator.share){ navigator.share({title:'Check my profile',url}).catch(()=>{}); }
     else { navigator.clipboard.writeText(url).then(()=>showToast('Profile link copied!')).catch(()=>showToast(url)); }
 }
@@ -575,12 +576,12 @@ function shareProfile(){
 /* ============================================================
    URL PARAMS - direct profile open
    ============================================================ */
-const urlParams = new URLSearchParams(window.location.search);
-const viewUidParam = urlParams.get('viewUid');
-const viewNameParam = urlParams.get('viewName');
-if(viewUidParam){
-    // clean URL immediately so back button works
-    window.history.replaceState({}, document.title, window.location.pathname);
+
+
+
+
+
+
 }
 
 /* ============================================================
@@ -601,18 +602,22 @@ firebase.auth().onAuthStateChanged(function(user){
     // load user cache
     loadUserCache();
 
-    // decide which profile to show
-    if(viewUidParam && viewUidParam !== user.uid){
-        showOtherUserProfile(viewUidParam, viewNameParam || 'User');
+    // always show the signed-in user's profile
+    showOwnProfile(user);
+/*
+    
+        
     } else {
-        showOwnProfile(user);
+        
     }
+
+*/
 
     // notifications
     listenNotifications(user.uid);
 
     // highlights
-    loadUserHighlights(viewUidParam || user.uid);
+    loadUserHighlights(user.uid);
 });
 
 function loadUserCache(){
@@ -684,7 +689,9 @@ function showOwnProfile(me){
 /* ============================================================
    PROFILE RENDER - OTHER USER
    ============================================================ */
-function showOtherUserProfile(uid, fallbackName){
+/* function showOtherUserProfile(uid, fallbackName){
+    showOwnProfile(firebase.auth().currentUser);
+    return; // other-user profile removed
     _activeProfileUid = uid;
     document.getElementById('search-content-wrap').style.display='none';
     document.getElementById('profile-content-wrap').style.display='block';
@@ -735,7 +742,10 @@ function showOtherUserProfile(uid, fallbackName){
 }
 
 /* ============================================================
-   STATS + POSTS LISTENERS
+*/
+
+*/
+/*   STATS + POSTS LISTENERS
    ============================================================ */
 function clearProfileStatsListeners(){
     if(_refFollowersCount){ _refFollowersCount.off(); _refFollowersCount=null; }
@@ -1117,7 +1127,7 @@ async function loadFollowList(uid, type){
 }
 function goToUserFromModal(uid, name){
     closeFollowModal();
-    setTimeout(()=>{ window.location.href = `profile.html?viewUid=${encodeURIComponent(uid)}&viewName=${encodeURIComponent(name)}`; }, 120);
+    setTimeout(()=>{ window.location.href = 'profile.html'; }, 120);
 }
 
 /* ============================================================
@@ -1190,7 +1200,7 @@ if(searchInput){
 }
 function openUserProfile(uid, name){
     if(!uid){ showToast('User ID missing'); return; }
-    window.location.href = `profile.html?viewUid=${encodeURIComponent(uid)}&viewName=${encodeURIComponent(name)}`;
+    window.location.href = 'profile.html';
 }
 
 /* ============================================================
@@ -1364,7 +1374,7 @@ function listenNotifications(uid){
             const preview = n.commentText ? `<div style="font-size:12px;color:#666;margin-top:3px;font-style:italic">${esc(n.commentText)}</div>` : '';
             const fromName = n.fromName || 'Someone';
             const initial = fromName.charAt(0).toUpperCase();
-            const click = n.fromUid ? `onclick="window.location.href='profile.html?viewUid=${encodeURIComponent(n.fromUid)}&viewName=${encodeURIComponent(fromName)}'"` : '';
+            const click = n.fromUid ? `onclick="window.location.href='profile.html'"` : '';
             html += `<div class="follow-user-row" ${click} style="cursor:pointer">
                 <div class="follow-user-avatar">${initial}</div>
                 <div class="follow-user-info">
@@ -1437,10 +1447,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
     document.documentElement.classList.add('dark-mode');
   }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a111683c1b35627d',t:'MTc4MjM2MzYxMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></html>
 
-<div id="settingsSPAContainer" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 50px; z-index: 9998; background: #fff;">
-    <iframe id="settingsIframe" style="width: 100%; height: 100%; border: none;"></iframe>
+
+
 </div>
 
 <script>
@@ -1455,12 +1464,17 @@ window.openSettingsSPA = function() {
         iframe.src = 'settings.html?spa=true';
     }
     
-    // Yahan se nav bar ko hide karne wala code hata diya gaya hai!
+    document.getElementById('bottom-nav-bar').style.display = 'none';
 };
 
 window.closeSettingsSPA = function() {
     document.getElementById('settingsSPAContainer').style.display = 'none';
     
-    // Yahan se nav bar ko wapas show karne wala code bhi hata diya gaya hai kyunki ab wo hide hi nahi hoga!
+    document.getElementById('bottom-nav-bar').style.display = 'flex';
 };
 </script>
+
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a113012359adb68f',t:'MTc4MjM4MDM2MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script src="profile-patch.js"></script>
+</body>
+</html>
