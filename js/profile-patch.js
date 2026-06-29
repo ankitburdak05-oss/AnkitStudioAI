@@ -267,11 +267,10 @@
       const snap = await db.ref('users').once('value');
       snap.forEach((child) => {
         const uid = child.key;
-        if (uid === (firebase.auth().currentUser && firebase.auth().currentUser.uid)) return;
         const ud = child.val() || {};
         const p = ud.profile || {};
         const name = p.displayName || ud.displayName || ud.name || (ud.email ? ud.email.split('@')[0] : 'User');
-        const hay = `${name} ${(ud.email || '')}`.toLowerCase();
+        const hay = `${name} ${(ud.email || '')} ${uid}`.toLowerCase();
         if (!hay.includes(q)) return;
         found = true;
         const photo = p.photoURL || ud.photoURL || null;

@@ -1760,14 +1760,13 @@ $('#searchInput').addEventListener('input', function(){
   grid.style.display='none';
   let html=''; let found=false;
   Object.keys(_userCache).forEach(uid=>{
-    if(uid===_myUid) return;
     const u=_userCache[uid];
-    if((u.name.toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q))){
+    if((u.name.toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q) || uid.toLowerCase().includes(q))){
       found=true;
       const av = u.photo ? `<img src="${esc(u.photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : u.name.charAt(0).toUpperCase();
       html += `<div class="search-user-row" onclick="openProfile('${esc(uid)}','${esc(u.name)}')">
         <div class="search-user-av">${av}</div>
-        <div><div class="search-user-name">${esc(u.name)}</div><div class="search-user-sub">${esc(u.email||'')}</div></div>
+        <div><div class="search-user-name">${esc(u.name)}</div></div>
       </div>`;
     }
   });
@@ -1775,8 +1774,8 @@ $('#searchInput').addEventListener('input', function(){
     // 🔥 Also search loaded feed cache for missing users
     (_feedCache||[]).concat(_reelsCache||[]).forEach(p=>{
       const d=p.data||{};
-      if(d.authorId && d.authorId !== _myUid && !_userCache[d.authorId] && 
-         ((d.authorName||'').toLowerCase().includes(q) || (d.authorEmail||'').toLowerCase().includes(q))){
+      if(d.authorId && !_userCache[d.authorId] && 
+         ((d.authorName||'').toLowerCase().includes(q) || (d.authorEmail||'').toLowerCase().includes(q) || d.authorId.toLowerCase().includes(q))){
         _userCache[d.authorId] = {name:d.authorName||'User', email:d.authorEmail||'', photo:null};
         found=true;
         const av = (d.authorName||'U').charAt(0).toUpperCase();
@@ -1787,7 +1786,30 @@ $('#searchInput').addEventListener('input', function(){
       }
     });
   }
-  results.innerHTML = found ? html : '<div class="empty-state">No users found</div>';
+  if(!found){
+    results.innerHTML='<div class="empty-state"><span class="spinner"></span> Searching database...</div>';
+    db.ref('users').once('value', s=>{
+      let f2=false, h2='';
+      if(s.exists()){
+        s.forEach(c=>{
+          const uid=c.key, u=c.val()||{}, p=u.profile||{};
+          const nm=p.displayName||u.displayName||u.name||(u.email?u.email.split('@')[0]:'User');
+          const em=u.email||'';
+          if(nm.toLowerCase().includes(q)||em.toLowerCase().includes(q)||uid.toLowerCase().includes(q)){
+            f2=true; _userCache[uid]={name:nm, email:em, photo:p.photoURL||u.photoURL||null};
+            const av=p.photoURL||u.photoURL?`<img src="${esc(p.photoURL||u.photoURL)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`:nm.charAt(0).toUpperCase();
+            h2+=`<div class="search-user-row" onclick="openProfile('${esc(uid)}','${esc(nm)}')">
+              <div class="search-user-av">${av}</div>
+              <div><div class="search-user-name">${esc(nm)}</div><div class="search-user-sub">${esc(em)}</div></div>
+            </div>`;
+          }
+        });
+      }
+      results.innerHTML=f2?h2:'<div class="empty-state">No users found</div>';
+    }).catch(()=>{results.innerHTML='<div class="empty-state">No users found</div>'});
+    return;
+  }
+  results.innerHTML = html;
 });
 
 /* ============================================================
@@ -1945,7 +1967,7 @@ function openNewChat(){
   let found=null;
   Object.keys(_userCache).forEach(uid=>{
     const u=_userCache[uid];
-    if(u.email.toLowerCase().includes(name.toLowerCase()) || u.name.toLowerCase().includes(name.toLowerCase())) found={uid, name:u.name};
+    if(u.email.toLowerCase().includes(name.toLowerCase()) || u.name.toLowerCase().includes(name.toLowerCase()) || uid.toLowerCase().includes(name.toLowerCase())) found={uid, name:u.name};
   });
   if(found) openChat(found.uid, found.name);
   else {
@@ -3425,5 +3447,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </script>
 
 
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a134cc8ece6f0b3c',t:'MTc4MjczNDcyMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

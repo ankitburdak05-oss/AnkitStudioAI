@@ -1188,9 +1188,8 @@ if(searchInput){
         grid.style.display='none'; results.style.display='block';
         let html='', found=false, seen=new Set();
         Object.keys(_userCacheMap).forEach(uid=>{
-            if(uid===_myUid) return;
             const u=_userCacheMap[uid];
-            if((u.name.toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q)) && !seen.has(uid)){
+            if((u.name.toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q) || uid.toLowerCase().includes(q)) && !seen.has(uid)){
                 seen.add(uid); found=true;
                 const uname = u.email ? u.email.split('@')[0] : u.name.replace(/\s+/g,'').toLowerCase();
                 const initial = u.name.charAt(0).toUpperCase();
@@ -1204,7 +1203,35 @@ if(searchInput){
                 </div>`;
             }
         });
-        results.innerHTML = found ? html : '<div style="text-align:center;color:#8e8e8e;padding:40px;font-size:14px">No user found</div>';
+        if(!found){
+            results.innerHTML='<div style="text-align:center;color:#8e8e8e;padding:40px;font-size:14px"><span class="spinner"></span> Searching database...</div>';
+            db.ref('users').once('value', s=>{
+                let h2='', f2=false;
+                if(s.exists()){
+                    s.forEach(c=>{
+                        const uid=c.key, ud=c.val()||{}, p=ud.profile||{};
+                        const nm=p.displayName||ud.displayName||ud.name||(ud.email?ud.email.split('@')[0]:'User');
+                        const em=ud.email||'';
+                        if(nm.toLowerCase().includes(q)||em.toLowerCase().includes(q)||uid.toLowerCase().includes(q)){
+                            f2=true; _userCacheMap[uid]={name:nm, email:em, photo:p.photoURL||ud.photoURL||null};
+                            const unm=em?em.split('@')[0]:nm.replace(/\s+/g,'').toLowerCase();
+                            const init=nm.charAt(0).toUpperCase();
+                            const av=p.photoURL||ud.photoURL?`<img src="${esc(p.photoURL||ud.photoURL)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`:init;
+                            h2+=`<div onclick="openUserProfile('${escJS(uid)}','${escJS(nm)}')" style="display:flex;align-items:center;padding:10px 0;gap:14px;cursor:pointer">
+                                <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${av}</div>
+                                <div style="flex:1;border-bottom:1px solid #efefef;padding-bottom:10px">
+                                    <div style="font-size:14px;font-weight:600;color:#000">${esc(unm)}</div>
+                                    <div style="font-size:13px;color:#8e8e8e">${esc(nm)}</div>
+                                </div>
+                            </div>`;
+                        }
+                    });
+                }
+                results.innerHTML=f2?h2:'<div style="text-align:center;color:#8e8e8e;padding:40px;font-size:14px">No user found</div>';
+            }).catch(()=>{results.innerHTML='<div style="text-align:center;color:#8e8e8e;padding:40px;font-size:14px">No user found</div>'});
+            return;
+        }
+        results.innerHTML = html;
     });
 }
 function openUserProfile(uid, name){
@@ -1461,5 +1488,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </div>
 
 <!-- profile-patch.js removed: profile.html has its own complete auth + profile system -->
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a134cd7729ad0b3c',t:'MTc4MjczNDc1OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
