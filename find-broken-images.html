@@ -39,6 +39,22 @@
 const db = firebase.database();
 let brokenCount = 0, okCount = 0, totalCount = 0;
 
+// ⚠️ ADMIN CHECK — Sirf authorized UIDs allow hote hain
+const ADMIN_UIDS = ['YOUR_ADMIN_UID_HERE']; // Apna Firebase UID yahan daalo
+firebase.auth().onAuthStateChanged(function(user) {
+    if (!user) {
+        document.getElementById('log').textContent = '❌ Login required. Pehle login karo.';
+        document.getElementById('scanBtn').disabled = true;
+        return;
+    }
+    if (!ADMIN_UIDS.includes(user.uid)) {
+        document.getElementById('log').textContent = '❌ Access denied. Aap admin nahi hain. UID: ' + user.uid;
+        document.getElementById('scanBtn').disabled = true;
+        return;
+    }
+    document.getElementById('log').textContent = '✅ Admin verified (' + user.email + '). "Scan All Posts" button dabao.';
+});
+
 function log(msg) {
     document.getElementById('log').textContent += '\n' + msg;
 }

@@ -12,6 +12,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <script src="js/firebase-config.js"></script>
+<!-- spa.js REMOVED: index.html has its own const SPA - duplicate declaration crashes all JS -->
+<script src="js/app.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -1343,6 +1345,8 @@ function getUser(uid){
   return _userCache[uid] || {name:'User', email:'', photo:null};
 }
 
+
+
 /* ============================================================
    HOME FEED
    ============================================================ */
@@ -1360,7 +1364,7 @@ function loadHomeFeed(){
       const authorName = d.authorName || 'User';
       const u = getUser(d.authorId);
       const avatar = u.photo ? `<img src="${esc(u.photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : authorName.charAt(0).toUpperCase();
-      const likes = d.likeCount||0;
+      const likes = d.likes ? Object.keys(d.likes).length : (d.likeCount||0);
       const comments = d.commentCount||0;
       const isOwn = d.authorId === _myUid;
       html += `<div class="ig-feed-post">
@@ -1392,21 +1396,21 @@ function loadHomeFeed(){
   });
 }
 function toggleLike(el, postId){
+  if(!_myUid){ toast('Like karne ke liye login karo'); return; }
   const liked = el.classList.contains('liked');
+  const countEl = el.querySelector('span');
   if(liked){
     el.classList.remove('liked','fas'); el.classList.add('far');
-    db.ref('posts/'+postId+'/likeCount').transaction(c => (c||0) - 1);
+    // Sirf likes/$uid remove karo — likeCount Cloud Function update karega
     db.ref('posts/'+postId+'/likes/'+_myUid).remove();
+    if(countEl) countEl.textContent = Math.max(0, (parseInt(countEl.textContent)||1) - 1);
   }
   else {
     el.classList.remove('far'); el.classList.add('fas','liked');
-    db.ref('posts/'+postId+'/likeCount').transaction(c => (c||0) + 1);
-    // Store who liked & notify post owner
-    db.ref('posts/'+postId+'/likes/'+_myUid).set({
-      uid:_myUid,
-      name: _myUser.displayName || (_myUser.email?_myUser.email.split('@')[0]:'User'),
-      timestamp: firebase.database.ServerValue.TIMESTAMP
-    });
+    // Sirf likes/$uid set karo — likeCount Cloud Function update karega
+    db.ref('posts/'+postId+'/likes/'+_myUid).set(true);
+    if(countEl) countEl.textContent = (parseInt(countEl.textContent)||0) + 1;
+    // Notify post owner
     const p=_feedCache.find(x=>x.key===postId);
     if(p && p.data.authorId !== _myUid){
       const myName=_myUser.displayName||(_myUser.email?_myUser.email.split('@')[0]:'User');
@@ -2027,10 +2031,27 @@ function renderProfile(uid, fallbackName, isOwn){
 
   $('#profileTopName').textContent = displayName.toLowerCase().replace(/\s+/g,'');
   $('#pDisplayName').textContent = displayName;
-  $('#pBio').textContent = 'AI creator • ANKITSTUDIOAI';
+  $('#pBio').textContent = '';
   const avImg = $('#profileAvatarImg'), avInit=$('#profileAvatarInitial');
   if(photo){ avImg.src=photo; avImg.style.display='block'; avInit.style.display='none'; }
   else { avImg.style.display='none'; avInit.style.display='flex'; avInit.textContent = displayName.charAt(0).toUpperCase(); }
+
+  // FIX: Apna profile Firebase se load karo — naam, bio, photo sab
+  db.ref('users/'+uid+'/profile').once('value', snap=>{
+    const p = snap.val() || {};
+    const realName = p.displayName || displayName;
+    const realBio  = p.bio || (isOwn ? 'Welcome to ANKITSTUDIOAI ✨' : 'AI creator • ANKITSTUDIOAI');
+    const realPhoto = p.photoURL || photo;
+    $('#pDisplayName').textContent = realName;
+    $('#profileTopName').textContent = realName.toLowerCase().replace(/\s+/g,'');
+    $('#pBio').textContent = realBio;
+    if(realPhoto){ avImg.src=realPhoto; avImg.style.display='block'; avInit.style.display='none'; }
+    else { avImg.style.display='none'; avInit.style.display='flex'; avInit.textContent = realName.charAt(0).toUpperCase(); }
+    // nav pic bhi update karo
+    if(isOwn && realPhoto){ const np=$('#navProfilePic'); if(np) np.src=realPhoto; }
+  }).catch(()=>{
+    $('#pBio').textContent = isOwn ? 'Welcome to ANKITSTUDIOAI ✨' : 'AI creator • ANKITSTUDIOAI';
+  });
 
   // back button show if not own
   $('#profileBackBtn').style.display = isOwn ? 'none' : 'block';
@@ -2354,7 +2375,8 @@ $('#upSubmitBtn').onclick = async ()=>{
   const btn=$('#upSubmitBtn'); btn.disabled=true; btn.textContent='Uploading...';
   try{
     const fd=new FormData(); fd.append('image', file);
-    const res = await fetch('https://api.imgbb.com/1/upload?key=5f30b483ae91c03320748137616415d7', {method:'POST', body:fd});
+    const IMGBB_KEY = window.ANKITSTUDIO_CONFIG?.imgbbKey || '5f30b483ae91c03320748137616415d7';
+    const res = await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_KEY, {method:'POST', body:fd});
     const j = await res.json();
     if(!j.success) throw new Error('ImgBB failed');
     const imageUrl=j.data.url;
@@ -2544,7 +2566,8 @@ async function saveEditProfile(){
   if(_editAvatarFile){
     try{
       const fd=new FormData(); fd.append('image',_editAvatarFile);
-      const res=await fetch('https://api.imgbb.com/1/upload?key=5f30b483ae91c03320748137616415d7',{method:'POST',body:fd});
+      const IMGBB_KEY = window.ANKITSTUDIO_CONFIG?.imgbbKey || '5f30b483ae91c03320748137616415d7';
+      const res=await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_KEY,{method:'POST',body:fd});
       const j=await res.json();
       if(j.success) photoURL=j.data.url;
     }catch(e){ console.error('Avatar upload failed',e); }
@@ -2679,14 +2702,14 @@ function closeQrModal(){ document.getElementById('qrModalOverlay').classList.rem
    ============================================================ */
 
 // 21. DARK MODE
-let _darkMode=localStorage.getItem('darkMode')==='true';
+let _darkMode=localStorage.getItem('ankitstudio_darkmode')==='true';
 function applyDarkMode(){
   if(_darkMode) document.body.classList.add('dark-mode');
   else document.body.classList.remove('dark-mode');
 }
 function toggleDarkMode(){
   _darkMode=!_darkMode;
-  localStorage.setItem('darkMode',_darkMode);
+  localStorage.setItem('ankitstudio_darkmode',String(_darkMode));
   applyDarkMode();
   toast(_darkMode?'Dark mode on 🌙':'Light mode on ☀️');
 }
@@ -3368,7 +3391,7 @@ window.refreshSuggestions=function(){
 setTimeout(()=>{ if(_myUid) updateNotifBadge(); },1500);
 
 // Apply saved dark mode on load
-if(localStorage.getItem('darkMode')==='true'){ _darkMode=true; applyDarkMode(); }
+if(localStorage.getItem('ankitstudio_darkmode')==='true'){ _darkMode=true; applyDarkMode(); }
 
 /* ============================================================
    INIT

@@ -582,6 +582,30 @@ firebase.auth().onAuthStateChanged(function(user){
     const navPic=document.getElementById('ig-profile-btn');
     if(navPic && user.photoURL) navPic.src=user.photoURL;
 
+    // FIX: Auto-create user node in Firebase if it doesn't exist yet
+    // Bina iske db.ref('users/UID') empty return karta hai, profile blank dikhti hai
+    // NOTE: Firebase rules mein users/$uid/profile ko .write allowed hai (auth.uid === $uid)
+    const userRef = db.ref('users/' + user.uid);
+    userRef.once('value', function(snap){
+        if(!snap.exists()){
+            // Pehli baar login — profile node create karo (rules mein allowed hai)
+            const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+            db.ref('users/' + user.uid + '/profile').set({
+                displayName: displayName,
+                bio: 'Welcome to ANKITSTUDIOAI ✨',
+                photoURL: user.photoURL || '',
+                website: '',
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            }).catch(function(e){ console.warn('Profile node create failed:', e.message); });
+            // public node bhi set karo
+            db.ref('users/' + user.uid + '/public').set({
+                displayName: displayName,
+                photoURL: user.photoURL || '',
+                email: user.email || ''
+            }).catch(function(e){ console.warn('Public node create failed:', e.message); });
+        }
+    });
+
     // load user cache
     loadUserCache();
 
@@ -639,13 +663,14 @@ function showOwnProfile(me){
     const uname = me.email ? me.email.split('@')[0].toLowerCase() : 'user';
     document.getElementById('top-title-text').textContent = uname;
 
-    // load from DB
+    // load from DB — with Google Auth fallback
     db.ref('users/' + me.uid).once('value', usnap=>{
         const uData = usnap.val() || {};
         const prof = uData.profile || {};
-        const displayName = prof.displayName || me.displayName || uname;
-        const bio = prof.bio || 'Welcome to ANKITSTUDIOAI ✨';
-        const photoUrl = prof.photoURL || me.photoURL || uData.photoURL || null;
+        // FIX: Google login ka displayName/photoURL use karo as fallback
+        const displayName = prof.displayName || uData.displayName || me.displayName || uname;
+        const bio = prof.bio || uData.bio || 'Welcome to ANKITSTUDIOAI ✨';
+        const photoUrl = prof.photoURL || uData.photoURL || me.photoURL || null;
         const website = prof.website || '';
 
         document.getElementById('main-profile-name').textContent = displayName;
@@ -730,6 +755,10 @@ function showOwnProfile(me){
 function clearProfileStatsListeners(){
     if(_refFollowersCount){ _refFollowersCount.off(); _refFollowersCount=null; }
     if(_refFollowingCount){ _refFollowingCount.off(); _refFollowingCount=null; }
+}
+// FIX: clearPostsListener was missing — caused "clearPostsListener is not defined" error
+function clearPostsListener(){
+    if(_refPosts){ _refPosts.off(); _refPosts=null; }
 }
 function attachProfileStatsListener(uid){
     clearProfileStatsListeners();
@@ -1429,31 +1458,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </script>
 
 
-
 </div>
 
-<script>
-window.openSettingsSPA = function() {
-    var container = document.getElementById('settingsSPAContainer');
-    var iframe = document.getElementById('settingsIframe');
-    
-    container.style.display = 'block'; 
-    
-    // Iframe mein cleanly settings load karo
-    if (!iframe.src || iframe.src.indexOf('settings.html') === -1) {
-        iframe.src = 'settings.html?spa=true';
-    }
-    
-    document.getElementById('bottom-nav-bar').style.display = 'none';
-};
-
-window.closeSettingsSPA = function() {
-    document.getElementById('settingsSPAContainer').style.display = 'none';
-    
-    document.getElementById('bottom-nav-bar').style.display = 'flex';
-};
-</script>
-
-<script src="profile-patch.js"></script>
+<!-- profile-patch.js removed: profile.html has its own complete auth + profile system -->
 </body>
 </html>

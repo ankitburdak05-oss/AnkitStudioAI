@@ -68,6 +68,15 @@ document.getElementById('loginBtn').addEventListener('click', function() {
 
 firebase.auth().onAuthStateChanged(function(user) {
   if (user) {
+    // ⚠️ ADMIN CHECK: Sirf authorized UIDs allow karo
+    const ADMIN_UIDS = ['YOUR_ADMIN_UID_HERE']; // Apna Firebase UID yahan daalo
+    if (!ADMIN_UIDS.includes(user.uid)) {
+      setStatus('❌ Access denied. Aap admin nahi hain.');
+      document.getElementById('loginBtn').style.display = 'none';
+      document.getElementById('runBtn').style.display = 'none';
+      log('Access denied for UID: ' + user.uid);
+      return;
+    }
     setStatus('✅ Logged in as: ' + (user.email || user.uid));
     document.getElementById('loginBtn').style.display = 'none';
     document.getElementById('runBtn').style.display = 'block';

@@ -8,11 +8,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <!-- style.css removed: settings.html has its own complete inline CSS.
+         In iframe/SPA mode, relative paths fail with MIME type errors. -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
+    <script src="js/bottom-nav.js"></script>
     <script>
     // Firebase initialized via firebase-config.js
     const db = firebase.database();
@@ -1908,8 +1910,8 @@
         const user = firebase.auth().currentUser;
         if (!user) return;
 
-        firebase.database().ref('users/' + user.uid).update({
-            isPrivate: enabled
+        firebase.database().ref('users/' + user.uid + '/settings').update({
+    isPrivate: enabled
         }).then(() => {
             showToast(enabled ? '🔒 Account is now Private' : '🔓 Account is now Public');
         }).catch(err => {
@@ -2748,20 +2750,17 @@
         document.getElementById(id).classList.add('open');
     }
 
-    // --- HOOK INTO AUTH STATE: Load all new settings after auth ---
-    var _origSettingsAuth = firebase.auth().onAuthStateChanged;
-    firebase.auth().onAuthStateChanged = function(cb) {
-        _origSettingsAuth.call(firebase.auth(), function(user) {
-            if (user) {
-                loadPrivacySettings(user.uid);
-                loadContentSettings();
-                updateSecuritySection(user);
-                loadInteractionCounts(user.uid);
-                loadAppPrefs();
-            }
-            if (typeof cb === 'function') cb(user);
-        });
-    };
+    // FIX: firebase.auth().onAuthStateChanged ko override karna wrong tha.
+    // Ek alag listener attach karo for the new features — safe pattern.
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            loadPrivacySettings(user.uid);
+            loadContentSettings();
+            updateSecuritySection(user);
+            loadInteractionCounts(user.uid);
+            loadAppPrefs();
+        }
+    });
 
 </script>
 

@@ -509,7 +509,8 @@ function switchTab(tab) {
 function handleRealAuthSubmit(e) {
     e.preventDefault();
     if (typeof firebase === 'undefined' || !firebase.auth) {
-        alert("Firebase Service Unavailable. Please try again later.");
+        const fn = typeof showToast === 'function' ? showToast : alert;
+        fn("Firebase Service Unavailable. Please try again later.");
         return;
     }
     
@@ -522,12 +523,14 @@ function handleRealAuthSubmit(e) {
     const isLoginMode = currentTab === 'login';
 
     if (!email || !password) {
-        alert("Validation Error: Email and password fields are required.");
+        if (typeof showToast === 'function') showToast("⚠️ Email aur password dono zaroori hain.");
+        else alert("Email aur password dono zaroori hain.");
         return;
     }
 
     if (password.length < 6) {
-        alert("Security Alert: Password must be at least 6 characters long.");
+        if (typeof showToast === 'function') showToast("⚠️ Password kam se kam 6 characters ka hona chahiye.");
+        else alert("Password kam se kam 6 characters ka hona chahiye.");
         return;
     }
 
@@ -543,7 +546,8 @@ function handleRealAuthSubmit(e) {
             })
             .catch((error) => {
                 console.error("Firebase Login Error:", error.message);
-                alert("Login Error: " + error.message);
+                if (typeof showToast === 'function') showToast("❌ Login Error: " + error.message);
+                else alert("Login Error: " + error.message);
                 if (authSubmitBtn) authSubmitBtn.disabled = false;
             });
     } else {
@@ -560,7 +564,8 @@ function handleRealAuthSubmit(e) {
             })
             .catch((error) => {
                 console.error("Firebase Signup Error:", error.message);
-                alert("Registration Error: " + error.message);
+                if (typeof showToast === 'function') showToast("❌ Registration Error: " + error.message);
+                else alert("Registration Error: " + error.message);
                 if (authSubmitBtn) authSubmitBtn.disabled = false;
             });
     }
@@ -1110,7 +1115,8 @@ window.submitComment = function(postKey) {
 
     const user = firebase.auth().currentUser;
     if (!user) {
-        alert('Comment karne ke liye pehle login karo!');
+        if (typeof showToast === 'function') showToast('💬 Comment karne ke liye pehle login karo!');
+        else alert('Comment karne ke liye pehle login karo!');
         if (typeof openAuthModal === 'function') openAuthModal();
         return;
     }
@@ -1176,7 +1182,8 @@ window.submitComment = function(postKey) {
 
     }).catch(err => {
         console.error('🔥 [COMMENT] Submit error:', err);
-        alert('Comment post nahi hua. Try again!');
+        if (typeof showToast === 'function') showToast('❌ Comment post nahi hua. Try again!');
+        else alert('Comment post nahi hua. Try again!');
     }).finally(() => {
         if (sendBtn) {
             sendBtn.disabled = false;
@@ -1434,7 +1441,8 @@ function listenForNotifications(uid) {
     
     const notifRef = firebase.database().ref('users/' + uid + '/notifications');
     notifRef.limitToLast(50).on('value', snap => {
-        const notifList = document.getElementById('fullNotifList');
+        // FIX: 'fullNotifList' index.html mein exist nahi karta — actual ID 'notifList' hai
+        const notifList = document.getElementById('fullNotifList') || document.getElementById('notifList');
         
         console.log('🔥 [NOTIF-LISTEN] Firebase callback fired. Data exists:', snap.exists(), '| Element found:', !!notifList);
         
@@ -1550,7 +1558,7 @@ window.testNotification = function() {
     const user = firebase.auth().currentUser;
     if (!user) {
         console.error('🔥 [TEST] Pehle login karo!');
-        alert('Pehle login karo!');
+        if (typeof showToast === 'function') showToast('🔥 Pehle login karo!');
         return;
     }
     
@@ -1566,10 +1574,10 @@ window.testNotification = function() {
         read: false
     }).then(() => {
         console.log('🔥 [TEST] ✅ Test notification SENT!');
-        alert('✅ Test notification bhej diya! Notification page check karo.');
+        if (typeof showToast === 'function') showToast('✅ Test notification bhej diya! Notification page check karo.');
     }).catch(err => {
         console.error('🔥 [TEST] ❌ Test notification FAILED:', err);
-        alert('❌ Notification nahi gaya! Error: ' + err.message + '\n\nFirebase Security Rules check karo!');
+        if (typeof showToast === 'function') showToast('❌ Notification nahi gaya! Error: ' + err.message);
     });
 };
 
@@ -1603,48 +1611,41 @@ firebase.auth().onAuthStateChanged(user => {
 
 // 🔥 4. REAL FIREBASE LIKE / UNLIKE LOGIC (With Notifications)
 window.toggleLikePost = function(postKey) {
-    let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
-    const dbRef = firebase.database().ref('posts/' + postKey + '/likeCount');
     const currentUser = firebase.auth().currentUser;
-
-    if (myFavorites.includes(postKey)) {
-        // UNLIKE KAR RAHA HAI
-        myFavorites = myFavorites.filter(id => id !== postKey);
-        dbRef.transaction(currentLikes => (currentLikes || 0) > 0 ? currentLikes - 1 : 0);
-    } else {
-        // LIKE KAR RAHA HAI
-        myFavorites.push(postKey);
-        dbRef.transaction(currentLikes => (currentLikes || 0) + 1);
-
-        // 🔥 NOTIFICATION BHEJNE KA LOGIC 🔥
-        if (currentUser) {
-            firebase.database().ref('posts/' + postKey).once('value', snap => {
-                let pData = snap.val();
-                console.log('🔥 [LIKE-NOTIF] Post authorId:', pData?.authorId, '| Liker UID:', currentUser.uid);
-                // Khud ke post par like ka notification nahi jayega
-                if (pData && pData.authorId && pData.authorId !== currentUser.uid) {
-                    firebase.database().ref('users/' + pData.authorId + '/notifications').push({
-                        type: 'like',
-                        postId: postKey,
-                        fromUid: currentUser.uid,
-                        fromName: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User'),
-                        timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        read: false
-                    }).then(() => {
-                        console.log('🔥 [LIKE-NOTIF] ✅ Like notification sent!');
-                    }).catch(err => {
-                        console.error('🔥 [LIKE-NOTIF] ❌ Failed:', err);
-                    });
-                } else if (pData && pData.authorId === currentUser.uid) {
-                    console.log('🔥 [LIKE-NOTIF] ⚠️ Self-like — no notification');
-                }
-            });
-        }
+    if (!currentUser) {
+        if (typeof showToast === 'function') showToast('Like karne ke liye login karo!');
+        return;
     }
 
-    // 3. Local memory update kar do taaki dil (heart) turant apna color badle
+    let myFavorites = JSON.parse(localStorage.getItem('community_favs') || '[]');
+    // likes/$uid node use karo — likeCount Cloud Function se update hoga
+    const likeRef = firebase.database().ref('posts/' + postKey + '/likes/' + currentUser.uid);
+
+    if (myFavorites.includes(postKey)) {
+        // UNLIKE
+        myFavorites = myFavorites.filter(id => id !== postKey);
+        likeRef.remove();
+    } else {
+        // LIKE
+        myFavorites.push(postKey);
+        likeRef.set(true);
+
+        // Notification bhejo post owner ko
+        firebase.database().ref('posts/' + postKey).once('value', snap => {
+            let pData = snap.val();
+            if (pData && pData.authorId && pData.authorId !== currentUser.uid) {
+                firebase.database().ref('users/' + pData.authorId + '/notifications').push({
+                    type: 'like',
+                    postId: postKey,
+                    fromUid: currentUser.uid,
+                    fromName: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User'),
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    read: false
+                }).catch(err => console.error('🔥 [LIKE-NOTIF] ❌ Failed:', err));
+            }
+        });
+    }
+
     localStorage.setItem('community_favs', JSON.stringify(myFavorites));
-    
-    // 4. Screen ko turant refresh karo
     loadCommunityPosts();
 };
