@@ -251,7 +251,7 @@ function renderCards(data) {
             </div>
         `;
         
-        card.querySelector('.post-body').addEventListener('click', () => openModal(p.id));
+        // card.querySelector('.post-body').addEventListener('click', () => openModal(p.id));
         card.querySelector('.card-fav-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavoriteState(p.id);
@@ -947,7 +947,7 @@ function loadCommunityPostsOriginal() {
             const bookmarkColor = isBookmarked ? '#ffaa00' : 'white';
 
             const card = `
-                <div class="hover-card-wrapper" onmouseenter="this.querySelector('.hover-overlay').style.opacity='1'" onmouseleave="this.querySelector('.hover-overlay').style.opacity='0'" onclick="openModal('${key}')" style="position: relative; break-inside: avoid; margin-bottom: 24px; display: inline-block; width: 100%; border-radius: 16px; overflow: hidden; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                <div class="hover-card-wrapper" onmouseenter="this.querySelector('.hover-overlay').style.opacity='1'" onmouseleave="this.querySelector('.hover-overlay').style.opacity='0'"  style="position: relative; break-inside: avoid; margin-bottom: 24px; display: inline-block; width: 100%; border-radius: 16px; overflow: hidden;  box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
                     
                     <img src="${post.imageUrl}" style="width: 100%; height: auto; display: block; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
                     
@@ -1326,7 +1326,7 @@ loadCommunityPosts = function() {
             const bookmarkColor = isBookmarked ? '#ffaa00' : 'white';
 
             const card = `
-                <div class="hover-card-wrapper" onmouseenter="this.querySelector('.hover-overlay').style.opacity='1'" onmouseleave="this.querySelector('.hover-overlay').style.opacity='0'" onclick="openModal('${key}')" style="position: relative; break-inside: avoid; margin-bottom: 24px; display: inline-block; width: 100%; border-radius: 16px; overflow: hidden; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                <div class="hover-card-wrapper" onmouseenter="this.querySelector('.hover-overlay').style.opacity='1'" onmouseleave="this.querySelector('.hover-overlay').style.opacity='0'"  style="position: relative; break-inside: avoid; margin-bottom: 24px; display: inline-block; width: 100%; border-radius: 16px; overflow: hidden;  box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
                     
                     <img src="${post.imageUrl}" style="width: 100%; height: auto; display: block; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
                     
