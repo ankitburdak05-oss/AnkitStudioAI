@@ -1354,58 +1354,56 @@ let _feedCache = [];
 function loadHomeFeed(){
   const feed = $('#homeFeed');
   if (!feed) return;
-  const fetchFeed = () => {
-    Promise.all([
-      db.ref('posts').once('value'),
-      db.ref('reels').once('value')
-    ]).then(([pSnap, rSnap]) => {
-      let allItems = [];
-      if(pSnap.exists()) pSnap.forEach(c => allItems.push({key:c.key, data:c.val()}));
-      if(rSnap.exists()) rSnap.forEach(c => allItems.push({key:c.key, data:c.val()}));
-      if(!allItems.length){
-        feed.innerHTML='<div class="empty-state"><i class="far fa-camera"></i>No posts yet</div>';
-        return;
-      }
-      allItems.sort((a,b) => (b.data.timestamp||0) - (a.data.timestamp||0));
-      _feedCache = allItems;
-      let html = '';
-      allItems.forEach(p => {
-        const d = p.data;
-        const authorName = d.authorName || 'User';
-        const u = getUser(d.authorId);
-        const avatar = u.photo ? `<img src="${esc(u.photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : authorName.charAt(0).toUpperCase();
-        const likes = d.likes ? Object.keys(d.likes).length : (d.likeCount||0);
-        const comments = d.commentCount||0;
-        const isOwn = d.authorId === _myUid;
-        html += `<div class="ig-feed-post">
-          <div class="ig-post-header">
-            <div class="ig-post-avatar" onclick="openProfile('${esc(d.authorId||'')}','${esc(authorName)}')">${avatar}</div>
-            <div class="ig-post-user-info">
-              <div class="ig-post-username">${esc(authorName)}</div>
-              <div class="ig-post-subtitle">${esc(d.aiTool||d.category||'Creator')}</div>
-            </div>
-            ${!isOwn ? `<button class="ig-post-follow-btn" onclick="quickFollow('${esc(d.authorId||'')}', this)">Follow</button>` : ''}
-            <i class="fas fa-ellipsis-h ig-post-more" onclick="togglePostOptions('${p.key}',event)"></i>
+  let postsData = {};
+  let reelsData = {};
+  const renderTimeline = () => {
+    let allItems = [];
+    Object.keys(postsData).forEach(k => allItems.push({key: k, data: postsData[k]}));
+    Object.keys(reelsData).forEach(k => allItems.push({key: k, data: reelsData[k]}));
+    allItems = allItems.filter(p => p && p.data && (p.data.imageUrl || p.data.videoUrl || p.data.imageURL));
+    if(!allItems.length){
+      feed.innerHTML='<div class="empty-state"><i class="far fa-camera"></i>No posts yet</div>';
+      return;
+    }
+    allItems.sort((a,b) => (b.data?.timestamp||0) - (a.data?.timestamp||0));
+    _feedCache = allItems;
+    let html = '';
+    allItems.forEach(p => {
+      const d = p.data;
+      const authorName = d.authorName || 'User';
+      const u = getUser(d.authorId);
+      const avatar = u.photo ? `<img src="${esc(u.photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : authorName.charAt(0).toUpperCase();
+      const likes = d.likes ? (typeof d.likes === 'object' ? Object.keys(d.likes).length : d.likes) : (d.likeCount||0);
+      const comments = d.commentCount||d.comments||0;
+      const isOwn = d.authorId === _myUid;
+      html += `<div class="ig-feed-post">
+        <div class="ig-post-header">
+          <div class="ig-post-avatar" onclick="openProfile('${esc(d.authorId||'')}','${esc(authorName)}')">${avatar}</div>
+          <div class="ig-post-user-info">
+            <div class="ig-post-username">${esc(authorName)}</div>
+            <div class="ig-post-subtitle">${esc(d.aiTool||d.category||'Creator')}</div>
           </div>
-          <img class="ig-post-image" src="${esc(d.imageUrl||d.videoUrl||'')}" loading="lazy" onerror="this.style.background='#f5f5f5'" ondblclick="doubleTapHeart(event, '${p.key}')">
-          <div class="ig-post-actions">
-            <i class="far fa-heart" onclick="toggleLike(this,'${p.key}')"></i>
-            <i class="far fa-comment" onclick="openPostModal('${p.key}')"></i>
-            <i class="far fa-paper-plane" onclick="openShareModal('${p.key}')"></i>
-            <i class="far fa-bookmark right" id="bmk_${p.key}" onclick="toggleBookmark(this,'${p.key}')"></i>
-          </div>
-          <div class="ig-post-likes" onclick="viewLikes('${p.key}')" style="cursor:pointer">${likes} likes</div>
-          <div class="ig-post-caption${(d.caption||'').length>120?' collapsed':''}"><strong>${esc(authorName)}</strong> ${esc(d.caption||'')}</div>
-          ${(d.caption||'').length>120?`<span class="ig-post-caption-more" onclick="this.previousElementSibling.classList.toggle('collapsed');this.textContent=this.previousElementSibling.classList.contains('collapsed')?'more...':'show less'">more...</span>`:''}
-          <div class="ig-post-time" style="padding:2px 12px;font-size:11px;color:#8e8e8e;cursor:pointer" onclick="openPostModal('${p.key}')">${comments ? `View all ${comments} comments` : 'Add a comment'}</div>
-        </div>`;
-      });
-      feed.innerHTML = html;
-      setTimeout(loadSuggestedPosts, 500);
+          ${!isOwn ? `<button class="ig-post-follow-btn" onclick="quickFollow('${esc(d.authorId||'')}', this)">Follow</button>` : ''}
+          <i class="fas fa-ellipsis-h ig-post-more" onclick="togglePostOptions('${p.key}',event)"></i>
+        </div>
+        ${d.videoUrl || d.type === 'video' ? `<video src="${esc(d.videoUrl||d.imageUrl||'')}" class="ig-post-image" controls playsinline loop style="background:#000"></video>` : `<img class="ig-post-image" src="${esc(d.imageUrl||d.imageURL||'')}" loading="lazy" onerror="this.style.background='#f5f5f5'" ondblclick="doubleTapHeart(event, '${p.key}')">`}
+        <div class="ig-post-actions">
+          <i class="far fa-heart" onclick="toggleLike(this,'${p.key}')"></i>
+          <i class="far fa-comment" onclick="openPostModal('${p.key}')"></i>
+          <i class="far fa-paper-plane" onclick="openShareModal('${p.key}')"></i>
+          <i class="far fa-bookmark right" id="bmk_${p.key}" onclick="toggleBookmark(this,'${p.key}')"></i>
+        </div>
+        <div class="ig-post-likes" onclick="viewLikes('${p.key}')" style="cursor:pointer">${likes} likes</div>
+        <div class="ig-post-caption${(d.caption||'').length>120?' collapsed':''}"><strong>${esc(authorName)}</strong> ${esc(d.caption||'')}</div>
+        ${(d.caption||'').length>120?`<span class="ig-post-caption-more" onclick="this.previousElementSibling.classList.toggle('collapsed');this.textContent=this.previousElementSibling.classList.contains('collapsed')?'more...':'show less'">more...</span>`:''}
+        <div class="ig-post-time" style="padding:2px 12px;font-size:11px;color:#8e8e8e;cursor:pointer" onclick="openPostModal('${p.key}')">${comments ? `View all ${comments} comments` : 'Add a comment'}</div>
+      </div>`;
     });
+    feed.innerHTML = html;
+    setTimeout(loadSuggestedPosts, 500);
   };
-  db.ref('posts').on('value', fetchFeed);
-  db.ref('reels').on('value', fetchFeed);
+  db.ref('posts').on('value', snap => { postsData = snap.val() || {}; renderTimeline(); });
+  db.ref('reels').on('value', snap => { reelsData = snap.val() || {}; renderTimeline(); });
 }
 function toggleLike(el, postId){
   if(!_myUid){ toast('Like karne ke liye login karo'); return; }
@@ -1594,7 +1592,12 @@ function showStoryViewer(stories){
   if(u.photo){ avEl.innerHTML=`<img src="${esc(u.photo)}">`; }
   else{ avEl.innerHTML=`<div style="width:100%;height:100%;background:linear-gradient(135deg,#f09433,#bc1888);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700">${(u.name||'U').charAt(0).toUpperCase()}</div>`; }
   $('#svName').textContent=u.name||'User';
-  $('#svMoreBtn').style.display=(s.authorId===_myUid)?'':'none';
+  const isOwn = (s.authorId === _myUid);
+  $('#svMoreBtn').style.display=isOwn?'':'none';
+  const svViewsBtn = $('#svViews');
+  const svReplyBtn = document.querySelector('.sv-reply');
+  if(svViewsBtn) svViewsBtn.style.display = isOwn ? 'inline-block' : 'none';
+  if(svReplyBtn) svReplyBtn.style.display = isOwn ? 'none' : 'inline-block';
   const age=Date.now()-s.timestamp;
   $('#svTime').textContent=age<60000?'just now':age<3600000?Math.floor(age/60000)+'m':age<86400000?Math.floor(age/3600000)+'h':Math.floor(age/86400000)+'d';
   // Image
@@ -1606,22 +1609,39 @@ function showStoryViewer(stories){
   const progBar=$('#svProgressBar');
   progBar.innerHTML=stories.map((_,i)=>`<div class="sv-bar"><div class="sv-fill" id="svFill${i}"></div></div>`).join('');
   // View count
-  loadStoryViews(s.key);
+  loadStoryViews(s.key, s.authorId);
   // Record view (only if not own)
-  if(s.authorId!==_myUid) recordStoryView(s.key);
+  if(!isOwn) recordStoryView(s.key, s.authorId);
   // Start progress
   startStoryProgress(stories);
 }
-function loadStoryViews(storyKey){
+function loadStoryViews(storyKey, authorId){
+  const viewsEl = $('#svViews');
+  if(!viewsEl) return;
   db.ref('stories/'+storyKey+'/views').on('value', snap=>{
-    const count=snap.exists()?snap.numChildren():0;
-    $('#svViews').textContent=count+' view'+(count!==1?'s':'');
-    window._currentStoryKey=storyKey;
-    window._currentStoryViews=snap.val()||{};
+    let count = snap.exists() ? snap.numChildren() : 0;
+    viewsEl.textContent = count + ' view' + (count !== 1 ? 's' : '');
+    window._currentStoryKey = storyKey;
+    window._currentStoryViews = snap.val() || {};
+    if(count === 0 && authorId){
+      db.ref('users/'+authorId+'/storyViewers/'+storyKey).once('value', s2 => {
+        if(s2.exists()){
+          let c2 = s2.numChildren();
+          viewsEl.textContent = c2 + ' view' + (c2 !== 1 ? 's' : '');
+          window._currentStoryViews = s2.val() || {};
+        }
+      });
+    }
   });
 }
-function recordStoryView(storyKey){
-  db.ref('stories/'+storyKey+'/views/'+_myUid).set({viewedAt:firebase.database.ServerValue.TIMESTAMP});
+function recordStoryView(storyKey, authorId){
+  if(!_myUid || !storyKey) return;
+  const now = firebase.database.ServerValue.TIMESTAMP;
+  db.ref('stories/'+storyKey+'/views/'+_myUid).set({viewedAt: now});
+  if(authorId){
+    db.ref('users/'+authorId+'/storyViewers/'+storyKey+'/'+_myUid).set({timestamp: now});
+    db.ref('users/'+authorId+'/analytics/storyViews').transaction(c => (c||0)+1);
+  }
 }
 function startStoryProgress(stories){
   clearTimeout(_svTimer);
@@ -1659,9 +1679,14 @@ function showStoryFrame(stories){
   if(u.photo){ $('#svAvatar').innerHTML=`<img src="${esc(u.photo)}">`; }
   else{ $('#svAvatar').innerHTML=`<div style="width:100%;height:100%;background:linear-gradient(135deg,#f09433,#bc1888);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700">${(u.name||'U').charAt(0).toUpperCase()}</div>`; }
   $('#svName').textContent=u.name||'User';
-  $('#svMoreBtn').style.display=(s.authorId===_myUid)?'':'none';
-  loadStoryViews(s.key);
-  if(s.authorId!==_myUid) recordStoryView(s.key);
+  const isOwn = (s.authorId === _myUid);
+  $('#svMoreBtn').style.display=isOwn?'':'none';
+  const svViewsBtn = $('#svViews');
+  const svReplyBtn = document.querySelector('.sv-reply');
+  if(svViewsBtn) svViewsBtn.style.display = isOwn ? 'inline-block' : 'none';
+  if(svReplyBtn) svReplyBtn.style.display = isOwn ? 'none' : 'inline-block';
+  loadStoryViews(s.key, s.authorId);
+  if(!isOwn) recordStoryView(s.key, s.authorId);
   startStoryProgress(stories);
 }
 function nextStory(){
@@ -1716,8 +1741,8 @@ function openStoryViewerList(){
         const d=snap.val(),p=d.profile||{};
         const name=p.displayName||d.displayName||d.name||(d.email?d.email.split('@')[0]:'User');
         const photo=p.photoURL||d.photoURL||null;
-        const av=photo?`<img src="${esc(photo)}">`:name.charAt(0).toUpperCase();
-        html+=`<div class="viewer-row"><div class="vr-av">${av}</div><div class="vr-name">${esc(name)}</div></div>`;
+        const av=photo?`<img src="${esc(photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`:name.charAt(0).toUpperCase();
+        html+=`<div class="viewer-row" style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05)"><div class="vr-av" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden">${av}</div><div class="vr-name" style="font-size:14px;font-weight:600;color:#fff">${esc(name)}</div></div>`;
       }
       if(loaded===uids.length) body.innerHTML=html||'<div style="text-align:center;padding:20px;color:#8e8e8e">No viewers</div>';
     });
@@ -3459,5 +3484,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </script>
 
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a13565b1187d1af9',t:'MTc4Mjc0MDk5NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1358ae04ed77794',t:'MTc4Mjc0MjUxNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
