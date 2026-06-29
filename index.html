@@ -1781,7 +1781,7 @@ $('#searchInput').addEventListener('input', function(){
         const av = (d.authorName||'U').charAt(0).toUpperCase();
         html += `<div class="search-user-row" onclick="openProfile('${esc(d.authorId)}','${esc(d.authorName||'User')}')">
           <div class="search-user-av">${av}</div>
-          <div><div class="search-user-name">${esc(d.authorName||'User')}</div><div class="search-user-sub">${esc(d.authorEmail||'')}</div></div>
+          <div><div class="search-user-name">${esc(d.authorName||'User')}</div></div>
         </div>`;
       }
     });
@@ -1800,7 +1800,7 @@ $('#searchInput').addEventListener('input', function(){
             const av=p.photoURL||u.photoURL?`<img src="${esc(p.photoURL||u.photoURL)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`:nm.charAt(0).toUpperCase();
             h2+=`<div class="search-user-row" onclick="openProfile('${esc(uid)}','${esc(nm)}')">
               <div class="search-user-av">${av}</div>
-              <div><div class="search-user-name">${esc(nm)}</div><div class="search-user-sub">${esc(em)}</div></div>
+              <div><div class="search-user-name">${esc(nm)}</div></div>
             </div>`;
           }
         });
@@ -3447,5 +3447,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </script>
 
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a134cc8ece6f0b3c',t:'MTc4MjczNDcyMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a134e4c80c32fe9b',t:'MTc4MjczNTcxNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
