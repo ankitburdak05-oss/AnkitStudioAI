@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AnkitStudio · Pro Developer Visual IDE</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<style>
+:root {
+  --bg-dark-0: #0d0e12;
+  --bg-dark-1: #15161c;
+  --bg-dark-2: #1e1f28;
+  --bg-dark-3: #282936;
+  --border-line: #2e303e;
+  --border-soft: #232430;
+  --text-primary: #f5f6fa;
+  --text-secondary: #a0a2b2;
+  --text-muted: #646675;
+  --accent-purple: #705cf6;
+  --accent-purple-glow: rgba(112,92,246,0.25);
+  --accent-cyan: #00e5ff;
+  --accent-green: #00e676;
+  --danger-red: #ff5252;
+  --warn-orange: #ffab00;
+  --ide-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --ide-font-mono: 'Fira Code', 'SF Mono', Consolas, ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+html, body { height: 100vh; width: 100vw; overflow: hidden; background: var(--bg-dark-0); font-family: var(--ide-font-sans); color: var(--text-primary); font-size: 13px; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border-line); border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ===================== IDE SHELL GRID ===================== */
+.ide-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr 300px;
+  grid-template-rows: 52px 1fr 180px;
+  height: 100vh;
+  width: 100vw;
+  transition: grid-template-rows 0.2s ease;
+}
+.ide-shell.terminal-collapsed {
+  grid-template-rows: 52px 1fr 34px;
+}
+
+/* ===================== TOP NAV BAR ===================== */
+.ide-topbar {
+  grid-column: 1 / 4;
+  background: var(--bg-dark-1);
+  border-bottom: 1px solid var(--border-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 100;
+}
+.brand-zone { display: flex; align-items: center; gap: 10px; }
+.brand-logo { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: #fff; box-shadow: 0 0 12px var(--accent-purple-glow); }
+.brand-title { font-size: 14px; font-weight: 800; letter-spacing: 0.3px; }
+.brand-badge { font-size: 10px; font-weight: 700; background: var(--bg-dark-3); color: var(--accent-cyan); padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(0,229,255,0.3); }
+
+/* Top Mode Switcher */
+.mode-switcher { display: flex; align-items: center; background: var(--bg-dark-0); border: 1px solid var(--border-line); border-radius: 20px; padding: 3px; gap: 4px; }
+.mode-btn { border: none; background: transparent; color: var(--text-secondary); padding: 6px 14px; border-radius: 16px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.15s; }
+.mode-btn.active.inspect { background: var(--accent-purple); color: #fff; box-shadow: 0 2px 10px var(--accent-purple-glow); }
+.mode-btn.active.live { background: var(--accent-green); color: #000; box-shadow: 0 2px 10px rgba(0,230,118,0.3); }
+
+/* Breakpoints Bar */
+.breakpoints-bar { display: flex; align-items: center; background: var(--bg-dark-0); border: 1px solid var(--border-line); border-radius: 8px; padding: 2px; }
+.bp-btn { width: 34px; height: 30px; border: none; background: transparent; color: var(--text-muted); border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
+.bp-btn:hover { color: var(--text-primary); background: var(--bg-dark-2); }
+.bp-btn.active { color: var(--accent-cyan); background: var(--bg-dark-3); border: 1px solid rgba(0,229,255,0.4); }
+
+/* Actions Group */
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.ide-btn { border: 1px solid var(--border-line); background: var(--bg-dark-2); color: var(--text-primary); padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.15s; }
+.ide-btn:hover { background: var(--bg-dark-3); border-color: #44475a; }
+.ide-btn:active { transform: scale(0.97); }
+.ide-btn.primary { background: var(--accent-purple); border-color: var(--accent-purple); color: #fff; }
+.ide-btn.primary:hover { background: #826ef8; box-shadow: 0 0 15px var(--accent-purple-glow); }
+.ide-btn.warn { border-color: var(--warn-orange); color: var(--warn-orange); }
+
+/* ===================== LEFT PANEL: DOM TREE & LIBRARY ===================== */
+.ide-leftpanel {
+  grid-column: 1;
+  background: var(--bg-dark-1);
+  border-right: 1px solid var(--border-line);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.panel-tabs { display: flex; border-bottom: 1px solid var(--border-line); background: var(--bg-dark-0); }
+.ptab { flex: 1; padding: 12px 0; border: none; background: transparent; color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.15s; }
+.ptab:hover { color: var(--text-primary); }
+.ptab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); background: var(--bg-dark-1); }
+
+.ptab-content { flex: 1; overflow-y: auto; padding: 10px; display: none; }
+.ptab-content.active { display: block; }
+
+/* DOM Tree View */
+.dom-tree-list { display: flex; flex-direction: column; gap: 2px; font-family: var(--ide-font-mono); font-size: 11.5px; }
+.dom-node { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px; color: var(--text-secondary); cursor: pointer; transition: 0.1s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dom-node:hover { background: var(--bg-dark-2); color: var(--text-primary); }
+.dom-node.selected { background: rgba(112,92,246,0.2); color: #fff; border-left: 3px solid var(--accent-purple); }
+.dom-node .tag { color: #ff79c6; font-weight: 600; }
+.dom-node .cls { color: #8be9fd; }
+.dom-node .id { color: #50fa7b; }
+.dom-node-toggle { width: 14px; text-align: center; color: var(--text-muted); cursor: pointer; }
+
+/* Components Library Grid */
+.comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.comp-item { background: var(--bg-dark-2); border: 1px solid var(--border-soft); border-radius: 8px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: grab; transition: 0.15s; }
+.comp-item:hover { border-color: var(--accent-cyan); transform: translateY(-2px); background: var(--bg-dark-3); }
+.comp-item i { font-size: 18px; color: var(--accent-cyan); }
+.comp-item span { font-size: 11px; font-weight: 600; color: var(--text-primary); }
+
+/* ===================== CENTER CANVAS ===================== */
+.ide-center {
+  grid-column: 2;
+  background: #0f1015;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Breadcrumb Bar (Deep Dive Scope) */
+.scope-breadcrumb {
+  background: rgba(21, 22, 28, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-soft);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--ide-font-mono);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  z-index: 50;
+}
+.scope-crumb { cursor: pointer; padding: 2px 8px; border-radius: 4px; transition: 0.1s; display: flex; align-items: center; gap: 6px; }
+.scope-crumb:hover { background: var(--bg-dark-3); color: #fff; }
+.scope-crumb.active { background: var(--accent-purple); color: #fff; font-weight: 700; }
+
+.canvas-viewport {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 30px;
+}
+
+.device-mockup-wrapper {
+  position: relative;
+  transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1), height 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 30px 80px rgba(0,0,0,0.8);
+  border-radius: 40px;
+  overflow: hidden;
+  background: #fff;
+}
+.device-mockup-wrapper.phone { width: 390px; height: 844px; border: 12px solid #1c1d24; border-radius: 44px; }
+.device-mockup-wrapper.tablet { width: 768px; height: 1024px; border: 16px solid #1c1d24; border-radius: 36px; }
+.device-mockup-wrapper.desktop { width: 1280px; height: 800px; border: 8px solid #1c1d24; border-radius: 12px; }
+
+#liveSiteFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
+  display: block;
+}
+
+/* ===================== RIGHT PANEL: PROPERTY INSPECTOR ===================== */
+.ide-rightpanel {
+  grid-column: 3;
+  background: var(--bg-dark-1);
+  border-left: 1px solid var(--border-line);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.inspector-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-dark-0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.selected-badge { display: flex; align-items: center; gap: 8px; font-family: var(--ide-font-mono); font-size: 12px; font-weight: 700; color: var(--accent-cyan); }
+
+.insp-section { border-bottom: 1px solid var(--border-soft); padding: 14px 16px; }
+.insp-title { font-size: 10.5px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+
+/* Box Model Interactive Visualizer */
+.box-model-diagram {
+  background: var(--bg-dark-0);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: var(--ide-font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.bm-label { position: absolute; top: 4px; left: 6px; font-size: 9px; color: #ffb86c; font-weight: 700; }
+.bm-margin { border: 1px dashed #ffb86c; padding: 20px; width: 100%; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; }
+.bm-padding { border: 1px solid #50fa7b; padding: 18px; width: 100%; border-radius: 4px; background: rgba(80,250,123,0.05); display: flex; align-items: center; justify-content: center; position: relative; }
+.bm-content { background: rgba(112,92,246,0.3); border: 1px solid var(--accent-purple); padding: 10px 20px; border-radius: 3px; color: #fff; font-weight: 700; text-align: center; }
+
+.bm-val { position: absolute; cursor: pointer; }
+.bm-val:hover { color: #fff; font-weight: bold; }
+.bm-mt { top: 4px; left: 50%; transform: translateX(-50%); }
+.bm-mb { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.bm-ml { left: 6px; top: 50%; transform: translateY(-50%); }
+.bm-mr { right: 6px; top: 50%; transform: translateY(-50%); }
+
+/* Controls Grid */
+.prop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.prop-field label { display: block; font-size: 10px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; }
+.prop-input { width: 100%; background: var(--bg-dark-2); border: 1px solid var(--border-line); border-radius: 6px; padding: 6px 8px; color: #fff; font-family: var(--ide-font-mono); font-size: 12px; outline: none; transition: 0.15s; }
+.prop-input:focus { border-color: var(--accent-cyan); background: var(--bg-dark-3); }
+
+/* Firebase CMS Binding Box */
+.cms-bind-box { background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.25); border-radius: 8px; padding: 12px; margin-top: 6px; }
+.cms-bind-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+
+/* ===================== BOTTOM TERMINAL LOG ===================== */
+.ide-terminal {
+  grid-column: 1 / 4;
+  grid-row: 3;
+  background: #090a0f;
+  border-top: 1px solid var(--border-line);
+  display: flex;
+  flex-direction: column;
+  z-index: 90;
+  overflow: hidden;
+}
+.term-header {
+  background: var(--bg-dark-1);
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--ide-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.term-header .term-title { display: flex; align-items: center; gap: 8px; color: var(--accent-green); cursor: pointer; }
+.term-body { flex: 1; overflow-y: auto; padding: 12px 16px; font-family: var(--ide-font-mono); font-size: 11.5px; line-height: 1.6; display: flex; flex-direction: column; gap: 4px; }
+.log-line { display: flex; align-items: center; gap: 10px; }
+.log-time { color: var(--text-muted); }
+.log-info { color: #8be9fd; }
+.log-warn { color: var(--warn-orange); }
+.log-success { color: var(--accent-green); }
+.log-css { color: #ff79c6; }
+</style>
+</head>
+<body>
+
+<div class="ide-shell" id="ideShell">
+
+  <!-- TOP BAR -->
+  <header class="ide-topbar">
+    <div class="brand-zone">
+      <div class="brand-logo"><i class="fas fa-code"></i></div>
+      <div class="brand-title">AnkitStudio <span class="brand-badge">PRO IDE v2.0</span></div>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switcher">
+      <button class="mode-btn active inspect" id="modeInspBtn" onclick="switchIdeMode('inspect')"><i class="fas fa-hand-pointer"></i> Inspect Mode (Move Only)</button>
+      <button class="mode-btn live" id="modeLiveBtn" onclick="switchIdeMode('live')"><i class="fas fa-bolt"></i> Live Mode (Interactive)</button>
+    </div>
+
+    <!-- Breakpoints Switcher -->
+    <div class="breakpoints-bar">
+      <button class="bp-btn active" id="bpPhone" onclick="switchBreakpoint('phone')" title="Phone · 390px"><i class="fas fa-mobile-alt"></i></button>
+      <button class="bp-btn" id="bpTablet" onclick="switchBreakpoint('tablet')" title="Tablet · 768px"><i class="fas fa-tablet-alt"></i></button>
+      <button class="bp-btn" id="bpDesktop" onclick="switchBreakpoint('desktop')" title="Desktop · 1280px"><i class="fas fa-laptop"></i></button>
+    </div>
+
+    <!-- Actions -->
+    <div class="top-actions">
+      <button class="ide-btn warn" onclick="triggerIdeReset()"><i class="fas fa-rotate-left"></i> Reset Layout</button>
+      <button class="ide-btn" onclick="ideUndo()" title="Undo"><i class="fas fa-undo"></i></button>
+      <button class="ide-btn" onclick="ideRedo()" title="Redo"><i class="fas fa-redo"></i></button>
+      <button class="ide-btn primary" onclick="saveIdeLayout()"><i class="fas fa-cloud-arrow-up"></i> Save to Firebase</button>
+    </div>
+  </header>
+
+  <!-- LEFT PANEL: DOM TREE & LIBRARY -->
+  <aside class="ide-leftpanel">
+    <div class="panel-tabs">
+      <button class="ptab active" id="tabTreeBtn" onclick="switchLeftTab('tree')"><i class="fas fa-folder-tree"></i> DOM Tree</button>
+      <button class="ptab" id="tabLibBtn" onclick="switchLeftTab('lib')"><i class="fas fa-cubes"></i> Components</button>
+    </div>
+
+    <!-- DOM Tree View -->
+    <div class="ptab-content active" id="tabTreeContent">
+      <div style="font-size:10.5px;font-weight:700;color:var(--text-muted);margin-bottom:8px;display:flex;justify-content:space-between">
+        <span>LIVE VIRTUAL DOM TREE</span>
+        <span onclick="refreshDomTree()" style="color:var(--accent-cyan);cursor:pointer"><i class="fas fa-sync-alt"></i> Sync</span>
+      </div>
+      <div class="dom-tree-list" id="domTreeList">
+        <div style="color:var(--text-muted);text-align:center;padding:20px">Scanning iframe DOM...</div>
+      </div>
+    </div>
+
+    <!-- Components Library -->
+    <div class="ptab-content" id="tabLibContent">
+      <div style="font-size:10.5px;font-weight:700;color:var(--text-muted);margin-bottom:6px">DRAG TO CANVAS OR DOM TREE</div>
+      <div class="comp-grid">
+        <div class="comp-item" draggable="true" ondragstart="startDragComp(event, 'container')"><i class="fas fa-box"></i><span>Container</span></div>
+        <div class="comp-item" draggable="true" ondragstart="startDragComp(event, 'heading')"><i class="fas fa-heading"></i><span>Heading</span></div>
+        <div class="comp-item" draggable="true" ondragstart="startDragComp(event, 'text')"><i class="fas fa-paragraph"></i><span>Text Paragraph</span></div>
+        <div class="comp-item" draggable="true" ondragstart="startDragComp(event, 'button')"><i class="fas fa-square"></i><span>Pro Button</span></div>
+        <div class="comp-item" draggable="true" ondragstart="startDragComp(event, 'image')"><i class="far fa-image"></i><span>CMS Image</span></div>
+        <div class="comp-item" draggable="true" ondragstart="startDragComp(event, 'icon')"><i class="fas fa-heart"></i><span>Icon Element</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CENTER CANVAS -->
+  <main class="ide-center">
+    <!-- Breadcrumb Bar (Scope Edit) -->
+    <div class="scope-breadcrumb" id="scopeBreadcrumb">
+      <span class="scope-crumb active" onclick="exitDeepScope()"><i class="fas fa-house"></i> Root Document</span>
+    </div>
+
+    <!-- Canvas Viewport -->
+    <div class="canvas-viewport" id="canvasViewport">
+      <div class="device-mockup-wrapper phone" id="deviceMockup">
+        <iframe id="liveSiteFrame" src="index.html"></iframe>
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL: INSPECTOR -->
+  <aside class="ide-rightpanel">
+    <div class="inspector-header">
+      <span style="font-size:11px;font-weight:800;color:var(--text-muted)">ELEMENT INSPECTOR</span>
+      <div class="selected-badge" id="selectedBadge">&lt;body&gt;</div>
+    </div>
+
+    <!-- Box Model -->
+    <div class="insp-section">
+      <div class="insp-title"><span>Visual Box Model</span><i class="fas fa-vector-square" style="color:var(--accent-purple)"></i></div>
+      <div class="box-model-diagram">
+        <span class="bm-label">MARGIN</span>
+        <div class="bm-margin">
+          <span class="bm-val bm-mt" id="bmMarginTop">0</span>
+          <span class="bm-val bm-mb" id="bmMarginBottom">0</span>
+          <span class="bm-val bm-ml" id="bmMarginLeft">0</span>
+          <span class="bm-val bm-mr" id="bmMarginRight">0</span>
+          
+          <div class="bm-padding">
+            <span style="position:absolute;top:2px;left:4px;font-size:8px;color:#50fa7b;font-weight:700">PADDING</span>
+            <span class="bm-val bm-mt" id="bmPadTop">0</span>
+            <span class="bm-val bm-mb" id="bmPadBottom">0</span>
+            <span class="bm-val bm-ml" id="bmPadLeft">0</span>
+            <span class="bm-val bm-mr" id="bmPadRight">0</span>
+            
+            <div class="bm-content" id="bmContentBox">390 × 844</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typography -->
+    <div class="insp-section">
+      <div class="insp-title"><span>Typography</span><i class="fas fa-font" style="color:var(--accent-cyan)"></i></div>
+      <div class="prop-grid">
+        <div class="prop-field"><label>Font Size</label><input class="prop-input" type="text" id="propFontSize" value="14px"></div>
+        <div class="prop-field"><label>Font Weight</label><select class="prop-input" id="propFontWeight"><option>400</option><option>600</option><option>700</option><option>800</option></select></div>
+      </div>
+      <div class="prop-field" style="margin-top:6px"><label>Text Content</label><input class="prop-input" type="text" id="propTextContent" placeholder="Edit live text..."></div>
+    </div>
+
+    <!-- Position & Layout -->
+    <div class="insp-section">
+      <div class="insp-title"><span>Position & Offsets</span><i class="fas fa-arrows-up-down-left-right" style="color:var(--accent-green)"></i></div>
+      <div class="prop-grid">
+        <div class="prop-field"><label>Left (X)</label><input class="prop-input" type="number" id="propPosX" value="0"></div>
+        <div class="prop-field"><label>Top (Y)</label><input class="prop-input" type="number" id="propPosY" value="0"></div>
+      </div>
+      <div class="prop-grid" style="margin-top:6px">
+        <div class="prop-field"><label>Scale</label><input class="prop-input" type="number" step="0.1" id="propScale" value="1"></div>
+        <div class="prop-field"><label>Z-Index</label><input class="prop-input" type="number" id="propZIndex" value="1"></div>
+      </div>
+    </div>
+
+    <!-- Firebase CMS Data Binding -->
+    <div class="insp-section">
+      <div class="insp-title"><span>Firebase CMS Binding</span><i class="fas fa-database" style="color:#ffab00"></i></div>
+      <div class="cms-bind-box">
+        <span style="font-size:11px;color:var(--text-secondary)">Bridge element to Realtime Database</span>
+        <div class="cms-bind-row">
+          <select class="prop-input" style="flex:1"><option>posts/title</option><option>posts/caption</option><option>users/displayName</option><option>users/bio</option></select>
+          <button class="ide-btn primary" onclick="toastIde('Bound to Firebase field!')"><i class="fas fa-link"></i> Bind</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- BOTTOM TERMINAL LOG -->
+  <footer class="ide-terminal">
+    <div class="term-header">
+      <div class="term-title" onclick="toggleTerminalCollapse()"><i class="fas fa-terminal"></i> TERMINAL CONSOLE & LOGS</div>
+      <div style="display:flex;gap:12px;font-size:11px">
+        <span style="color:var(--accent-cyan)"><i class="fas fa-circle" style="font-size:8px"></i> Realtime Sync Active</span>
+        <span onclick="toggleTerminalCollapse()" style="cursor:pointer"><i class="fas fa-chevron-down" id="termCollapseIcon"></i></span>
+      </div>
+    </div>
+    <div class="term-body" id="termOutput">
+      <div class="log-line"><span class="log-time">[09:00:01]</span><span class="log-success">✔ IDE Core Shell Initialized (Webflow / Figma Mode)</span></div>
+      <div class="log-line"><span class="log-time">[09:00:02]</span><span class="log-info">ℹ Virtual DOM Bridge established. Admin UID: WcZgccJDnSNmHyNs1Y7FauE04ff1</span></div>
+    </div>
+  </footer>
+
+</div>
+
+<script src="site-editor.js"></script>
+</body>
+</html>

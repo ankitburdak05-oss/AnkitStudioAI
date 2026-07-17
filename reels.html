@@ -129,9 +129,172 @@
         body.dark-mode .rcm-close{color:#fff}
         body.dark-mode .rcm-text{color:#ccc}
         body.dark-mode .rcm-input{background:#262626;color:#fff;border-color:#333}
+
+        /* ===== REELS MUSIC & AUTO-SCROLL ADDITIONS ===== */
+        /* Vinyl Record rotating disk */
+        .reel-music-disc {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #111, #333, #111);
+            border: 2px solid rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 12px;
+            animation: spinDisc 2.5s linear infinite;
+            animation-play-state: paused;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: 0 0 8px rgba(0,0,0,0.6);
+            position: relative;
+        }
+        .reel-music-disc.playing {
+            animation-play-state: running;
+        }
+        .reel-music-disc::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #000;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+        .reel-music-disc i {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            z-index: 1;
+        }
+        @keyframes spinDisc {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Marquee Song Title styling */
+        .reel-audio-marquee {
+            display: flex;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 160px;
+            mask-image: linear-gradient(to right, transparent, black 8px, black 92%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 8px, black 92%, transparent);
+            background: rgba(255, 255, 255, 0.12);
+            padding: 4px 8px;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+            align-items: center;
+            gap: 6px;
+        }
+        .reel-audio-marquee i {
+            color: #fff;
+            font-size: 11px;
+            animation: pulseMusic 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes pulseMusic {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            100% { transform: scale(1.15); opacity: 1; }
+        }
+        .reel-audio-marquee-text {
+            display: inline-block;
+            animation: runMarquee 10s linear infinite;
+            font-weight: 500;
+            font-size: 12px;
+            color: #fff;
+            padding-right: 12px;
+        }
+        @keyframes runMarquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Auto-scroll floating pill */
+        .autoscroll-toggle-pill {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .autoscroll-toggle-pill:hover {
+            background: rgba(0, 0, 0, 0.75);
+        }
+        .autoscroll-toggle-pill:active {
+            transform: scale(0.96);
+        }
+        .autoscroll-toggle-pill i {
+            font-size: 11px;
+            transition: color 0.2s;
+        }
+        .autoscroll-toggle-pill.active i {
+            color: #0095f6;
+        }
+
+        /* Progress Bar for all reels (both image and video) */
+        .reel-progress {
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 10;
+            cursor: pointer;
+        }
+        .reel-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f09433, #bc1888, #0095f6);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        /* Speaker Volume Overlay popup */
+        .reel-volume-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.7);
+            background: rgba(0, 0, 0, 0.65);
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .reel-volume-overlay.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        .reel-volume-overlay i {
+            font-size: 28px;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
+<!-- Floating Auto-Scroll Toggle Pill -->
+<div class="autoscroll-toggle-pill active" id="autoScrollPill" onclick="toggleAutoScrollPill()">
+    <i class="fas fa-magic"></i> <span>Auto-Scroll: On</span>
+</div>
+
 <script>if(sessionStorage.getItem('splash_shown')){document.documentElement.style.setProperty('--splash-display','none');}</script>
 
 <!-- ===== REELS FEED ===== -->
@@ -210,19 +373,27 @@ if(localStorage.getItem('ankitstudio_darkmode')==='true')document.body.classList
 
 // ===== AUDIO LIBRARY (Static for now, can be dynamic) =====
 const AUDIO_LIBRARY=[
-    {name:"Aesthetic Vibes",artist:"Lo-Fi Beats"},
-    {name:"Neon Dreams",artist:"Synthwave"},
-    {name:"Cosmic Journey",artist:"Space Ambient"},
-    {name:"Midnight City",artist:"Chillhop"},
-    {name:"Digital Rain",artist:"Cyberpunk OST"},
-    {name:"Sunset Drive",artist:"Tropical House"},
-    {name:"Ethereal Glow",artist:"Ambient"},
-    {name:"Retro Wave",artist:"80s Synth"},
-    {name:"Bass Drop",artist:"EDM"},
-    {name:"Chill Mode",artist:"Lo-Fi Hip Hop"},
-    {name:"Trending Now",artist:"Viral Hits"},
-    {name:"Original Audio",artist:"Original"},
+    {name:"Aesthetic Vibes",artist:"Lo-Fi Beats",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"},
+    {name:"Neon Dreams",artist:"Synthwave",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"},
+    {name:"Cosmic Journey",artist:"Space Ambient",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"},
+    {name:"Midnight City",artist:"Chillhop",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"},
+    {name:"Digital Rain",artist:"Cyberpunk OST",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"},
+    {name:"Sunset Drive",artist:"Tropical House",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"},
+    {name:"Ethereal Glow",artist:"Ambient",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"},
+    {name:"Retro Wave",artist:"80s Synth",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"},
+    {name:"Bass Drop",artist:"EDM",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3"},
+    {name:"Chill Mode",artist:"Lo-Fi Hip Hop",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"},
+    {name:"Trending Now",artist:"Viral Hits",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3"},
+    {name:"Original Audio",artist:"Original",url:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3"},
 ];
+
+// Central audio player for background music
+const globalAudioPlayer = new Audio();
+let isGlobalMuted = true; // Browser compatibility: start muted by default
+globalAudioPlayer.muted = true;
+let isAutoScrollActive = true; // Auto-scroll state (default true)
+let activeReelElement = null; // Current active reel DOM node
+
 
 firebase.auth().onAuthStateChanged(function(user){
     if(user){
@@ -233,6 +404,241 @@ firebase.auth().onAuthStateChanged(function(user){
         window.location.href='index.html';
     }
 });
+
+// ===== REELS MUSIC & AUTOPLAY LOGIC HELPERS =====
+function getAudioUrl(audioName) {
+    if (!audioName) return AUDIO_LIBRARY[0].url;
+    var nameClean = audioName.toLowerCase().trim();
+    var found = AUDIO_LIBRARY.find(function(a) {
+        return a.name.toLowerCase().includes(nameClean) || nameClean.includes(a.name.toLowerCase());
+    });
+    if (found) return found.url;
+    
+    // Hash function fallback to keep audio selection consistent per name
+    var hash = 0;
+    for (var i = 0; i < nameClean.length; i++) {
+        hash = nameClean.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    var idx = Math.abs(hash) % AUDIO_LIBRARY.length;
+    return AUDIO_LIBRARY[idx].url;
+}
+
+let isScrollObserverSetup = false;
+function setupReelsScrollObserver() {
+    if (isScrollObserverSetup) return;
+    var feed = document.getElementById('reelsFeed');
+    if (!feed) return;
+    
+    var scrollTimeout;
+    feed.addEventListener('scroll', function() {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(handleReelSelection, 80);
+    });
+    
+    isScrollObserverSetup = true;
+}
+
+function handleReelSelection() {
+    var container = document.getElementById('reelsFeed');
+    if (!container) return;
+    var reels = container.querySelectorAll('.reel');
+    if (reels.length === 0) return;
+    
+    var containerHeight = window.innerHeight;
+    var maxVisibleHeight = 0;
+    var newActiveReel = null;
+    
+    reels.forEach(function(reel) {
+        var rect = reel.getBoundingClientRect();
+        var visibleHeight = Math.min(rect.bottom, containerHeight) - Math.max(rect.top, 0);
+        if (visibleHeight > maxVisibleHeight) {
+            maxVisibleHeight = visibleHeight;
+            newActiveReel = reel;
+        }
+    });
+    
+    if (newActiveReel && newActiveReel !== activeReelElement) {
+        playActiveReel(newActiveReel);
+    }
+}
+
+let activeVideo = null;
+let progressInterval = null;
+
+function playActiveReel(reel) {
+    // Clean up previous active reel
+    if (activeReelElement) {
+        var prevVideo = activeReelElement.querySelector('video.reel-media');
+        if (prevVideo) {
+            prevVideo.pause();
+            prevVideo.currentTime = 0;
+        }
+        var prevDisc = activeReelElement.querySelector('.reel-music-disc');
+        if (prevDisc) prevDisc.classList.remove('playing');
+        
+        var prevProgressFill = activeReelElement.querySelector('.reel-progress-fill');
+        if (prevProgressFill) prevProgressFill.style.width = '0%';
+    }
+    
+    clearInterval(progressInterval);
+    globalAudioPlayer.pause();
+    
+    // Set new active reel
+    activeReelElement = reel;
+    var reelId = reel.dataset.reelId;
+    var video = reel.querySelector('video.reel-media');
+    var disc = reel.querySelector('.reel-music-disc');
+    var audioName = reel.dataset.audioName || '';
+    
+    // Determine audio URL
+    var audioUrl = getAudioUrl(audioName);
+    
+    // Play media
+    if (video) {
+        activeVideo = video;
+        video.muted = isGlobalMuted;
+        
+        // If there's background music tag, play music, mute video
+        var playsMusic = audioName && audioName.toLowerCase() !== 'original' && audioName.toLowerCase() !== 'original audio';
+        if (playsMusic) {
+            video.muted = true; // Video is muted, music plays
+            globalAudioPlayer.src = audioUrl;
+            globalAudioPlayer.muted = isGlobalMuted;
+            if (!isGlobalMuted) {
+                globalAudioPlayer.play().catch(function(e){ console.log("Audio autoplay blocked: ", e); });
+                if (disc) disc.classList.add('playing');
+            }
+        } else {
+            // Original video audio
+            if (!isGlobalMuted) {
+                video.muted = false;
+                if (disc) disc.classList.add('playing');
+            } else {
+                video.muted = true;
+            }
+        }
+        
+        video.play().catch(function(e) {
+            console.log("Video autoplay blocked: ", e);
+        });
+        
+        // Track video progress
+        progressInterval = setInterval(function() {
+            if (video.duration) {
+                var pct = (video.currentTime / video.duration) * 100;
+                var fill = reel.querySelector('.reel-progress-fill');
+                if (fill) fill.style.width = pct + '%';
+            }
+        }, 100);
+        
+        // Video finished handler
+        video.onended = function() {
+            if (isAutoScrollActive) {
+                scrollNextReel();
+            }
+        };
+    } else {
+        // Image Reel
+        activeVideo = null;
+        globalAudioPlayer.src = audioUrl;
+        globalAudioPlayer.muted = isGlobalMuted;
+        if (!isGlobalMuted) {
+            globalAudioPlayer.play().catch(function(e){ console.log("Audio autoplay blocked: ", e); });
+            if (disc) disc.classList.add('playing');
+        }
+        
+        // Track global audio progress for image reels
+        progressInterval = setInterval(function() {
+            if (globalAudioPlayer.duration) {
+                var pct = (globalAudioPlayer.currentTime / globalAudioPlayer.duration) * 100;
+                var fill = reel.querySelector('.reel-progress-fill');
+                if (fill) fill.style.width = pct + '%';
+            }
+        }, 100);
+        
+        // Audio finished handler
+        globalAudioPlayer.onended = function() {
+            if (isAutoScrollActive) {
+                scrollNextReel();
+            }
+        };
+    }
+}
+
+function scrollNextReel() {
+    var container = document.getElementById('reelsFeed');
+    if (!container || !activeReelElement) return;
+    var next = activeReelElement.nextElementSibling;
+    if (next && next.classList.contains('reel')) {
+        next.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function toggleActiveReelMute(reel) {
+    isGlobalMuted = !isGlobalMuted;
+    
+    // Toggle global speaker overlay
+    var overlay = reel.querySelector('.reel-volume-overlay');
+    if (overlay) {
+        var icon = overlay.querySelector('i');
+        if (isGlobalMuted) {
+            icon.className = 'fas fa-volume-mute';
+        } else {
+            icon.className = 'fas fa-volume-up';
+        }
+        overlay.classList.add('show');
+        setTimeout(function() {
+            overlay.classList.remove('show');
+        }, 800);
+    }
+    
+    // Apply sound state
+    var video = reel.querySelector('video.reel-media');
+    var disc = reel.querySelector('.reel-music-disc');
+    var audioName = reel.dataset.audioName || '';
+    
+    var playsMusic = audioName && audioName.toLowerCase() !== 'original' && audioName.toLowerCase() !== 'original audio';
+    
+    if (isGlobalMuted) {
+        globalAudioPlayer.muted = true;
+        globalAudioPlayer.pause();
+        if (video) video.muted = true;
+        if (disc) disc.classList.remove('playing');
+    } else {
+        if (video) {
+            if (playsMusic) {
+                video.muted = true; // Keep video muted, play music
+                globalAudioPlayer.muted = false;
+                globalAudioPlayer.play().catch(function(e){});
+            } else {
+                video.muted = false; // Original audio, play video unmuted
+            }
+        } else {
+            // Image, play music
+            globalAudioPlayer.muted = false;
+            globalAudioPlayer.play().catch(function(e){});
+        }
+        if (disc) disc.classList.add('playing');
+    }
+}
+
+function toggleAutoScrollPill() {
+    isAutoScrollActive = !isAutoScrollActive;
+    var pill = document.getElementById('autoScrollPill');
+    if (pill) {
+        var span = pill.querySelector('span');
+        var icon = pill.querySelector('i');
+        if (isAutoScrollActive) {
+            pill.classList.add('active');
+            span.textContent = 'Auto-Scroll: On';
+            showToast('Auto-scroll activated 🎬');
+        } else {
+            pill.classList.remove('active');
+            span.textContent = 'Auto-Scroll: Off';
+            showToast('Auto-scroll deactivated ✕');
+        }
+    }
+}
 
 // ===== LOAD REELS =====
 function loadReels(){
@@ -252,7 +658,20 @@ function loadReels(){
         reels.forEach(function(reel){
             feed.innerHTML+=buildReelHTML(reel);
         });
+        
+        // Initial active selection and scroll observer
+        setTimeout(function() {
+            handleReelSelection();
+            setupReelsScrollObserver();
+        }, 300);
     });
+}
+
+function onReelTap(e, reelEl) {
+    if (e.target.closest('.reel-actions') || e.target.closest('.reel-author') || e.target.closest('.rcm-close') || e.target.closest('.rcm-input-area') || e.target.closest('button') || e.target.closest('input')) {
+        return;
+    }
+    toggleActiveReelMute(reelEl);
 }
 
 // Fallback: show posts as reels
@@ -266,45 +685,77 @@ function loadPostsAsReels(){
         posts.forEach(function(post){
             var d=post.data;
             var authorName=d.authorName||'User';
-            var html='<div class="reel" data-reel-id="'+post.key+'">'+
-                '<div class="reel-media-image"><img src="'+(d.imageUrl||'https://via.placeholder.com/400x700/111/333?text=Reel')+'" alt="" onerror="this.style.background=\'#111\'"></div>'+
+            var audioName = d.audioName || 'Aesthetic Vibes';
+            var artist = 'Original Creator';
+            var songTitle = audioName + ' • ' + artist;
+            var audioHtml = '<div class="reel-audio-marquee">' +
+                                '<i class="fas fa-music"></i>' +
+                                '<div style="overflow:hidden;width:120px;white-space:nowrap;display:inline-block;vertical-align:middle;">' +
+                                    '<span class="reel-audio-marquee-text">' + esc(songTitle) + ' &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp; ' + esc(songTitle) + ' &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;</span>' +
+                                '</div>' +
+                            '</div>';
+
+            var html='<div class="reel" data-reel-id="'+post.key+'" data-audio-name="'+esc(audioName)+'" onclick="onReelTap(event, this)">'+
+                '<div class="reel-volume-overlay"><i class="fas fa-volume-mute"></i></div>'+
+                '<div class="reel-media-image"><img class="reel-media" src="'+(d.imageUrl||'https://via.placeholder.com/400x700/111/333?text=Reel')+'" alt="" onerror="this.style.background=\'#111\'"></div>'+
+                '<div class="reel-progress"><div class="reel-progress-fill" id="progress-'+post.key+'"></div></div>'+
                 '<div class="reel-overlay">'+
                     '<div class="reel-author"><div class="reel-author-av">'+authorName.charAt(0).toUpperCase()+'</div><div class="reel-author-name">'+esc(authorName)+'</div></div>'+
                     '<div class="reel-caption"><span class="cap-user">'+esc(authorName)+'</span>'+esc((d.caption||'').substring(0,100))+'</div>'+
-                    '<div class="reel-audio"><i class="fas fa-music reel-audio-spin"></i><span class="reel-audio-name">'+(d.aiTool||'AI')+' • Original Audio</span></div>'+
+                    audioHtml+
                 '</div>'+
                 '<div class="reel-actions">'+
                     '<div class="reel-action" onclick="toggleReelLike(this,\''+post.key+'\')"><i class="far fa-heart"></i><span>'+(d.likeCount||0)+'</span></div>'+
                     '<div class="reel-action" onclick="openReelComments(\''+post.key+'\')"><i class="far fa-comment"></i><span>'+(d.commentCount||0)+'</span></div>'+
                     '<div class="reel-action" onclick="shareReelPost(\''+post.key+'\')"><i class="far fa-paper-plane"></i></div>'+
                     '<div class="reel-action" onclick="toggleReelSave(this)"><i class="far fa-bookmark"></i></div>'+
+                    '<div class="reel-music-disc"><i class="fas fa-compact-disc"></i></div>'+
                 '</div>'+
             '</div>';
             feed.innerHTML+=html;
         });
+        
+        // Initial active selection and scroll observer
+        setTimeout(function() {
+            handleReelSelection();
+            setupReelsScrollObserver();
+        }, 300);
     });
 }
 
 function buildReelHTML(reel){
     var d=reel.data;
     var authorName=d.authorName||'User';
-    var audioTag=d.audioName?('<i class="fas fa-music reel-audio-spin"></i><span class="reel-audio-name" onclick="showReelsWithAudio(\''+esc(d.audioName)+'\',\''+esc(d.audioArtist||'')+'\')">'+esc(d.audioName)+' • '+esc(d.audioArtist||'Original')+'</span>'):'';
+    var audioName = d.audioName || 'Aesthetic Vibes';
+    var artist = d.audioArtist || 'Original';
+    var songTitle = audioName + ' • ' + artist;
+    var audioHtml = '<div class="reel-audio-marquee" onclick="event.stopPropagation(); showReelsWithAudio(\''+esc(audioName)+'\',\''+esc(artist)+'\')">' +
+                        '<i class="fas fa-music"></i>' +
+                        '<div style="overflow:hidden;width:120px;white-space:nowrap;display:inline-block;vertical-align:middle;">' +
+                            '<span class="reel-audio-marquee-text">' + esc(songTitle) + ' &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp; ' + esc(songTitle) + ' &nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;</span>' +
+                        '</div>' +
+                    '</div>';
+
     var isVideo=d.type==='video';
     var mediaHtml=isVideo?
-        '<video class="reel-media" src="'+esc(d.videoUrl||d.imageUrl||'')+'" loop playsinline muted onclick="this.paused?this.play():this.pause()"></video><div class="reel-progress"><div class="reel-progress-fill" id="progress-'+reel.key+'"></div></div>':
-        '<div class="reel-media-image"><img src="'+esc(d.imageUrl||'')+'" alt=""></div>';
-    return '<div class="reel" data-reel-id="'+reel.key+'">'+
+        '<video class="reel-media" src="'+esc(d.videoUrl||d.imageUrl||'')+'" loop playsinline muted></video>':
+        '<div class="reel-media-image"><img class="reel-media" src="'+esc(d.imageUrl||'')+'" alt=""></div>';
+        
+    return '<div class="reel" data-reel-id="'+reel.key+'" data-audio-name="'+esc(audioName)+'" onclick="onReelTap(event, this)">'+
+        '<div class="reel-volume-overlay"><i class="fas fa-volume-mute"></i></div>'+
         mediaHtml+
+        '<div class="reel-progress"><div class="reel-progress-fill" id="progress-'+reel.key+'"></div></div>'+
         '<div class="reel-overlay">'+
             '<div class="reel-author"><div class="reel-author-av">'+authorName.charAt(0).toUpperCase()+'</div><div class="reel-author-name">'+esc(authorName)+'</div>'+(d.authorId!==_myUid?'<button class="reel-follow-btn" onclick="toggleReelFollow(this,\''+d.authorId+'\')">Follow</button>':'')+'</div>'+
             '<div class="reel-caption"><span class="cap-user">'+esc(authorName)+'</span>'+esc((d.caption||'').substring(0,150))+'</div>'+
-            (audioTag?'<div class="reel-audio">'+audioTag+'</div>':'')+
+            audioHtml+
         '</div>'+
         '<div class="reel-actions">'+
             '<div class="reel-action" onclick="toggleReelLike(this,\''+reel.key+'\')"><i class="far fa-heart"></i><span>'+(d.likes||0)+'</span></div>'+
             '<div class="reel-action" onclick="openReelComments(\''+reel.key+'\')"><i class="far fa-comment"></i><span>'+(d.comments||0)+'</span></div>'+
             '<div class="reel-action" onclick="shareReelExternal(\''+reel.key+'\')"><i class="far fa-paper-plane"></i></div>'+
             '<div class="reel-action" onclick="toggleReelSave(this)"><i class="far fa-bookmark"></i></div>'+
+            '<div class="reel-music-disc"><i class="fas fa-compact-disc"></i></div>'+
         '</div>'+
     '</div>';
 }

@@ -234,7 +234,6 @@ function renderCards(data) {
                 <button class="card-fav-btn" data-id="${p.id}" style="position: absolute; top: 12px; right: 12px; background: rgba(15, 10, 30, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); width: 32px; height: 32px; border-radius: 50%; color: #ff3366; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); transition: transform 0.2s; z-index: 5;"><i class="${heartClass}"></i></button>
             </div>
             <div class="post-body">
-                <div class="post-ai-tag ${p.aiClass}">${p.ai}</div>
                 <div class="post-title">${p.title}</div>
                 <div class="post-preview">${p.post}</div>
                 <div class="post-footer">
@@ -242,11 +241,6 @@ function renderCards(data) {
                         <div class="author-avatar">${p.author[0]}</div>
                         ${p.author}
                     </div>
-                    <div class="post-rating"><i class="fas fa-star"></i> ${p.rating}</div>
-                </div>
-                <div class="post-footer" style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">
-                    <span class="${p.free ? 'price-free post-price' : 'price-paid post-price'}">${p.free ? 'FREE' : '₹49'}</span>
-                    <span style="font-size:11px;color:var(--muted); font-weight:600;" id="download-count-${p.id}"><i class="fas fa-download"></i> ${p.downloads}</span>
                 </div>
             </div>
         `;
@@ -921,7 +915,6 @@ function loadCommunityPostsOriginal() {
                         id: key,
                         images: [post.imageUrl], 
                         author: post.authorName || (post.authorEmail ? post.authorEmail.split('@')[0] : "User"),
-                        ai: post.aiTool || 'AI Image',
                         posts: [post.caption], 
                         likes: realLikes
                     });
@@ -1300,7 +1293,6 @@ loadCommunityPosts = function() {
                         id: key,
                         images: [post.imageUrl],
                         author: post.authorName || (post.authorEmail ? post.authorEmail.split('@')[0] : "User"),
-                        ai: post.aiTool || 'AI Image',
                         posts: [post.caption],
                         likes: realLikes
                     });
@@ -1649,3 +1641,7 @@ window.toggleLikePost = function(postKey) {
     localStorage.setItem('community_favs', JSON.stringify(myFavorites));
     loadCommunityPosts();
 };
+
+
+
+

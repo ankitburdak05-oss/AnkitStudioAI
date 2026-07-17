@@ -138,7 +138,7 @@
       const uData = snap.val() || {};
       const prof = uData.profile || {};
       const name = prof.displayName || uData.displayName || fallbackName || 'User';
-      const bio = prof.bio || (isOwn ? 'Welcome to ANKITSTUDIOAI ✨' : 'AI creator on ANKITSTUDIOAI');
+      const bio = prof.bio || (isOwn ? 'Welcome to AnkitStudio ✨' : 'Creator on AnkitStudio');
       const photoUrl = prof.photoURL || uData.photoURL || null;
       const website = prof.website || '';
 

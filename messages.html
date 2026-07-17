@@ -6,594 +6,278 @@
     <title>Messages - AnkitStudioAI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="js/firebase-config.js"></script>
+    <script src="js/assistant.js"></script>
     <script src="js/bottom-nav.js"></script>
 
     <style>
-       * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-/* ✅ Anti-flicker: body instantly show hoga, no jump */
-body {
-    padding: 0 !important;
-    background: #fff !important;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    color: #000;
-    overflow: hidden;
-    /* No opacity trick needed — bottom nav already fixed position hai */
+/* ============================================================
+   INSTAGRAM PREMIUM DM STYLES (COHESIVE LIGHT/DARK MODE)
+   ============================================================ */
+:root {
+  --ig-primary-background: #ffffff;
+  --ig-secondary-background: #fafafa;
+  --ig-primary-text: #262626;
+  --ig-secondary-text: #8e8e8e;
+  --ig-stroke: #dbdbdb;
+  --ig-border-light: #efefef;
+  --ig-elevated-background: #ffffff;
+  --ig-link: #00376b;
+  --ig-success: #0095f6;
+  --ig-error: #ed4956;
+  --ig-highlight: #f5f5f5;
+  --ig-glass-bg: rgba(255, 255, 255, 0.85);
+  --ig-story-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  --ig-dm-gradient: linear-gradient(135deg, #3797f0 0%, #a200ff 100%);
+  --ig-story-gray: #dbdbdb;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
-/* ✅ Bottom nav instant load — content se pehle visible */
+
+body.dark-mode {
+  --ig-primary-background: #000000;
+  --ig-secondary-background: #121212;
+  --ig-primary-text: #f5f5f5;
+  --ig-secondary-text: #a8a8a8;
+  --ig-stroke: #262626;
+  --ig-border-light: #1a1a1a;
+  --ig-elevated-background: #121212;
+  --ig-link: #e0f1ff;
+  --ig-success: #0095f6;
+  --ig-error: #ed4956;
+  --ig-highlight: #1a1a1a;
+  --ig-glass-bg: rgba(0, 0, 0, 0.85);
+  --ig-story-gray: #262626;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); }
+html, body { height: 100%; background: var(--ig-primary-background); color: var(--ig-primary-text); overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+body { transition: background-color 0.3s, color 0.3s; }
+a { color: inherit; text-decoration: none; }
+
+/* Fixed positioning for bottom-nav compatibility */
 .ig-bottom-nav {
-    will-change: transform;
-    transform: translateZ(0);
+  position: fixed; bottom: 0; left: 0; width: 100%;
+  background: var(--ig-glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+  border-top: 1px solid var(--ig-stroke); display: flex;
+  justify-content: space-around; align-items: center; padding: 10px 0 12px; z-index: 9999;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
-        /* ===== TOP NAV ===== */
-        .dm-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 16px;
-            border-bottom: 1px solid #efefef;
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 100;
-        }
-        .dm-header .back-btn {
-            font-size: 22px;
-            cursor: pointer;
-            color: #000;
-            background: none;
-            border: none;
-        }
-        .dm-header h1 {
-            font-size: 18px;
-            font-weight: 700;
-        }
-        .dm-header .compose-btn {
-            font-size: 22px;
-            cursor: pointer;
-            color: #000;
-            background: none;
-            border: none;
-        }
+/* ===== TOP NAV / DM HEADER ===== */
+.dm-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px; border-bottom: 1px solid var(--ig-stroke);
+  position: sticky; top: 0; background: var(--ig-glass-bg);
+  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 100;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+.dm-header .back-btn { font-size: 22px; cursor: pointer; color: var(--ig-primary-text); background: none; border: none; transition: opacity 0.1s; }
+.dm-header .back-btn:active { opacity: 0.5; }
+.dm-header h1 { font-size: 18px; font-weight: 700; color: var(--ig-primary-text); display: flex; align-items: center; gap: 4px; }
+.dm-header .compose-btn { font-size: 22px; cursor: pointer; color: var(--ig-primary-text); background: none; border: none; transition: opacity 0.15s; }
+.dm-header .compose-btn:active { opacity: 0.5; }
 
-        /* ===== CHAT LIST VIEW ===== */
-        .dm-list-view {
-            height: calc(100vh - 56px);
-            overflow-y: auto;
-            padding-bottom: 20px;
-        }
+/* ===== CHAT LIST VIEW ===== */
+.dm-list-view {
+  height: calc(100vh - 56px); overflow-y: auto; padding-bottom: 80px;
+  background: var(--ig-primary-background);
+}
+.dm-search-bar { padding: 12px 14px; position: sticky; top: 0; background: var(--ig-primary-background); z-index: 5; }
+.dm-search-bar input {
+  width: 100%; background: var(--ig-secondary-background); border: 1px solid var(--ig-stroke);
+  border-radius: 8px; padding: 10px 14px; font-size: 14px; outline: none;
+  color: var(--ig-primary-text); transition: background-color 0.2s;
+}
+.dm-search-bar input:focus { background: var(--ig-primary-background); }
+.dm-search-bar input::placeholder { color: var(--ig-secondary-text); }
 
-        .dm-search-bar {
-            padding: 8px 16px;
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 5;
-        }
-        .dm-search-bar input {
-            width: 100%;
-            background: #efefef;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 14px;
-            outline: none;
-            color: #000;
-        }
-        .dm-search-bar input::placeholder { color: #8e8e8e; }
+.dm-item {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+  cursor: pointer; transition: background-color 0.15s; border-bottom: 1px solid var(--ig-border-light);
+}
+.dm-item:hover { background-color: var(--ig-highlight); }
+.dm-item:active { background-color: var(--ig-stroke); }
 
-        .dm-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: background 0.15s;
-            border-bottom: 1px solid #fafafa;
-        }
-        .dm-item:hover { background: #fafafa; }
-        .dm-item:active { background: #f0f0f0; }
+.dm-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--ig-story-gradient); padding: 1.8px;
+  color: #fff; font-size: 20px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; position: relative; overflow: hidden;
+}
+.dm-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2.2px solid var(--ig-primary-background); }
+.dm-avatar-initial { width: 100%; height: 100%; border-radius: 50%; background: var(--ig-story-gradient); display: flex; align-items: center; justify-content: center; color: #fff; border: 2.2px solid var(--ig-primary-background); }
 
-        .dm-avatar {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #f09433, #bc1888);
-            color: #fff;
-            font-size: 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            position: relative;
-        }
-        .dm-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .dm-avatar .online-dot {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #00c853;
-            border: 2px solid #fff;
-        }
+.dm-info { flex: 1; min-width: 0; }
+.dm-name { font-size: 14.5px; font-weight: 600; color: var(--ig-primary-text); }
+.dm-preview { font-size: 13px; color: var(--ig-secondary-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+.dm-preview .unread-text { font-weight: 700; color: var(--ig-primary-text); }
 
-        .dm-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .dm-info .dm-name {
-            font-size: 15px;
-            font-weight: 600;
-            color: #000;
-        }
-        .dm-info .dm-preview {
-            font-size: 13px;
-            color: #8e8e8e;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 2px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .dm-info .dm-preview .unread-text {
-            color: #000;
-            font-weight: 600;
-        }
+.dm-meta { text-align: right; font-size: 11px; color: var(--ig-secondary-text); }
+.dm-time { font-size: 11px; }
+.dm-unread-badge {
+  background: var(--ig-success); color: #fff; font-size: 11px; font-weight: 700;
+  min-width: 18px; height: 18px; border-radius: 9px; display: inline-flex;
+  align-items: center; justify-content: center; padding: 0 5px; margin-top: 6px;
+  box-shadow: 0 2px 6px rgba(0, 149, 246, 0.25);
+}
 
-        .dm-meta {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 6px;
-            flex-shrink: 0;
-        }
-        .dm-meta .dm-time {
-            font-size: 11px;
-            color: #8e8e8e;
-        }
-        .dm-meta .dm-unread-badge {
-            background: #0095f6;
-            color: #fff;
-            font-size: 11px;
-            font-weight: 700;
-            min-width: 20px;
-            height: 20px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 6px;
-        }
+/* ===== CHAT THREAD VIEW ===== */
+.chat-thread-view {
+  position: fixed; inset: 0; z-index: 1000; background: var(--ig-primary-background);
+  display: none; flex-direction: column; transition: transform 0.22s ease-out;
+}
+.chat-thread-view.open { display: flex; }
 
-        .dm-empty {
-            text-align: center;
-            padding: 80px 20px;
-            color: #8e8e8e;
-        }
-        .dm-empty i {
-            font-size: 60px;
-            display: block;
-            margin-bottom: 16px;
-            color: #dbdbdb;
-        }
-        .dm-empty h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #262626;
-            margin-bottom: 8px;
-        }
-        .dm-empty p {
-            font-size: 14px;
-            line-height: 1.5;
-            max-width: 300px;
-            margin: 0 auto;
-        }
+/* Chat Header */
+.chat-header {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  border-bottom: 1px solid var(--ig-stroke); background: var(--ig-glass-bg);
+  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 100;
+}
+.chat-header .back-btn { font-size: 22px; cursor: pointer; color: var(--ig-primary-text); background: none; border: none; }
+.chat-header .chat-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--ig-story-gradient); padding: 1.5px;
+  color: #fff; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;
+}
+.chat-header .chat-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--ig-primary-background); }
+.chat-header .chat-user-info { flex: 1; min-width: 0; }
+.chat-header .chat-user-name { font-size: 15px; font-weight: 700; color: var(--ig-primary-text); }
+.chat-header .chat-user-status { font-size: 11.5px; color: var(--ig-secondary-text); margin-top: 1px; }
+.chat-header .chat-user-status.online { color: #00c853; font-weight: 600; }
+.chat-header .chat-actions { display: flex; gap: 18px; }
+.chat-header .chat-actions button { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--ig-primary-text); transition: transform 0.1s; }
+.chat-header .chat-actions button:active { transform: scale(0.85); }
 
-        /* ===== CHAT VIEW ===== */
-        .dm-chat-view {
-            display: none;
-            flex-direction: column;
-            height: 100vh;
-        }
-        .dm-chat-view.active {
-            display: flex;
-        }
-        .dm-list-view.hidden {
-            display: none;
-        }
+/* Messages Area */
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 16px; display: flex;
+  flex-direction: column; gap: 8px; background: var(--ig-primary-background);
+}
+.msg-bubble {
+  max-width: 72%; padding: 10px 14px; border-radius: 20px;
+  font-size: 14px; line-height: 1.45; word-break: break-word; position: relative;
+}
+.msg-sent {
+  align-self: flex-end; background: var(--ig-dm-gradient); color: #fff; border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(162, 0, 255, 0.15);
+}
+.msg-received {
+  align-self: flex-start; background: var(--ig-secondary-background); border: 1px solid var(--ig-stroke);
+  color: var(--ig-primary-text); border-bottom-left-radius: 4px;
+}
+.msg-meta { display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 4px; opacity: 0.7; }
+.msg-time { font-size: 10px; }
+.msg-sent .msg-read-receipt { font-size: 11px; }
+.msg-sent .msg-read-receipt.read { color: #fff; }
+.msg-sent .msg-read-receipt.delivered { color: rgba(255,255,255,0.5); }
 
-        .chat-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-bottom: 1px solid #efefef;
-            background: #fff;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .chat-header .chat-back-btn {
-            font-size: 20px;
-            cursor: pointer;
-            color: #000;
-            background: none;
-            border: none;
-        }
-        .chat-header .chat-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #f09433, #bc1888);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .chat-header .chat-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .chat-header .chat-user-info {
-            flex: 1;
-        }
-        .chat-header .chat-user-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: #000;
-        }
-        .chat-header .chat-user-status {
-            font-size: 12px;
-            color: #8e8e8e;
-        }
-        .chat-header .chat-user-status.online {
-            color: #00c853;
-            font-weight: 600;
-        }
-        .chat-header .chat-actions {
-            display: flex;
-            gap: 16px;
-        }
-        .chat-header .chat-actions button {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #000;
-        }
+/* Shared Post in DM */
+.msg-post-card {
+  background: rgba(255,255,255,0.18); border-radius: 12px; padding: 10px;
+  margin-top: 6px; display: flex; align-items: center; gap: 10px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.msg-received .msg-post-card {
+  background: rgba(0,0,0,0.04); border: 1px solid var(--ig-stroke);
+}
+.msg-post-img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+.msg-post-info { flex: 1; min-width: 0; font-size: 12px; }
+.msg-post-title { font-weight: 700; color: inherit; }
+.msg-post-cap { opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
-        /* Messages Area */
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            background: #fff;
-        }
+/* Date separator */
+.chat-date-separator {
+  align-self: center; font-size: 11px; color: var(--ig-secondary-text);
+  margin: 14px 0 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+}
 
-        .msg-bubble {
-            max-width: 75%;
-            padding: 10px 14px;
-            border-radius: 18px;
-            font-size: 14px;
-            line-height: 1.4;
-            word-break: break-word;
-            position: relative;
-        }
-        .msg-sent {
-            align-self: flex-end;
-            background: #0095f6;
-            color: #fff;
-            border-bottom-right-radius: 4px;
-        }
-        .msg-received {
-            align-self: flex-start;
-            background: #efefef;
-            color: #000;
-            border-bottom-left-radius: 4px;
-        }
+/* Typing indicator */
+.msg-typing { align-self: flex-start; padding: 12px 18px; background: var(--ig-secondary-background); border: 1px solid var(--ig-stroke); border-radius: 20px; border-bottom-left-radius: 4px; display: none; align-items: center; gap: 4px; }
+.msg-typing span { width: 6px; height: 6px; background: var(--ig-secondary-text); border-radius: 50%; display: inline-block; animation: typing-bounce 1.4s infinite ease-in-out both; }
+.msg-typing span:nth-child(1) { animation-delay: -0.32s; }
+.msg-typing span:nth-child(2) { animation-delay: -0.16s; }
+@keyframes typing-bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
 
-        .msg-meta {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            justify-content: flex-end;
-            margin-top: 4px;
-        }
-        .msg-time {
-            font-size: 10px;
-            opacity: 0.7;
-        }
-        .msg-sent .msg-read-receipt {
-            font-size: 12px;
-        }
-        .msg-sent .msg-read-receipt.read { color: #fff; }
-        .msg-sent .msg-read-receipt.delivered { color: rgba(255,255,255,0.5); }
+/* Input Panel */
+.chat-input-area {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  border-top: 1px solid var(--ig-stroke); background: var(--ig-primary-background);
+}
+.chat-input-area .emoji-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--ig-primary-text); }
+.chat-input-area .input-wrap { flex: 1; position: relative; }
+.chat-input-area textarea {
+  width: 100%; border: 1px solid var(--ig-stroke); background: var(--ig-secondary-background);
+  border-radius: 20px; padding: 10px 42px 10px 16px; font-size: 14.5px; outline: none;
+  color: var(--ig-primary-text); resize: none; max-height: 100px;
+}
+.chat-input-area .photo-upload-btn { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 20px; cursor: pointer; color: var(--ig-primary-text); transition: opacity 0.15s; }
+.chat-input-area .photo-upload-btn:hover { opacity: 0.7; }
 
-        /* Shared Post in DM */
-        .msg-post-card {
-            background: rgba(255,255,255,0.15);
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        .msg-received .msg-post-card {
-            background: rgba(0,0,0,0.05);
-        }
-        .msg-post-card img {
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
-            object-fit: cover;
-        }
-        .msg-post-card .post-card-info {
-            flex: 1;
-        }
-        .msg-post-card .post-card-title {
-            font-size: 12px;
-            font-weight: 700;
-        }
-        .msg-post-card .post-card-sub {
-            font-size: 10px;
-            opacity: 0.7;
-        }
+.chat-input-area .send-btn {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--ig-success);
+  color: #fff; border: none; cursor: pointer; font-size: 15px; display: flex;
+  align-items: center; justify-content: center; transition: transform 0.1s, opacity 0.1s;
+}
+.chat-input-area .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: scale(1); }
+.chat-input-area .send-btn:active:not(:disabled) { transform: scale(0.9); }
 
-        /* Chat Input */
-        .chat-input-area {
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            padding: 10px 12px;
-            border-top: 1px solid #efefef;
-            background: #fff;
-        }
-        .chat-input-area .chat-input-wrapper {
-            flex: 1;
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            background: #efefef;
-            border-radius: 22px;
-            padding: 6px 12px;
-        }
-        .chat-input-area .emoji-btn {
-            background: none;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-            color: #8e8e8e;
-            padding: 4px;
-        }
-        .chat-input-area textarea {
-            flex: 1;
-            border: none;
-            background: transparent;
-            font-size: 14px;
-            font-family: inherit;
-            color: #000;
-            outline: none;
-            resize: none;
-            max-height: 80px;
-            min-height: 20px;
-            line-height: 20px;
-            padding: 4px 0;
-        }
-        .chat-input-area .send-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #0095f6;
-            color: #fff;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.2s;
-        }
-        .chat-input-area .send-btn:disabled {
-            background: #dbdbdb;
-            cursor: not-allowed;
-        }
-        .chat-input-area .send-btn:not(:disabled):hover {
-            background: #0081d6;
-            transform: scale(1.05);
-        }
+/* ===== COMPOSE DIRECT MODAL ===== */
+#composeModal { position: fixed; inset: 0; z-index: 1005; background: var(--ig-primary-background); display: none; flex-direction: column; backdrop-filter: blur(5px); }
+#composeModal.open { display: flex; animation: composeFade 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes composeFade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.compose-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--ig-stroke); }
+.compose-header h2 { font-size: 17px; font-weight: 700; color: var(--ig-primary-text); flex: 1; text-align: center; }
+.compose-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--ig-primary-text); width: 28px; line-height: 1; }
+.compose-search-wrap { padding: 10px 14px; border-bottom: 1px solid var(--ig-stroke); display: flex; align-items: center; gap: 8px; }
+.compose-search-wrap span { font-size: 14px; font-weight: 600; color: var(--ig-primary-text); }
+.compose-search-wrap input { flex: 1; border: none; outline: none; font-size: 14px; color: var(--ig-primary-text); background: transparent; }
+.compose-results { flex: 1; overflow-y: auto; padding: 10px 0; background: var(--ig-primary-background); }
+.compose-user-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background-color 0.1s; border-bottom: 1px solid var(--ig-border-light); }
+.compose-user-row:hover { background-color: var(--ig-highlight); }
+.compose-user-av { width: 44px; height: 44px; border-radius: 50%; background: var(--ig-story-gradient); padding: 1.5px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; overflow: hidden; }
+.compose-user-av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--ig-primary-background); }
+.compose-user-name { font-size: 14.5px; font-weight: 600; color: var(--ig-primary-text); }
+.compose-empty { text-align: center; padding: 60px 20px; color: var(--ig-secondary-text); font-size: 14px; }
 
-        /* Date Separator */
-        .msg-date-separator {
-            text-align: center;
-            padding: 8px 0;
-            font-size: 12px;
-            color: #8e8e8e;
-            font-weight: 600;
-        }
+/* ===== CALLING SCREENS ===== */
+.call-overlay { position: fixed; inset: 0; z-index: 10000; background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; animation: callFadeIn 0.25s ease-out; }
+@keyframes callFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.call-avatar-container { width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, #0095f6, #bc1888); padding: 3px; position: relative; margin-bottom: 24px; animation: pulseRing 1.8s infinite; }
+.call-avatar-container img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3.5px solid #1a1a2e; }
+.call-initial { font-size: 44px; font-weight: 700; width: 100%; height: 100%; border-radius: 50%; background: var(--ig-story-gradient); display: flex; align-items: center; justify-content: center; border: 3.5px solid #1a1a2e; }
+@keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(0, 149, 246, 0.4); } 70% { box-shadow: 0 0 0 16px rgba(0, 149, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 149, 246, 0); } }
+.call-name { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.call-status { font-size: 14px; color: #a8a8a8; margin-bottom: 60px; text-transform: uppercase; letter-spacing: 1px; }
+.call-actions-bar { display: flex; gap: 24px; }
+.call-btn-hangup { width: 68px; height: 68px; border-radius: 50%; background: var(--ig-error); border: none; color: #fff; font-size: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(237, 73, 86, 0.35); transition: transform 0.1s; }
+.call-btn-hangup:active { transform: scale(0.9); }
 
-        /* Bottom Nav */
-        .ig-bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #ffffff;
-            border-top: 1px solid #dbdbdb;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 12px 0;
-            z-index: 9999999;
-        }
-        .ig-bottom-nav i { font-size: 24px; color: #000; cursor: pointer; }
-        .ig-nav-profile {
-            width: 28px; height: 28px; border-radius: 50%;
-            object-fit: cover; border: 1px solid #dbdbdb; cursor: pointer;
-        }
+/* ===== EMOJI PICKER ===== */
+.emoji-picker-container { position: fixed; bottom: 70px; left: 14px; background: var(--ig-elevated-background); border: 1px solid var(--ig-stroke); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 10px; z-index: 99999; display: flex; flex-wrap: wrap; gap: 6px; max-width: 280px; transition: background-color 0.3s, border-color 0.3s; }
+.emoji-span { font-size: 24px; cursor: pointer; padding: 4px; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }
+.emoji-span:active { transform: scale(1.25); }
 
-        /* Compose Modal */
-        .compose-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 999999;
-            background: rgba(0,0,0,0.5);
-            align-items: flex-end;
-            justify-content: center;
-        }
-        .compose-overlay.open { display: flex; }
-        .compose-sheet {
-            background: #fff;
-            width: 100%;
-            max-width: 500px;
-            border-radius: 16px 16px 0 0;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            animation: slideUp 0.3s ease;
-        }
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        .compose-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px;
-            border-bottom: 1px solid #efefef;
-        }
-        .compose-header h2 { font-size: 16px; font-weight: 700; }
-        .compose-header button { background: none; border: none; font-size: 24px; cursor: pointer; color: #000; }
-        .compose-search {
-            padding: 12px 16px;
-        }
-        .compose-search input {
-            width: 100%;
-            background: #efefef;
-            border: none;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 14px;
-            outline: none;
-        }
-        .compose-list {
-            overflow-y: auto;
-            flex: 1;
-        }
-        .compose-user {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .compose-user:hover { background: #fafafa; }
-        .compose-user .cu-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #f09433, #bc1888);
-            color: #fff;
-            font-size: 16px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .compose-user .cu-name {
-            font-size: 14px;
-            font-weight: 600;
-        }
+/* Double check responsive overrides */
+@media (min-width: 761px) {
+  .dm-list-view { max-width: 600px; margin: 0 auto; border-left: 1px solid var(--ig-stroke); border-right: 1px solid var(--ig-stroke); }
+  .chat-thread-view { max-width: 600px; margin: 0 auto; border-left: 1px solid var(--ig-stroke); border-right: 1px solid var(--ig-stroke); box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+  .call-overlay { max-width: 600px; margin: 0 auto; }
+}
 
-        /* Toast */
-        .settings-toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #262626;
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 999999;
-            opacity: 0;
-            transition: all 0.3s ease;
-            pointer-events: none;
-        }
-        .settings-toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* ===== DARK MODE ===== */
-        body.dark-mode {
-            background: #000 !important;
-            color: #fff !important;
-        }
-        body.dark-mode .dm-header { background: #000; border-color: #262626; }
-        body.dark-mode .dm-header h1 { color: #fff; }
-        body.dark-mode .dm-header .back-btn { color: #fff; }
-        body.dark-mode .dm-header .compose-btn { color: #fff; }
-        body.dark-mode .dm-search-bar { background: #000; }
-        body.dark-mode .dm-search-bar input { background: #262626; color: #fff; }
-        body.dark-mode .dm-item { border-color: #1a1a1a; }
-        body.dark-mode .dm-item:hover { background: #1a1a1a; }
-        body.dark-mode .dm-info .dm-name { color: #fff; }
-        body.dark-mode .dm-empty h3 { color: #fff; }
-        body.dark-mode .chat-header { background: #000; border-color: #262626; }
-        body.dark-mode .chat-header .chat-back-btn { color: #fff; }
-        body.dark-mode .chat-header .chat-user-name { color: #fff; }
-        body.dark-mode .chat-header .chat-actions button { color: #fff; }
-        body.dark-mode .chat-messages { background: #000; }
-        body.dark-mode .msg-received { background: #262626; color: #fff; }
-        body.dark-mode .msg-received .msg-post-card { background: rgba(255,255,255,0.08); }
-        body.dark-mode .chat-input-area { background: #000; border-color: #262626; }
-        body.dark-mode .chat-input-area .chat-input-wrapper { background: #262626; }
-        body.dark-mode .chat-input-area textarea { color: #fff; }
-        body.dark-mode .compose-sheet { background: #000; }
-        body.dark-mode .compose-header { border-color: #262626; }
-        body.dark-mode .compose-header h2 { color: #fff; }
-        body.dark-mode .compose-header button { color: #fff; }
-        body.dark-mode .compose-search input { background: #262626; color: #fff; }
-        body.dark-mode .compose-user:hover { background: #1a1a1a; }
-        body.dark-mode .compose-user .cu-name { color: #fff; }
-        body.dark-mode .ig-bottom-nav { background: #000; border-color: #262626; }
-        body.dark-mode .ig-bottom-nav i { color: #fff; }
-    </style>
+/* VERIFIED BADGE */
+.verified-badge {
+  fill: var(--ig-success); display: inline-block; vertical-align: middle; margin-left: 4px; flex-shrink: 0;
+}
+</style>
 </head>
 <body>
 <script>if(sessionStorage.getItem('splash_shown')){document.documentElement.style.setProperty('--splash-display','none');}</script>
@@ -807,6 +491,26 @@ function renderChatList(chats) {
     const container = document.getElementById('dmChatList');
     const emptyState = document.getElementById('dmEmptyState');
 
+    // Ensure AI Bot is always at the top of the chat list
+    const hasAiBot = chats.some(c => c.partnerUid === 'ankitstudio_ai_bot');
+    if (!hasAiBot) {
+        chats.unshift({
+            partnerUid: 'ankitstudio_ai_bot',
+            partnerName: 'AnkitStudio Assistant',
+            lastMessage: 'Hi! Let me know if you need help with Reels, Stories, or Settings! 👋',
+            lastMessageTime: Date.now(),
+            lastSender: 'ankitstudio_ai_bot',
+            unreadCount: 0
+        });
+    }
+
+    if (!_userCache['ankitstudio_ai_bot']) {
+        _userCache['ankitstudio_ai_bot'] = {
+            name: 'AnkitStudio Assistant',
+            photo: null
+        };
+    }
+
     if (chats.length === 0) {
         container.innerHTML = '';
         container.innerHTML = `<div class="dm-empty">
@@ -829,9 +533,12 @@ function renderChatList(chats) {
         const timeStr = formatTime(lastTime);
         // 🔥 FIX: Show profile photo in chat list if available
         const photoUrl = cached.photo || chat.partnerPhoto || null;
-        const avatarHtml = photoUrl
-            ? `<div class="dm-avatar"><img src="${escHTML(photoUrl)}" alt="${escHTML(name)}"></div>`
-            : `<div class="dm-avatar">${initial}</div>`;
+        
+        const avatarHtml = uid === 'ankitstudio_ai_bot' 
+            ? `<div class="dm-avatar" style="background:linear-gradient(135deg, #a200ff, #3797f0); padding: 1.8px; display:flex; align-items:center; justify-content:center;"><div style="width:100%; height:100%; border-radius:50%; background:var(--ig-primary-background); display:flex; align-items:center; justify-content:center; font-size:22px;">💬</div></div>`
+            : (photoUrl
+                ? `<div class="dm-avatar"><img src="${escHTML(photoUrl)}" alt="${escHTML(name)}"></div>`
+                : `<div class="dm-avatar">${initial}</div>`);
 
         // Truncate message preview
         let preview = lastMsg;
@@ -888,7 +595,9 @@ function openChatWith(uid, name) {
     const cached = _userCache[uid] || {};
     const photoUrl = cached.photo || null;
     const chatAvatarEl = document.getElementById('chatAvatar');
-    if (chatAvatarEl && photoUrl) {
+    if (uid === 'ankitstudio_ai_bot') {
+        chatAvatarEl.innerHTML = `<div style="font-size:20px;">💬</div>`;
+    } else if (chatAvatarEl && photoUrl) {
         chatAvatarEl.innerHTML = `<img src="${escHTML(photoUrl)}" alt="${escHTML(name)}">`;
     } else {
         chatAvatarEl.textContent = name.charAt(0).toUpperCase();
@@ -946,7 +655,7 @@ function listenForMessages(partnerUid) {
 
     // Generate chat room ID (sorted UIDs)
     const chatId = getChatId(_myUid, partnerUid);
-    _chatListenerRef = firebase.database().ref('chats/' + chatId + '/messages').orderByChild('timestamp');
+    _chatListenerRef = firebase.database().ref('chats/' + chatId + '/messages').limitToLast(80);
 
     _chatListenerRef.on('value', function(snap) {
         const container = document.getElementById('chatMessages');
@@ -979,7 +688,7 @@ function renderMessages(messages) {
             lastDate = msgDate;
         }
 
-        const isSent = msg.senderId === _myUid;
+        const isSent = msg.senderId === _myUid && !msg.isBot;
         const timeStr = formatTime(msg.timestamp);
         const readReceipt = isSent ? (msg.read ? '<span class="msg-read-receipt read">✓✓</span>' : '<span class="msg-read-receipt delivered">✓✓</span>') : '';
 
@@ -1032,7 +741,7 @@ function sendMessage() {
     const messageData = {
         text: text,
         senderId: _myUid,
-        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        timestamp: Date.now(),
         read: false,
         type: 'text'
     };
@@ -1042,7 +751,6 @@ function sendMessage() {
         autoResizeTextarea(input);
         sendBtn.disabled = false;
 
-        // 🔥 FIX: Removed broken 'updates' object (was not declared = caused ReferenceError = "Message not sent" toast)
         const myName = firebase.auth().currentUser?.displayName || (firebase.auth().currentUser?.email ? firebase.auth().currentUser.email.split('@')[0] : 'User');
         const myPhoto = firebase.auth().currentUser?.photoURL || null;
         const partnerCached = _userCache[_chatPartnerUid] || {};
@@ -1058,6 +766,12 @@ function sendMessage() {
             lastSender: _myUid,
             unreadCount: 0
         });
+
+        // Intercept AI bot messaging
+        if (_chatPartnerUid === 'ankitstudio_ai_bot') {
+            triggerAiResponseUnified(text, false);
+            return;
+        }
 
         // Update partner's chat metadata
         firebase.database().ref('users/' + _chatPartnerUid + '/chats/' + _myUid).set({
@@ -1120,36 +834,76 @@ function toggleSendBtn() {
 
 // 🔥 REAL video / voice call + emoji
 function startVideoCall(){
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed;inset:0;z-index:999999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff';
-  modal.innerHTML=`<div style="font-size:48px;margin-bottom:20px"><i class="fas fa-video"></i></div><div style="font-size:18px;font-weight:700;margin-bottom:8px">${_chatPartnerName||'User'}</div><div style="color:#8e8e8e;margin-bottom:40px">Calling...</div><div style="display:flex;gap:20px"><button onclick="this.closest('div').remove()" style="width:64px;height:64px;border-radius:50%;background:#ed4956;border:none;color:#fff;font-size:24px;cursor:pointer"><i class="fas fa-phone-slash"></i></button></div>`;
+  const partnerName = _chatPartnerName || 'User';
+  const partnerInitial = partnerName.charAt(0).toUpperCase();
+  const cached = _userCache[activeChatUid] || {};
+  const photoHtml = cached.photo 
+    ? `<img src="${cached.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid #1a1a2e">` 
+    : `<div class="call-initial" style="font-size:44px;font-weight:700;width:100%;height:100%;border-radius:50%;background:linear-gradient(45deg,#f09433,#bc1888);display:flex;align-items:center;justify-content:center;border:3px solid #1a1a2e;color:#fff">${partnerInitial}</div>`;
+
+  const modal = document.createElement('div');
+  modal.className = 'call-overlay';
+  modal.innerHTML = `
+    <div class="call-avatar-container">${photoHtml}</div>
+    <div class="call-name">${escHTML(partnerName)}</div>
+    <div class="call-status"><i class="fas fa-video" style="margin-right:6px"></i> Video calling...</div>
+    <div class="call-actions-bar">
+      <button class="call-btn-hangup" onclick="this.closest('.call-overlay').remove()"><i class="fas fa-phone-slash"></i></button>
+    </div>
+  `;
   document.body.appendChild(modal);
-  setTimeout(()=>modal.remove(),10000);
-}
-function startVoiceCall(){
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed;inset:0;z-index:999999;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff';
-  modal.innerHTML=`<div style="font-size:48px;margin-bottom:20px"><i class="fas fa-phone"></i></div><div style="font-size:18px;font-weight:700;margin-bottom:8px">${_chatPartnerName||'User'}</div><div style="color:#8e8e8e;margin-bottom:40px">Voice calling...</div><div style="display:flex;gap:20px"><button onclick="this.closest('div').remove()" style="width:64px;height:64px;border-radius:50%;background:#ed4956;border:none;color:#fff;font-size:24px;cursor:pointer"><i class="fas fa-phone-slash"></i></button></div>`;
-  document.body.appendChild(modal);
-  setTimeout(()=>modal.remove(),10000);
-}
-function insertEmoji(){
-  const input=document.getElementById('chatInput');
-  if(!input) return;
-  const emojis='😀😂❤️🔥👍🎉😍😭💯✨🥺😅🤣😊🙏💪';
-  const picker=document.createElement('div');
-  picker.style.cssText='position:fixed;bottom:70px;left:10px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:10px;z-index:99999;display:flex;flex-wrap:wrap;gap:6px;max-width:280px';
-  emojis.split('').forEach(e=>{
-    const span=document.createElement('span');
-    span.textContent=e; span.style.cssText='font-size:24px;cursor:pointer;padding:4px';
-    span.onclick=()=>{ input.value+=e; picker.remove(); input.focus(); };
-    picker.appendChild(span);
-  });
-  document.body.appendChild(picker);
-  setTimeout(()=>{ if(picker.parentNode) picker.remove(); },8000);
+  setTimeout(() => { if(modal.parentNode) modal.remove() }, 10000);
 }
 
-// 🔥 FIX: Back button logic — profile se aaye toh profile pe jaao, warna profile pe jaao
+function startVoiceCall(){
+  const partnerName = _chatPartnerName || 'User';
+  const partnerInitial = partnerName.charAt(0).toUpperCase();
+  const cached = _userCache[activeChatUid] || {};
+  const photoHtml = cached.photo 
+    ? `<img src="${cached.photo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid #1a1a2e">` 
+    : `<div class="call-initial" style="font-size:44px;font-weight:700;width:100%;height:100%;border-radius:50%;background:linear-gradient(45deg,#f09433,#bc1888);display:flex;align-items:center;justify-content:center;border:3px solid #1a1a2e;color:#fff">${partnerInitial}</div>`;
+
+  const modal = document.createElement('div');
+  modal.className = 'call-overlay';
+  modal.style.background = '#1a1a2e';
+  modal.innerHTML = `
+    <div class="call-avatar-container">${photoHtml}</div>
+    <div class="call-name">${escHTML(partnerName)}</div>
+    <div class="call-status"><i class="fas fa-phone" style="margin-right:6px"></i> Voice calling...</div>
+    <div class="call-actions-bar">
+      <button class="call-btn-hangup" onclick="this.closest('.call-overlay').remove()"><i class="fas fa-phone-slash"></i></button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  setTimeout(() => { if(modal.parentNode) modal.remove() }, 10000);
+}
+
+function insertEmoji(){
+  const input = document.getElementById('chatInput');
+  if(!input) return;
+  const emojis = '😀😂❤️🔥👍🎉😍😭💯✨🥺😅🤣😊🙏💪';
+  const picker = document.createElement('div');
+  picker.className = 'emoji-picker-container';
+  emojis.split('').forEach(e => {
+    const span = document.createElement('span');
+    span.className = 'emoji-span';
+    span.textContent = e;
+    span.onclick = () => { input.value += e; picker.remove(); input.focus(); if(typeof toggleSendBtn === 'function') toggleSendBtn(); };
+    picker.appendChild(span);
+  });
+  
+  // Close picker on click outside
+  const closePicker = (e) => {
+    if(!picker.contains(e.target) && e.target !== document.querySelector('.emoji-btn') && !e.target.closest('.emoji-btn')){
+      picker.remove();
+      document.removeEventListener('click', closePicker);
+    }
+  };
+  setTimeout(() => { document.addEventListener('click', closePicker) }, 10);
+  
+  document.body.appendChild(picker);
+}
+
 function goBackFromMessages() {
     window.location.href = 'profile.html';
 }
@@ -1158,6 +912,21 @@ function goBackFromMessages() {
 //  ONLINE STATUS
 // ============================================================
 function listenForOnlineStatus(uid) {
+    if (_myUid) {
+        // Set myself as online
+        firebase.database().ref('users/' + _myUid + '/online').set(true);
+        firebase.database().ref('users/' + _myUid + '/online').onDisconnect().set(false);
+    }
+
+    if (uid === 'ankitstudio_ai_bot') {
+        const statusEl = document.getElementById('chatUserStatus');
+        if (statusEl) {
+            statusEl.textContent = 'Online';
+            statusEl.classList.add('online');
+        }
+        return;
+    }
+
     firebase.database().ref('users/' + uid + '/online').on('value', function(snap) {
         const statusEl = document.getElementById('chatUserStatus');
         if (!statusEl) return;
@@ -1169,10 +938,6 @@ function listenForOnlineStatus(uid) {
             statusEl.classList.remove('online');
         }
     });
-
-    // Set myself as online
-    firebase.database().ref('users/' + _myUid + '/online').set(true);
-    firebase.database().ref('users/' + _myUid + '/online').onDisconnect().set(false);
 }
 
 // ============================================================

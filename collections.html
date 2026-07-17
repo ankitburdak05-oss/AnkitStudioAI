@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Saved · Collections - ANKITSTUDIOAI</title>
+    <title>Saved · Collections - AnkitStudio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -55,7 +55,7 @@
 </head>
 <body>
 <div class="coll-top">
-    <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+    <button class="back-btn" onclick="handleCollStandaloneBack()"><i class="fas fa-arrow-left"></i></button>
     <h2>Saved</h2>
     <button class="add-btn" onclick="openCreateCollection()"><i class="fas fa-plus"></i></button>
 </div>
@@ -123,13 +123,13 @@ function loadCollections(){
 function renderCollections(){
     var list=document.getElementById('collectionsList');
     var html='';
-    var keys=Object.keys(_collections);
+    var keys=Object.keys(_collections).filter(function(k){ return _collections[k] && _collections[k].name });
     keys.forEach(function(k){
         var c=_collections[k];
         var count=c.posts?Object.keys(c.posts).length:0;
         html+='<div class="coll-folder" onclick="viewCollection(\''+k+'\')">'+
             '<div class="coll-folder-icon">📁</div>'+
-            '<div class="coll-folder-name">'+esc(c.name||'Collection')+'</div>'+
+            '<div class="coll-folder-name">'+esc(c.name)+'</div>'+
             '<div class="coll-folder-count">'+count+' posts</div></div>';
     });
     html+='<div class="coll-folder coll-new-folder" onclick="openCreateCollection()"><div class="coll-folder-icon">➕</div><div class="coll-folder-name">New Collection</div></div>';
@@ -149,20 +149,50 @@ function loadSavedPosts(collId){
         var loaded=0,html='';
         ids.forEach(function(pid){
             db.ref('posts/'+pid).once('value',function(psnap){
-                loaded++;
                 if(psnap.exists()){
+                    loaded++;
                     var p=psnap.val();
-                    html+='<img src="'+(p.imageUrl||'https://via.placeholder.com/300')+'" alt="post" onclick="window.open(\''+(p.imageUrl||'#')+'\',\'_blank\')" onerror="this.style.background=\'#f5f5f5\'">';
+                    html+='<img src="'+(p.imageUrl||p.videoUrl||'')+'" alt="post" onclick="window.open(\''+(p.imageUrl||p.videoUrl||'#')+'\',\'_blank\')" onerror="this.style.background=\'#f5f5f5\'">';
+                    if(loaded===ids.length)grid.innerHTML=html||'<div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>';
+                } else {
+                    db.ref('reels/'+pid).once('value',function(rsnap){
+                        loaded++;
+                        if(rsnap.exists()){
+                            var r=rsnap.val();
+                            html+='<img src="'+(r.imageUrl||r.videoUrl||'')+'" alt="post" onclick="window.open(\''+(r.imageUrl||r.videoUrl||'#')+'\',\'_blank\')" onerror="this.style.background=\'#f5f5f5\'">';
+                        }
+                        if(loaded===ids.length)grid.innerHTML=html||'<div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>';
+                    });
                 }
-                if(loaded===ids.length)grid.innerHTML=html||'<div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>';
             });
         });
     });
 }
 
+let _activeCollFolderStandalone = null;
+window.handleCollStandaloneBack = function(){
+  if(_activeCollFolderStandalone){
+    _activeCollFolderStandalone = null;
+    document.querySelector('.coll-top h2').textContent = 'Saved';
+    document.querySelector('.coll-section-title:first-of-type').style.display='';
+    document.getElementById('collectionsList').style.display='';
+    loadSavedPosts(null);
+  } else {
+    history.back();
+  }
+};
+window.deleteCollFolderStandalone = function(collId){
+  if(!confirm('Delete folder?')) return;
+  db.ref('users/'+_myUid+'/collections/'+collId).remove().then(()=>{
+    toast('Folder deleted');
+    handleCollStandaloneBack();
+  });
+};
+
 function viewCollection(collId){
+    _activeCollFolderStandalone = collId;
     var top=document.querySelector('.coll-top h2');
-    if(top)top.textContent=_collections[collId]?.name||'Collection';
+    if(top) top.innerHTML = esc(_collections[collId]?.name||'Collection') + ` <button onclick="deleteCollFolderStandalone('${collId}')" style="margin-left:10px;background:#ffe0e0;border:1px solid #c00;color:#c00;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-trash"></i> Delete</button>`;
     document.querySelector('.coll-section-title:first-of-type').style.display='none';
     document.getElementById('collectionsList').style.display='none';
     loadSavedPosts(collId);
@@ -180,21 +210,26 @@ function closeCreateCollection(){
 function createCollection(){
     var name=document.getElementById('folderNameInput').value.trim();
     if(!name){toast('⚠️ Enter a name!');return}
-    var ref=db.ref('users/'+_myUid+'/collections').push();
+    var user = firebase.auth().currentUser;
+    var uid = _myUid || (user ? user.uid : null);
+    if(!uid){ alert('Pehle login karo!'); return; }
+    var ref=db.ref('users/'+uid+'/collections').push();
     ref.set({name:name,createdAt:firebase.database.ServerValue.TIMESTAMP,posts:{}}).then(function(){
         toast('✅ Collection created!');
         closeCreateCollection();
+    }).catch(function(err){
+        alert('Folder create nahi hua! Firebase Rule Error: ' + err.message + '\n\nKripya database.rules.json ko Firebase Console -> Realtime Database -> Rules me publish karein.');
     });
 }
 
 window.saveToCollection=function(postId){
-    var keys=Object.keys(_collections);
-    if(keys.length===0){toast('Create a collection first!');return}
+    var keys=Object.keys(_collections).filter(function(k){ return _collections[k] && _collections[k].name });
+    if(keys.length===0){toast('Create a collection folder first!');return}
     _pendingSavePostId=postId;
     var list=document.getElementById('folderSelectList');
     var html='';
     keys.forEach(function(k){
-        html+='<button onclick="addToCollection(\''+k+'\')" style="padding:12px;border:1px solid #dbdbdb;border-radius:8px;background:#fafafa;cursor:pointer;font-size:14px;font-weight:600;text-align:left">📁 '+esc(_collections[k].name||'Collection')+'</button>';
+        html+='<button onclick="addToCollection(\''+k+'\')" style="padding:12px;border:1px solid #dbdbdb;border-radius:8px;background:#fafafa;cursor:pointer;font-size:14px;font-weight:600;text-align:left">📁 '+esc(_collections[k].name)+'</button>';
     });
     list.innerHTML=html;
     document.getElementById('addToFolderModal').classList.add('open');
@@ -202,7 +237,9 @@ window.saveToCollection=function(postId){
 
 window.addToCollection=function(collId){
     if(!_pendingSavePostId)return;
-    db.ref('users/'+_myUid+'/collections/'+collId+'/posts/'+_pendingSavePostId).set({savedAt:firebase.database.ServerValue.TIMESTAMP}).then(function(){
+    var now = firebase.database.ServerValue.TIMESTAMP;
+    db.ref('users/'+_myUid+'/collections/'+collId+'/posts/'+_pendingSavePostId).set({savedAt:now});
+    db.ref('users/'+_myUid+'/savedPosts/'+_pendingSavePostId).set({savedAt:now}).then(function(){
         toast('✅ Saved to collection!');
         closeAddToFolder();
     });
@@ -217,5 +254,5 @@ document.querySelectorAll('.coll-modal-overlay').forEach(function(o){
     o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')});
 });
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a13adc64adee0e3c',t:'MTc4Mjc5ODI4NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

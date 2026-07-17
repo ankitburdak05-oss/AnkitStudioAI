@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Profile - ANKITSTUDIOAI</title>
+    <title>My Profile - AnkitStudio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -308,7 +308,7 @@ window.closeSettingsSPA = function() {
             <div class="ig-bio-section">
                 <div class="ig-name" id="main-profile-name">User</div>
                 <div class="ig-category" id="main-profile-category"></div>
-                <div class="ig-bio-text" id="main-profile-bio">Welcome to ANKITSTUDIOAI ✨</div>
+                <div class="ig-bio-text" id="main-profile-bio">Welcome to AnkitStudio ✨</div>
             </div>
 
             <!-- PRO DASHBOARD -->
@@ -435,10 +435,7 @@ window.closeSettingsSPA = function() {
         <input type="text" id="uploadTitle" placeholder="Title" style="width:100%;padding:11px;border:1px solid #dbdbdb;border-radius:8px;margin-bottom:10px;font-size:14px">
         <textarea id="uploadText" placeholder="Write your post..." rows="3" style="width:100%;padding:11px;border:1px solid #dbdbdb;border-radius:8px;margin-bottom:10px;font-size:14px;resize:vertical"></textarea>
         <div style="display:flex;gap:8px;margin-bottom:10px">
-            <select id="uploadTool" style="flex:1;padding:10px;border:1px solid #dbdbdb;border-radius:8px;font-size:13px">
-                <option>Midjourney</option><option>ChatGPT</option><option>Leonardo</option><option>Gemini</option><option>Stable Diffusion</option>
-            </select>
-            <select id="uploadCategory" style="flex:1;padding:10px;border:1px solid #dbdbdb;border-radius:8px;font-size:13px">
+            <select id="uploadCategory" style="width:100%;padding:10px;border:1px solid #dbdbdb;border-radius:8px;font-size:13px">
                 <option>Portrait</option><option>Landscape</option><option>Logo & Brand</option><option>Anime</option><option>Marketing</option><option>Fantasy</option>
             </select>
         </div>
@@ -471,7 +468,7 @@ window.closeSettingsSPA = function() {
                         <div class="author-handle" id="modalAuthorHandle">@user</div>
                     </div>
                 </div>
-                <div class="modal-ai-tag-new" id="modalAiTag"><i class="fas fa-robot"></i> AI</div>
+                <div class="modal-ai-tag-new" id="modalAiTag" style="display:none"></div>
             </div>
             <div class="posts-list" id="modalPostsList"></div>
             <!-- COMMENTS -->
@@ -592,7 +589,7 @@ firebase.auth().onAuthStateChanged(function(user){
             const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
             db.ref('users/' + user.uid + '/profile').set({
                 displayName: displayName,
-                bio: 'Welcome to ANKITSTUDIOAI ✨',
+                bio: 'Welcome to AnkitStudio ✨',
                 photoURL: user.photoURL || '',
                 website: '',
                 createdAt: firebase.database.ServerValue.TIMESTAMP
@@ -609,16 +606,16 @@ firebase.auth().onAuthStateChanged(function(user){
     // load user cache
     loadUserCache();
 
-    // always show the signed-in user's profile
-    showOwnProfile(user);
-/*
-    
-        
-    } else {
-        
-    }
+    // DYNAMIC ROUTING: Check URL query parameter to show either own or other user's profile
+    const params = new URLSearchParams(window.location.search);
+    const viewUid = params.get('viewUid');
+    const viewName = params.get('viewName');
 
-*/
+    if (viewUid && viewUid !== user.uid) {
+        showOtherUserProfile(viewUid, viewName || 'User');
+    } else {
+        showOwnProfile(user);
+    }
 
     // notifications
     listenNotifications(user.uid);
@@ -669,7 +666,7 @@ function showOwnProfile(me){
         const prof = uData.profile || {};
         // FIX: Google login ka displayName/photoURL use karo as fallback
         const displayName = prof.displayName || uData.displayName || me.displayName || uname;
-        const bio = prof.bio || uData.bio || 'Welcome to ANKITSTUDIOAI ✨';
+        const bio = prof.bio || uData.bio || 'Welcome to AnkitStudio ✨';
         const photoUrl = prof.photoURL || uData.photoURL || me.photoURL || null;
         const website = prof.website || '';
 
@@ -697,9 +694,7 @@ function showOwnProfile(me){
 /* ============================================================
    PROFILE RENDER - OTHER USER
    ============================================================ */
-/* function showOtherUserProfile(uid, fallbackName){
-    showOwnProfile(firebase.auth().currentUser);
-    return; // other-user profile removed
+function showOtherUserProfile(uid, fallbackName){
     _activeProfileUid = uid;
     document.getElementById('search-content-wrap').style.display='none';
     document.getElementById('profile-content-wrap').style.display='block';
@@ -709,7 +704,8 @@ function showOwnProfile(me){
     document.getElementById('bottom-nav-bar').style.display='flex'; // keep nav so user can go back
 
     // back arrow in title
-    document.getElementById('top-title').innerHTML = `<i class="fas fa-arrow-left" onclick="history.back()" style="margin-right:12px;cursor:pointer"></i><span id="top-title-text">${esc(fallbackName.replace(/\s+/g,'').toLowerCase())}</span>`;
+    const cleanName = (fallbackName || 'User').replace(/\s+/g,'').toLowerCase();
+    document.getElementById('top-title').innerHTML = `<i class="fas fa-arrow-left" onclick="history.back()" style="margin-right:12px;cursor:pointer"></i><span id="top-title-text">${esc(cleanName)}</span>`;
 
     document.getElementById('main-profile-name').textContent = fallbackName;
 
@@ -717,15 +713,23 @@ function showOwnProfile(me){
     db.ref('users/' + uid).once('value', snap=>{
         const uData = snap.val() || {};
         const prof = uData.profile || {};
-        const name = prof.displayName || uData.displayName || fallbackName;
-        const bio = prof.bio || 'AI creator on ANKITSTUDIOAI';
+        const name = prof.displayName || uData.displayName || fallbackName || 'User';
+        const bio = prof.bio || 'Creator on AnkitStudio';
         const photo = prof.photoURL || uData.photoURL || null;
         const website = prof.website || '';
 
-        document.getElementById('main-profile-name').textContent = name;
+        // Add blue verified badge dynamically if they should have it
+        const isVerified = prof.verified || uData.verified || ['admin', 'ankit', 'ankitstudio', 'ankitstudioai', 'verified', 'creator'].includes((name||'').toLowerCase());
+        const verifiedBadgeHtml = isVerified ? ` <svg class="verified-badge" viewBox="0 0 24 24" width="16" height="16" title="Verified" style="fill:#0095f6;display:inline-block;vertical-align:middle;margin-left:4px;"><path d="M12.003 2.001c-5.522 0-9.997 4.475-9.997 9.997s4.475 9.997 9.997 9.997 9.997-4.475 9.997-9.997-4.475-9.997-9.997-9.997zm-.003 18.003c-4.412 0-8.003-3.591-8.003-8.003s3.591-8.003 8.003-8.003 8.003 3.591 8.003 8.003-3.591 8.003-8.003 8.003zm3.712-10.713L11.002 14l-2.293-2.293a.999.999 0 1 0-1.414 1.414l3 3a.999.999 0 0 0 1.414 0l4.71-4.71a.999.999 0 1 0-1.41-1.414z"/></svg>` : '';
+        const verifiedBadgeSmall = isVerified ? ` <svg class="verified-badge" viewBox="0 0 24 24" width="12" height="12" title="Verified" style="fill:#0095f6;display:inline-block;vertical-align:middle;margin-left:2px;"><path d="M12.003 2.001c-5.522 0-9.997 4.475-9.997 9.997s4.475 9.997 9.997 9.997 9.997-4.475 9.997-9.997-4.475-9.997-9.997-9.997zm-.003 18.003c-4.412 0-8.003-3.591-8.003-8.003s3.591-8.003 8.003-8.003 8.003 3.591 8.003 8.003-3.591 8.003-8.003 8.003zm3.712-10.713L11.002 14l-2.293-2.293a.999.999 0 1 0-1.414 1.414l3 3a.999.999 0 0 0 1.414 0l4.71-4.71a.999.999 0 1 0-1.41-1.414z"/></svg>` : '';
+
+        document.getElementById('main-profile-name').innerHTML = esc(name) + verifiedBadgeHtml;
+        
+        const shortName = (uData.email ? uData.email.split('@')[0] : name).toLowerCase().replace(/\s+/g,'');
+        document.getElementById('top-title').innerHTML = `<i class="fas fa-arrow-left" onclick="history.back()" style="margin-right:12px;cursor:pointer"></i><span id="top-title-text">${esc(shortName)}${verifiedBadgeSmall}</span>`;
+
         document.getElementById('main-profile-bio').textContent = bio;
         document.getElementById('main-profile-category').innerHTML = website ? `<a href="${esc(website)}" target="_blank" style="color:#0095f6;text-decoration:none">${esc(website)}</a>` : '';
-        document.getElementById('top-title-text').textContent = (uData.email ? uData.email.split('@')[0] : name).toLowerCase().replace(/\s+/g,'');
 
         setProfilePhoto(
             document.getElementById('main-profile-pic'),
@@ -734,7 +738,7 @@ function showOwnProfile(me){
         );
     });
 
-    clearAllProfileListeners();
+    clearPostsListener(); // FIX: updated to clearPostsListener to match existing functions
     attachProfileStatsListener(uid);
     attachPostsListener(uid);
 
@@ -748,8 +752,6 @@ function showOwnProfile(me){
         attachFollowButtonListener(_myUid, uid);
     }
 }
-
-/* Fixed by Code Agent: 2026-06-28 - removed orphan '*/' that caused JS syntax error */
 /*   STATS + POSTS LISTENERS
    ============================================================ */
 function clearProfileStatsListeners(){
@@ -800,7 +802,7 @@ function attachPostsListener(uid){
                         authorId: uid,
                         images: [d.imageUrl],
                         author: d.authorName || 'User',
-                        ai: d.aiTool || 'AI',
+                        ai: '',
                         posts: [d.caption],
                         likes: d.likeCount||0,
                         post: d.caption
@@ -943,7 +945,7 @@ function openModal(id){
     document.getElementById('modalAuthorAvatar').textContent = (p.author||'U').charAt(0).toUpperCase();
     document.getElementById('modalAuthorName').textContent = p.author || 'User';
     document.getElementById('modalAuthorHandle').textContent = '@' + (p.author||'user').toLowerCase().replace(/\s/g,'');
-    document.getElementById('modalAiTag').innerHTML = `<i class="fas fa-robot"></i> ${p.ai||'AI'}`;
+    document.getElementById('modalAiTag').style.display = 'none';
     document.getElementById('modalLikeCount').textContent = p.likes || 0;
 
     // posts list
@@ -1328,7 +1330,6 @@ document.getElementById('finalSubmitBtn').addEventListener('click', async ()=>{
     if(!user){ showToast('Login required'); return; }
     const title=document.getElementById('uploadTitle').value.trim();
     const text=document.getElementById('uploadText').value.trim();
-    const tool=document.getElementById('uploadTool').value;
     const cat=document.getElementById('uploadCategory').value;
     const fileInput=document.getElementById('uploadImage');
     const file = _pendingUploadFile || (fileInput.files && fileInput.files[0]);
@@ -1349,7 +1350,7 @@ document.getElementById('finalSubmitBtn').addEventListener('click', async ()=>{
         const authorName = user.displayName || (user.email?user.email.split('@')[0]:'User');
         await db.ref('posts').push({
             title, caption:text, imageUrl,
-            aiTool:tool, category:cat,
+            category:cat,
             authorId:user.uid, authorName, authorEmail:user.email||'',
             likeCount:0, commentCount:0,
             timestamp: firebase.database.ServerValue.TIMESTAMP
@@ -1488,5 +1489,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </div>
 
 <!-- profile-patch.js removed: profile.html has its own complete auth + profile system -->
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a134cd7729ad0b3c',t:'MTc4MjczNDc1OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a134cd7729ad0b3c',t:'MTc4MjczNDc1OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a187f39adffc6574',t:'MTc4MzYwNjYzOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

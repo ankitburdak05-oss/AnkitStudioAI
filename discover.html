@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Discover People - ANKITSTUDIOAI</title>
+    <title>Discover People - AnkitStudio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -51,7 +51,7 @@
     <div class="disc-section">
         <div class="disc-categories" id="discChips">
             <button class="disc-chip active" onclick="filterDiscover('all',this)">All</button>
-            <button class="disc-chip" onclick="filterDiscover('ai',this)">AI Creators</button>
+            <button class="disc-chip" onclick="filterDiscover('ai',this)">Creators</button>
             <button class="disc-chip" onclick="filterDiscover('photo',this)">Photographers</button>
             <button class="disc-chip" onclick="filterDiscover('design',this)">Designers</button>
             <button class="disc-chip" onclick="filterDiscover('reel',this)">Reel Makers</button>
@@ -113,7 +113,7 @@ function renderDiscoverUsers(){
         html+='<div class="disc-user-row">'+
             '<div class="disc-user-av">'+avHtml+'</div>'+
             '<div class="disc-user-info"><div class="disc-user-name">'+esc(u.name)+'</div>'+
-            '<div class="disc-user-sub">'+esc(u.bio||'AI Creator on ANKITSTUDIOAI')+' · '+u.followersCount+' followers</div></div>'+
+            '<div class="disc-user-sub">'+esc(u.bio||'Creator on AnkitStudio')+' · '+u.followersCount+' followers</div></div>'+
             '<button class="disc-follow-btn" id="follow-'+u.uid+'" onclick="toggleFollow(\''+u.uid+'\',this)">Follow</button></div>';
     });
     list.innerHTML=html;
@@ -156,5 +156,5 @@ window.refreshSuggestions=function(){
     setTimeout(function(){renderDiscoverUsers()},500);
 };
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a13aa0abdf90fba9',t:'MTc4Mjc5NTgzOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

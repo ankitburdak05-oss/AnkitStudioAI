@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ANKITSTUDIOAI</title>
+<title>AnkitStudio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,6 +12,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <script src="js/firebase-config.js"></script>
+<script src="js/assistant.js"></script>
 <!-- spa.js REMOVED: index.html has its own const SPA - duplicate declaration crashes all JS -->
 <script src="js/app.js"></script>
 <style>
@@ -702,12 +703,12 @@ body.dark-mode .msg-options button:hover{background:#333}
 <body>
 
 <!-- SPLASH -->
-<div id="splashScreen"><div class="splash-logo">AnkitStudioAI</div><div class="splash-loader"><div class="splash-loader-bar"></div></div></div>
+<div id="splashScreen"><div class="splash-logo">AnkitStudio</div><div class="splash-loader"><div class="splash-loader-bar"></div></div></div>
 
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
-    <div class="login-logo">AnkitStudioAI</div>
+    <div class="login-logo">AnkitStudio</div>
     <div class="login-error" id="loginError"></div>
     <input type="email" class="login-input" id="loginEmail" placeholder="Email">
     <input type="password" class="login-input" id="loginPassword" placeholder="Password">
@@ -726,7 +727,7 @@ body.dark-mode .msg-options button:hover{background:#333}
 <!-- HOME VIEW -->
 <div class="spa-view active" id="homeView">
   <div class="ig-top-header">
-    <div class="header-logo">AnkitStudioAI</div>
+    <div class="header-logo">AnkitStudio</div>
     <div class="header-icons">
       <span style="position:relative;display:inline-flex">
         <i class="far fa-heart" onclick="SPA.navigate('notifView')" title="Notifications" style="cursor:pointer"></i>
@@ -750,6 +751,10 @@ body.dark-mode .msg-options button:hover{background:#333}
 <!-- SEARCH VIEW -->
 <div class="spa-view" id="searchView">
   <div class="search-top"><input type="text" id="searchInput" placeholder="Search users..."></div>
+  <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid #efefef;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:13px;font-weight:700;color:#262626"><i class="fas fa-user-friends" style="color:#bc1888"></i> Creators Community</span>
+    <button onclick="SPA.navigate('discoverView')" style="background:linear-gradient(135deg,#f09433,#bc1888);border:none;color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(188,24,136,.3)">🌟 Discover People</button>
+  </div>
   <div id="searchResults"></div>
   <div class="explore-grid" id="exploreGrid"></div>
 </div>
@@ -806,7 +811,7 @@ body.dark-mode .msg-options button:hover{background:#333}
 <!-- COLLECTIONS VIEW -->
 <div class="spa-view" id="collectionsView">
   <div class="coll-top">
-    <button class="back-btn" onclick="SPA.navigate('homeView')"><i class="fas fa-arrow-left"></i></button>
+    <button class="back-btn" onclick="handleCollTopBack()"><i class="fas fa-arrow-left"></i></button>
     <h2>Saved</h2>
     <button class="add-btn" onclick="openCreateCollection()"><i class="fas fa-plus"></i></button>
   </div>
@@ -835,7 +840,7 @@ body.dark-mode .msg-options button:hover{background:#333}
     <div class="disc-section">
       <div class="disc-categories" id="discChips">
         <button class="disc-chip active" onclick="filterDiscover('all',this)">All</button>
-        <button class="disc-chip" onclick="filterDiscover('ai',this)">AI Creators</button>
+        <button class="disc-chip" onclick="filterDiscover('ai',this)">Creators</button>
         <button class="disc-chip" onclick="filterDiscover('photo',this)">Photographers</button>
         <button class="disc-chip" onclick="filterDiscover('design',this)">Designers</button>
         <button class="disc-chip" onclick="filterDiscover('reel',this)">Reel Makers</button>
@@ -893,7 +898,7 @@ body.dark-mode .msg-options button:hover{background:#333}
 
   <div class="profile-bio">
     <div class="pname" id="pDisplayName">User</div>
-    <div class="pbio" id="pBio">AI creator • ANKITSTUDIOAI</div>
+    <div class="pbio" id="pBio">Digital creator • AnkitStudio</div>
   </div>
 
   <!-- Dashboard Banner — sirf apne profile pe dikhega -->
@@ -977,7 +982,7 @@ body.dark-mode .msg-options button:hover{background:#333}
       <div class="modal-side-head">
         <div class="modal-side-av" id="modalAv">U</div>
         <div><div style="font-weight:700;font-size:13px" id="modalAuthor">User</div><div style="font-size:11px;color:#8e8e8e" id="modalAuthorHandle">@user</div></div>
-        <div style="margin-left:auto;font-size:11px;background:#efefef;padding:3px 9px;border-radius:12px" id="modalAiTag">AI</div>
+        <div style="margin-left:auto;font-size:11px;background:#efefef;padding:3px 9px;border-radius:12px" id="modalAiTag">Category</div>
       </div>
       <div class="modal-caption-box" id="modalCaptionText"></div>
       <div class="modal-comments" id="modalComments"></div>
@@ -1102,7 +1107,7 @@ body.dark-mode .msg-options button:hover{background:#333}
       <div class="edit-profile-field">
         <label>Category</label>
         <select id="editCategory" style="width:100%;padding:10px;border:1px solid #dbdbdb;border-radius:8px;font-size:14px">
-          <option>AI Creator</option><option>Digital Creator</option><option>Artist</option><option>Entrepreneur</option><option>Developer</option><option>Personal Blog</option>
+          <option>Digital Creator</option><option>Artist</option><option>Entrepreneur</option><option>Developer</option><option>Personal Blog</option>
         </select>
       </div>
     </div>
@@ -1284,6 +1289,8 @@ auth.onAuthStateChanged(user=>{
     loadHomeFeed();
     loadUserCache();
     loadChatList();
+    if (document.getElementById('collectionsView')?.classList.contains('active')) loadCollectionsView();
+    if (document.getElementById('discoverView')?.classList.contains('active')) loadDiscoverView();
     // ✅ ?view= param se SPA navigate karo (bina reload ke)
     const _retParams = new URLSearchParams(location.search);
     const _retView = _retParams.get('view');
@@ -1381,7 +1388,7 @@ function loadHomeFeed(){
           <div class="ig-post-avatar" onclick="openProfile('${esc(d.authorId||'')}','${esc(authorName)}')">${avatar}</div>
           <div class="ig-post-user-info">
             <div class="ig-post-username">${esc(authorName)}</div>
-            <div class="ig-post-subtitle">${esc(d.aiTool||d.category||'Creator')}</div>
+            <div class="ig-post-subtitle">${esc(d.category||'Creator')}</div>
           </div>
           ${!isOwn ? `<button class="ig-post-follow-btn" onclick="quickFollow('${esc(d.authorId||'')}', this)">Follow</button>` : ''}
           <i class="fas fa-ellipsis-h ig-post-more" onclick="togglePostOptions('${p.key}',event)"></i>
@@ -1913,18 +1920,42 @@ function loadChatList(){
   if(!_myUid) return;
   const listEl=$('#chatList');
   db.ref('users/'+_myUid+'/chats').on('value', snap=>{
-    if(!snap.exists()){ listEl.innerHTML='<div class="empty-state"><i class="far fa-paper-plane"></i><h3>Your Messages</h3><p>Send private direct messages</p></div>'; return; }
     const chats=[];
-    snap.forEach(c=>chats.push({uid:c.key, ...c.val()}));
+    if(snap.exists()){
+      snap.forEach(c=>chats.push({uid:c.key, ...c.val()}));
+    }
+    
+    // Prepend Assistant bot if not present
+    const hasAiBot = chats.some(c => c.uid === 'ankitstudio_ai_bot');
+    if(!hasAiBot){
+      chats.unshift({
+        uid: 'ankitstudio_ai_bot',
+        partnerUid: 'ankitstudio_ai_bot',
+        partnerName: 'AnkitStudio Assistant',
+        lastMessage: 'Hi! Let me know if you need help with Reels, Stories, or Settings! 👋',
+        lastMessageTime: Date.now(),
+        lastSender: 'ankitstudio_ai_bot',
+        unreadCount: 0
+      });
+    }
+
     chats.sort((a,b)=>(b.lastMessageTime||0)-(a.lastMessageTime||0));
     let html='';
     chats.forEach(ch=>{
-      const u=getUser(ch.partnerUid || ch.uid);
-      const name = ch.partnerName || u.name;
-      const photo = u.photo ? `<img src="${esc(u.photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : name.charAt(0).toUpperCase();
+      const partnerUid = ch.partnerUid || ch.uid;
+      let name = ch.partnerName;
+      let photo = '';
+      if (partnerUid === 'ankitstudio_ai_bot') {
+        name = 'AnkitStudio Assistant';
+        photo = `<div style="width:100%;height:100%;border-radius:50%;background:var(--ig-primary-background);border:1.5px solid #a200ff;display:flex;align-items:center;justify-content:center;font-size:18px;">💬</div>`;
+      } else {
+        const u=getUser(partnerUid);
+        name = name || u.name;
+        photo = u.photo ? `<img src="${esc(u.photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : name.charAt(0).toUpperCase();
+      }
       const preview = (ch.lastMessage||'').substring(0,36);
       const unread = ch.unreadCount||0;
-      html += `<div class="chat-row" onclick="openChat('${esc(ch.partnerUid||ch.uid)}','${esc(name.replace(/'/g,''))}')">
+      html += `<div class="chat-row" onclick="openChat('${esc(partnerUid)}','${esc(name.replace(/'/g,''))}')">
         <div class="chat-av">${photo}</div>
         <div class="chat-info"><div class="chat-name">${esc(name)}</div><div class="chat-preview">${esc(preview)||'Say hello 👋'}</div></div>
         <div class="chat-meta">${fmtTime(ch.lastMessageTime)}${unread?`<br><span class="chat-unread">${unread}</span>`:''}</div>
@@ -1939,21 +1970,26 @@ function openChat(uid, name){
   $('#chatThread').classList.add('open');
   $('#bottomNav').style.display='none';
   $('#chatThreadName').textContent=name;
-  const u=getUser(uid);
+  
   const av=$('#chatThreadAv');
-  av.textContent = name.charAt(0).toUpperCase();
-  if(u.photo){ av.innerHTML=`<img src="${esc(u.photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`; }
+  if (uid === 'ankitstudio_ai_bot') {
+    av.innerHTML = `<div style="font-size:16px;">💬</div>`;
+  } else {
+    const u=getUser(uid);
+    av.textContent = name.charAt(0).toUpperCase();
+    if(u.photo){ av.innerHTML=`<img src="${esc(u.photo)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`; }
+  }
   // listen messages
   const chatId = [_myUid, uid].sort().join('_');
   if(_chatListener) _chatListener.off();
-  _chatListener = db.ref('chats/'+chatId+'/messages').orderByChild('timestamp').limitToLast(80);
+  _chatListener = db.ref('chats/'+chatId+'/messages').limitToLast(80);
   _chatListener.on('value', snap=>{
     const box=$('#chatMsgs');
     if(!snap.exists()){ box.innerHTML='<div class="empty-state">Say hello! 👋</div>'; return; }
     let html='';
     snap.forEach(c=>{
       const m=c.val();
-      const isMe = m.senderId === _myUid;
+      const isMe = m.senderId === _myUid && !m.isBot;
       html += `<div class="msg-bubble ${isMe?'msg-sent':'msg-recv'}">${esc(m.text||'')}<div class="msg-time">${fmtTime(m.timestamp)}</div></div>`;
     });
     box.innerHTML=html;
@@ -1977,18 +2013,25 @@ function sendChatMessage(){
   if(!text || !_chatPartnerUid) return;
   const chatId=[_myUid,_chatPartnerUid].sort().join('_');
   const msgRef=db.ref('chats/'+chatId+'/messages').push();
-  msgRef.set({text, senderId:_myUid, timestamp: firebase.database.ServerValue.TIMESTAMP, read:false});
+  msgRef.set({text, senderId:_myUid, timestamp: Date.now(), read:false});
   input.value=''; $('#chatSendBtn').disabled=true;
-  // update chat metadata for both users
+  
+  // Update my chat metadata
+  db.ref('users/'+_myUid+'/chats/'+_chatPartnerUid).update({
+    partnerUid:_chatPartnerUid, partnerName:_chatPartnerName,
+    lastMessage:text, lastMessageTime: firebase.database.ServerValue.TIMESTAMP, lastSender:_myUid, unreadCount:0
+  });
+
+  if (_chatPartnerUid === 'ankitstudio_ai_bot') {
+    triggerAiResponseUnified(text, true);
+    return;
+  }
+
   const meName = _myUser.displayName || (_myUser.email?_myUser.email.split('@')[0]:'User');
   const partner = getUser(_chatPartnerUid);
   const myPhoto = _myUser.photoURL || null;
-  db.ref('users/'+_myUid+'/chats/'+_chatPartnerUid).update({
-    partnerUid:_chatPartnerUid, partnerName:_chatPartnerName, partnerPhoto:partner.photo||null,
-    lastMessage:text, lastMessageTime: firebase.database.ServerValue.TIMESTAMP, lastSender:_myUid, unreadCount:0
-  });
   db.ref('users/'+_chatPartnerUid+'/chats/'+_myUid).update({
-    partnerUid:_myUid, partnerName:meName, partnerPhoto:myPhoto,
+    partnerUid:_myUid, partnerName:_myUid === _chatPartnerUid ? _chatPartnerName : meName, partnerPhoto:myPhoto,
     lastMessage:text, lastMessageTime: firebase.database.ServerValue.TIMESTAMP, lastSender:_myUid
   });
   db.ref('users/'+_chatPartnerUid+'/chats/'+_myUid+'/unreadCount').transaction(c=>(c||0)+1);
@@ -2099,7 +2142,7 @@ function renderProfile(uid, fallbackName, isOwn){
   db.ref('users/'+uid+'/profile').once('value', snap=>{
     const p = snap.val() || {};
     const realName = p.displayName || displayName;
-    const realBio  = p.bio || (isOwn ? 'Welcome to ANKITSTUDIOAI ✨' : 'AI creator • ANKITSTUDIOAI');
+    const realBio  = p.bio || (isOwn ? 'Welcome to AnkitStudio ✨' : 'Digital creator • AnkitStudio');
     const realPhoto = p.photoURL || photo;
     $('#pDisplayName').textContent = realName;
     $('#profileTopName').textContent = realName.toLowerCase().replace(/\s+/g,'');
@@ -2109,7 +2152,7 @@ function renderProfile(uid, fallbackName, isOwn){
     // nav pic bhi update karo
     if(isOwn && realPhoto){ const np=$('#navProfilePic'); if(np) np.src=realPhoto; }
   }).catch(()=>{
-    $('#pBio').textContent = isOwn ? 'Welcome to ANKITSTUDIOAI ✨' : 'AI creator • ANKITSTUDIOAI';
+    $('#pBio').textContent = isOwn ? 'Welcome to AnkitStudio ✨' : 'Digital creator • AnkitStudio';
   });
 
   // back button show if not own
@@ -2265,7 +2308,7 @@ function openPostModal(postId){
   $('#modalAuthor').textContent = d.authorName || 'User';
   $('#modalAv').textContent = (d.authorName||'U').charAt(0).toUpperCase();
   $('#modalAuthorHandle').textContent = '@' + (d.authorName||'user').toLowerCase().replace(/\s/g,'');
-  $('#modalAiTag').textContent = d.aiTool || 'AI';
+  $('#modalAiTag').textContent = d.category || 'Creator';
   $('#modalCaptionText').textContent = d.caption || '';
   $('#postModal').classList.add('open');
   document.body.style.overflow='hidden';
@@ -2514,19 +2557,18 @@ function doubleTapHeart(e, postId){
 function toggleBookmark(el, postId){
   if(!_myUid){ toast('Login first'); return; }
   const isSaved=el.classList.contains('saved');
-  const ref=db.ref('users/'+_myUid+'/collections/'+postId);
   if(isSaved){
-    ref.remove(); el.classList.remove('saved','fas'); el.classList.add('far');
+    db.ref('users/'+_myUid+'/savedPosts/'+postId).remove();
+    el.classList.remove('saved','fas'); el.classList.add('far');
+    toast('Removed from saved');
   } else {
-    const p=_feedCache.find(x=>x.key===postId);
-    ref.set({imageUrl:p?.data?.imageUrl||'',caption:(p?.data?.caption||'').substring(0,80),authorName:p?.data?.authorName||'',timestamp:firebase.database.ServerValue.TIMESTAMP});
-    el.classList.add('saved','fas'); el.classList.remove('far'); toast('Saved');
+    window.saveToCollection(postId);
   }
 }
 // restore saved bookmarks on feed load check
 function checkSavedBookmarks(){
   if(!_myUid) return;
-  db.ref('users/'+_myUid+'/collections').once('value', snap=>{
+  db.ref('users/'+_myUid+'/savedPosts').once('value', snap=>{
     if(!snap.exists()) return;
     snap.forEach(c=>{
       const icon=document.getElementById('bmk_'+c.key);
@@ -2596,9 +2638,9 @@ function openEditProfile(){
   db.ref('users/'+_myUid+'/profile').once('value', snap=>{
     if(snap.exists()){
       const p=snap.val();
-      document.getElementById('editBio').value = p.bio || 'AI creator • ANKITSTUDIOAI';
+      document.getElementById('editBio').value = p.bio || 'Digital creator • AnkitStudio';
       document.getElementById('editWebsite').value = p.website || '';
-      document.getElementById('editCategory').value = p.category || 'AI Creator';
+      document.getElementById('editCategory').value = p.category || 'Digital Creator';
     }
   }).catch(()=>{});
   const av=document.getElementById('editAvatarPreview');
@@ -3257,7 +3299,7 @@ function loadSuggestedPosts(){
       sh+=`<div class="ig-feed-post">
         <div class="ig-post-header">
           <div class="ig-post-avatar">${avatar}</div>
-          <div class="ig-post-user-info"><div class="ig-post-username">${esc(authorName)}</div><div class="ig-post-subtitle">${esc(d.aiTool||'AI')}</div></div>
+          <div class="ig-post-user-info"><div class="ig-post-username">${esc(authorName)}</div><div class="ig-post-subtitle">${esc(d.category||'Creator')}</div></div>
           <button class="ig-post-follow-btn" onclick="quickFollow('${esc(d.authorId||'')}',this)">Follow</button>
         </div>
         <img class="ig-post-image" src="${esc(d.imageUrl||'')}" loading="lazy" onerror="this.style.background=\\'#f5f5f5\\'" ondblclick="doubleTapHeart(event,'${p.key}')">
@@ -3291,8 +3333,11 @@ function hidePost(postId){
 // 55. COLLECTIONS SYSTEM
 let _coll={},_savedPostIds=[],_pendingCollPostId=null;
 function loadCollectionsView(){
-  if(!_myUid) return;
-  db.ref('users/'+_myUid+'/collections').on('value', snap=>{
+  const user = firebase.auth().currentUser;
+  const uid = _myUid || (user ? user.uid : null);
+  if(!uid) return;
+  _myUid = uid;
+  db.ref('users/'+uid+'/collections').on('value', snap=>{
     _coll=snap.val()||{};
     renderCollFolders();
   });
@@ -3304,8 +3349,9 @@ function renderCollFolders(){
   let html='';
   Object.keys(_coll).forEach(k=>{
     const c=_coll[k];
+    if(!c || !c.name) return;
     const count=c.posts?Object.keys(c.posts).length:0;
-    html+=`<div class="coll-folder" onclick="viewCollFolder('${k}')"><div class="coll-folder-icon">📁</div><div class="coll-folder-name">${esc(c.name||'Collection')}</div><div class="coll-folder-count">${count} posts</div></div>`;
+    html+=`<div class="coll-folder" onclick="viewCollFolder('${k}')"><div class="coll-folder-icon">📁</div><div class="coll-folder-name">${esc(c.name)}</div><div class="coll-folder-count">${count} posts</div></div>`;
   });
   html+='<div class="coll-folder coll-new-folder" onclick="openCreateCollection()"><div class="coll-folder-icon">➕</div><div class="coll-folder-name">New Collection</div></div>';
   list.innerHTML=html;
@@ -3313,7 +3359,7 @@ function renderCollFolders(){
 function loadAllSavedPosts(collId){
   const grid=document.getElementById('allSavedPosts');
   if(!grid) return;
-  const refPath=collId?'users/'+_myUid+'/collections/'+collId+'/posts':'users/'+_myUid+'/collections';
+  const refPath=collId?'users/'+_myUid+'/collections/'+collId+'/posts':'users/'+_myUid+'/savedPosts';
   db.ref(refPath).once('value', snap=>{
     if(!snap.exists()){ grid.innerHTML='<div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>'; return; }
     const ids=[];
@@ -3323,23 +3369,52 @@ function loadAllSavedPosts(collId){
     grid.innerHTML='<div class="coll-empty" style="grid-column:1/-1"><i class="fas fa-circle-notch fa-spin"></i><p>Loading posts...</p></div>';
     let loaded=0, html='';
     ids.forEach(pid=>{
-      db.ref('posts/'+pid).once('value', ps=>{
+      let item = _feedCache.find(x=>x.key===pid);
+      if(item){
         loaded++;
-        if(ps.exists()){
-          const p=ps.val();
-          html+=`<img src="${esc(p.imageUrl||'')}" alt="post" onclick="openPostModal('${pid}')" onerror="this.style.background='#f5f5f5'">`;
-        }
+        html+=`<img src="${esc(item.data?.imageUrl||item.data?.videoUrl||'')}" alt="post" onclick="openPostModal('${pid}')" onerror="this.style.background='#f5f5f5'">`;
         if(loaded===ids.length) grid.innerHTML=html||'<div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>';
-      });
+      } else {
+        db.ref('posts/'+pid).once('value', ps=>{
+          loaded++;
+          if(ps.exists()){
+            const p=ps.val();
+            html+=`<img src="${esc(p.imageUrl||p.videoUrl||'')}" alt="post" onclick="openPostModal('${pid}')" onerror="this.style.background='#f5f5f5'">`;
+          }
+          if(loaded===ids.length) grid.innerHTML=html||'<div class="coll-empty" style="grid-column:1/-1"><i class="far fa-bookmark"></i><p>No saved posts yet</p></div>';
+        });
+      }
     });
   });
 }
+let _activeCollFolderId = null;
 function viewCollFolder(collId){
+  _activeCollFolderId = collId;
   document.getElementById('collSectionTitle1').style.display='none';
   document.getElementById('collectionsList').style.display='none';
-  document.getElementById('collSectionTitle2').textContent=_coll[collId]?.name||'Collection';
+  const folderName = _coll[collId]?.name || 'Collection';
+  const titleEl = document.getElementById('collSectionTitle2');
+  titleEl.innerHTML = `📁 ${esc(folderName)} <button onclick="deleteCollFolder('${collId}')" style="margin-left:auto;float:right;background:#ffe0e0;border:1px solid #c00;color:#c00;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer"><i class="fas fa-trash"></i> Delete Folder</button>`;
   loadAllSavedPosts(collId);
 }
+window.deleteCollFolder = function(collId){
+  if(!confirm('Is folder ko delete karna hai?')) return;
+  db.ref('users/'+_myUid+'/collections/'+collId).remove().then(()=>{
+    toast('Folder deleted');
+    handleCollTopBack();
+  });
+};
+window.handleCollTopBack = function(){
+  if(_activeCollFolderId){
+    _activeCollFolderId = null;
+    document.getElementById('collSectionTitle1').style.display='';
+    document.getElementById('collectionsList').style.display='';
+    document.getElementById('collSectionTitle2').textContent = 'All Saved Posts';
+    loadAllSavedPosts(null);
+  } else {
+    SPA.navigate('homeView');
+  }
+};
 function openCreateCollection(){
   document.getElementById('folderNameInput').value='';
   document.getElementById('createFolderModal').classList.add('open');
@@ -3350,28 +3425,76 @@ function closeCreateCollection(){
 function createCollection(){
   const name=document.getElementById('folderNameInput').value.trim();
   if(!name){ toast('Enter a name!'); return; }
-  db.ref('users/'+_myUid+'/collections').push().set({name,createdAt:firebase.database.ServerValue.TIMESTAMP,posts:{}}).then(()=>{
+  const user = firebase.auth().currentUser;
+  const uid = _myUid || (user ? user.uid : null);
+  if(!uid){ alert('Pehle login karo!'); return; }
+  db.ref('users/'+uid+'/collections').push().set({name,createdAt:firebase.database.ServerValue.TIMESTAMP,posts:{}}).then(()=>{
     toast('Collection created!');
     closeCreateCollection();
+  }).catch(err => {
+    alert('Folder create nahi hua! Firebase Rule Error: ' + err.message + '\n\nKripya database.rules.json ko Firebase Console -> Realtime Database -> Rules me publish karein.');
   });
 }
 window.saveToCollection=function(postId){
-  const keys=Object.keys(_coll);
-  if(!keys.length){ toast('Create a collection first!'); return; }
-  _pendingCollPostId=postId;
-  let html='';
-  keys.forEach(k=>{
-    html+=`<button onclick="addToCollFolder('${k}')" style="padding:12px;border:1px solid #dbdbdb;border-radius:8px;background:#fafafa;cursor:pointer;font-size:14px;font-weight:600;text-align:left">📁 ${esc(_coll[k].name||'Collection')}</button>`;
+  const user = firebase.auth().currentUser;
+  const uid = _myUid || (user ? user.uid : null);
+  if(!uid){ toast('Login required'); return; }
+  _myUid = uid;
+  _pendingCollPostId = postId;
+
+  db.ref('users/'+uid+'/collections').once('value', snap => {
+    _coll = snap.val() || {};
+    const keys = Object.keys(_coll).filter(k => _coll[k] && _coll[k].name);
+    
+    let html = `<button onclick="addToCollFolder('__DEFAULT_ALL__')" style="padding:12px;border:1px solid #0095f6;border-radius:8px;background:#eef8ff;color:#0095f6;cursor:pointer;font-size:14px;font-weight:700;text-align:left;display:flex;align-items:center;gap:8px"><i class="far fa-bookmark"></i> All Saved Posts (Default)</button>`;
+    
+    keys.forEach(k => {
+      html += `<button onclick="addToCollFolder('${k}')" style="padding:12px;border:1px solid #dbdbdb;border-radius:8px;background:#fafafa;cursor:pointer;font-size:14px;font-weight:600;text-align:left">📁 ${esc(_coll[k].name)}</button>`;
+    });
+
+    html += `<button onclick="closeAddToFolder(); openCreateCollection();" style="padding:12px;border:1px dashed #8e8e8e;border-radius:8px;background:none;color:#8e8e8e;cursor:pointer;font-size:14px;font-weight:600;text-align:center">➕ Create New Folder</button>`;
+
+    document.getElementById('folderSelectList').innerHTML = html;
+    document.getElementById('addToFolderModal').classList.add('open');
   });
-  document.getElementById('folderSelectList').innerHTML=html;
-  document.getElementById('addToFolderModal').classList.add('open');
 };
 window.addToCollFolder=function(collId){
   if(!_pendingCollPostId) return;
-  db.ref('users/'+_myUid+'/collections/'+collId+'/posts/'+_pendingCollPostId).set({savedAt:firebase.database.ServerValue.TIMESTAMP}).then(()=>{
-    toast('Saved to collection!');
+  const now = firebase.database.ServerValue.TIMESTAMP;
+  const pid = _pendingCollPostId;
+  let item = _feedCache.find(x=>x.key===pid);
+
+  const performSave = (imgUrl, cap, authNm) => {
+    db.ref('users/'+_myUid+'/savedPosts/'+pid).set({
+      imageUrl: imgUrl || '',
+      caption: (cap || '').substring(0,80),
+      authorName: authNm || 'User',
+      timestamp: now
+    });
+    if(collId !== '__DEFAULT_ALL__'){
+      db.ref('users/'+_myUid+'/collections/'+collId+'/posts/'+pid).set({savedAt: now});
+    }
+    const icon = document.getElementById('bmk_'+pid);
+    if(icon){ icon.classList.add('saved','fas'); icon.classList.remove('far'); }
+    toast(collId === '__DEFAULT_ALL__' ? 'Saved!' : 'Saved to folder!');
     closeAddToFolder();
-  });
+  };
+
+  if(item){
+    performSave(item.data?.imageUrl||item.data?.videoUrl, item.data?.caption, item.data?.authorName);
+  } else {
+    db.ref('posts/'+pid).once('value', ps => {
+      if(ps.exists()){
+        const p = ps.val();
+        performSave(p.imageUrl||p.videoUrl, p.caption, p.authorName);
+      } else {
+        db.ref('reels/'+pid).once('value', rs => {
+          const r = rs.exists() ? rs.val() : {};
+          performSave(r.imageUrl||r.videoUrl, r.caption, r.authorName);
+        });
+      }
+    });
+  }
 };
 window.closeAddToFolder=function(){
   document.getElementById('addToFolderModal').classList.remove('open');
@@ -3384,7 +3507,10 @@ document.querySelectorAll('.coll-modal-overlay').forEach(o=>{
 // 56. DISCOVER PEOPLE SYSTEM
 let _discAllUsers=[],_discFilter='all';
 function loadDiscoverView(){
-  if(!_myUid) return;
+  const user = firebase.auth().currentUser;
+  const uid = _myUid || (user ? user.uid : null);
+  if(!uid) return;
+  _myUid = uid;
   db.ref('users').once('value', snap=>{
     if(!snap.exists()){ document.getElementById('discSuggestedUsers').innerHTML='<div style="text-align:center;padding:40px;color:#8e8e8e">No users found</div>'; return; }
     _discAllUsers=[];
@@ -3484,5 +3610,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 </script>
 
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1358ae04ed77794',t:'MTc4Mjc0MjUxNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
