@@ -1652,7 +1652,7 @@ body.dark-mode .msg-options button:hover{background:#333}
 
       <!-- Text DM Reply Input -->
       <div class="sv-reply-box">
-        <input type="text" id="svReplyInput" class="sv-reply-input" placeholder="Send message..." maxlength="200" onkeydown="if(event.key==='Enter'){sendStoryReplyText();event.preventDefault();}">
+        <input type="text" id="svReplyInput" class="sv-reply-input" placeholder="Send message..." maxlength="200" onfocus="pauseStoryProgress()" onblur="resumeStoryProgress()" onkeydown="if(event.key==='Enter'){sendStoryReplyText();event.preventDefault();}">
         <button class="sv-send-btn" onclick="sendStoryReplyText()"><i class="fas fa-paper-plane"></i></button>
       </div>
     </div>
@@ -2513,8 +2513,24 @@ function recordStoryView(storyKey, authorId){
     db.ref('users/'+authorId+'/analytics/storyViews').transaction(c => (c||0)+1);
   }
 }
+let _svIsPaused = false;
+
+function pauseStoryProgress(){
+  _svIsPaused = true;
+  clearTimeout(_svTimer);
+}
+
+function resumeStoryProgress(){
+  if(!_svIsPaused) return;
+  _svIsPaused = false;
+  if(_svActiveStories && _svActiveStories.length){
+    startStoryProgress(_svActiveStories);
+  }
+}
+
 function startStoryProgress(stories){
   clearTimeout(_svTimer);
+  if(_svIsPaused) return; // Don't advance if user is typing
   const dur=5000; // 5 sec per story
   let start=Date.now();
   const total=stories.length;
@@ -2524,6 +2540,7 @@ function startStoryProgress(stories){
     if(fill) fill.style.width=(i<_svIndex?'100%':'0%');
   }
   function tick(){
+    if(_svIsPaused) return; // Pause check during tick
     const elapsed=Date.now()-start;
     const pct=Math.min(100,(elapsed/dur)*100);
     const fill=document.getElementById('svFill'+_svIndex);
@@ -2565,6 +2582,8 @@ function sendStoryReaction(emoji){
   const currentStory = _svActiveStories[_svIndex];
   if(!currentStory || !currentStory.authorId) return;
   const targetUid = currentStory.authorId;
+  const targetUser = getUser(targetUid);
+  const targetName = targetUser.name || 'User';
 
   // 1. Trigger flying emoji animation on story body
   const body = document.getElementById('svBody');
@@ -2580,19 +2599,34 @@ function sendStoryReaction(emoji){
   // 2. Push story reaction message to chat in Firebase
   const chatId = _myUid < targetUid ? `${_myUid}_${targetUid}` : `${targetUid}_${_myUid}`;
   const myName = _myUser.displayName || (_myUser.email ? _myUser.email.split('@')[0] : 'User');
+  const msgText = `Reacted ${emoji} to story`;
 
   db.ref('chats/'+chatId+'/messages').push({
     senderId: _myUid,
     senderName: myName,
-    text: `Reacted ${emoji} to story`,
+    text: msgText,
     isStoryReply: true,
     storyKey: currentStory.key,
     timestamp: firebase.database.ServerValue.TIMESTAMP
   });
   db.ref('chats/'+chatId+'/lastMessage').set({
-    text: `${myName}: Reacted ${emoji} to story`,
+    text: `${myName}: ${msgText}`,
     timestamp: firebase.database.ServerValue.TIMESTAMP
   });
+
+  // Update Messages Inbox nodes for both sender and receiver
+  const now = firebase.database.ServerValue.TIMESTAMP;
+  db.ref('users/'+_myUid+'/chats/'+targetUid).update({
+    name: targetName,
+    lastMessage: msgText,
+    timestamp: now
+  });
+  db.ref('users/'+targetUid+'/chats/'+_myUid).update({
+    name: myName,
+    lastMessage: msgText,
+    timestamp: now
+  });
+  db.ref('users/'+targetUid+'/chats/'+_myUid+'/unreadCount').transaction(c=>(c||0)+1);
 
   // 3. Send notification to story owner
   db.ref('users/'+targetUid+'/notifications').push({
@@ -2616,13 +2650,16 @@ function sendStoryReplyText(){
   const currentStory = _svActiveStories[_svIndex];
   if(!currentStory || !currentStory.authorId) return;
   const targetUid = currentStory.authorId;
+  const targetUser = getUser(targetUid);
+  const targetName = targetUser.name || 'User';
   const chatId = _myUid < targetUid ? `${_myUid}_${targetUid}` : `${targetUid}_${_myUid}`;
   const myName = _myUser.displayName || (_myUser.email ? _myUser.email.split('@')[0] : 'User');
+  const msgText = `Replied to story: "${replyText}"`;
 
   db.ref('chats/'+chatId+'/messages').push({
     senderId: _myUid,
     senderName: myName,
-    text: `Replied to story: "${replyText}"`,
+    text: msgText,
     isStoryReply: true,
     storyKey: currentStory.key,
     timestamp: firebase.database.ServerValue.TIMESTAMP
@@ -2631,6 +2668,20 @@ function sendStoryReplyText(){
     text: `${myName}: ${replyText}`,
     timestamp: firebase.database.ServerValue.TIMESTAMP
   });
+
+  // Update Messages Inbox nodes for both sender and receiver
+  const now = firebase.database.ServerValue.TIMESTAMP;
+  db.ref('users/'+_myUid+'/chats/'+targetUid).update({
+    name: targetName,
+    lastMessage: msgText,
+    timestamp: now
+  });
+  db.ref('users/'+targetUid+'/chats/'+_myUid).update({
+    name: myName,
+    lastMessage: msgText,
+    timestamp: now
+  });
+  db.ref('users/'+targetUid+'/chats/'+_myUid+'/unreadCount').transaction(c=>(c||0)+1);
 
   // Notification to story owner
   db.ref('users/'+targetUid+'/notifications').push({
@@ -2642,6 +2693,7 @@ function sendStoryReplyText(){
   });
 
   input.value = '';
+  resumeStoryProgress();
   toast('Reply sent ✓');
 }
 function nextStory(){
@@ -2658,6 +2710,9 @@ function prevStory(){
 }
 function closeStoryViewer(){
   clearTimeout(_svTimer);
+  _svIsPaused = false;
+  const input = document.getElementById('svReplyInput');
+  if(input){ input.value = ''; input.blur(); }
   $('#storyViewerOverlay').classList.remove('open');
   document.body.style.overflow='';
   // Reset body bg and remove creator overlays
