@@ -1215,6 +1215,7 @@ body.dark-mode .msg-options button:hover{background:#333}
   <!-- Filter tabs -->
   <div class="nv-tabs" id="nvTabs">
     <button class="nv-tab active" data-cat="all"    onclick="nvFilter(this,'all')">All</button>
+    <button class="nv-tab"        data-cat="story"   onclick="nvFilter(this,'story')">📸 Stories</button>
     <button class="nv-tab"        data-cat="like"   onclick="nvFilter(this,'like')">❤️ Likes</button>
     <button class="nv-tab"        data-cat="comment" onclick="nvFilter(this,'comment')">💬 Comments</button>
     <button class="nv-tab"        data-cat="follow"  onclick="nvFilter(this,'follow')">👤 Follows</button>
@@ -3953,7 +3954,7 @@ function nvRender(){
     : _allNotifs.filter(n=>n.type===_nvFilter);
 
   if(!filtered.length){
-    const labels={all:'No notifications yet',like:'No likes yet',comment:'No comments yet',follow:'No followers yet',mention:'No mentions yet'};
+    const labels={all:'No notifications yet',story:'No story reactions yet',like:'No likes yet',comment:'No comments yet',follow:'No followers yet',mention:'No mentions yet'};
     el.innerHTML=`<div class="nv-empty">
       <i class="far fa-bell"></i>
       <p>${labels[_nvFilter]||'Nothing here'}</p>
@@ -3971,8 +3972,9 @@ function nvRender(){
 
     // Action text
     let text = meta.label;
-    if(n.type==='comment' && n.commentText) text = `commented: "${esc(n.commentText.substring(0,40))}${n.commentText.length>40?'…':''}"`;
-    if(n.type==='mention' && n.mentionText) text = `mentioned you: "${esc(n.mentionText.substring(0,40))}${n.mentionText.length>40?'…':''}"`;
+    if(n.commentText) text = esc(n.commentText);
+    else if(n.type==='comment' && n.commentText) text = `commented: "${esc(n.commentText.substring(0,40))}${n.commentText.length>40?'…':''}"`;
+    else if(n.type==='mention' && n.mentionText) text = `mentioned you: "${esc(n.mentionText.substring(0,40))}${n.mentionText.length>40?'…':''}"`;
 
     // Thumbnail (for post-related notifs)
     const thumb = n.postImage
@@ -3980,13 +3982,14 @@ function nvRender(){
       : `<div class="nv-thumb-placeholder">${meta.icon}</div>`;
 
     // Click action
-    const action = n.type==='follow'
-      ? `openProfile('${esc(n.fromUid||'')}','${esc(n.fromName||'')}');SPA.navigate('profileView');nvMarkRead('${n.key}')`
-      : n.type==='message'
-      ? `SPA.navigate('messagesView');nvMarkRead('${n.key}')`
+    const safeName = esc((n.fromName||'User').replace(/'/g,"\\'"));
+    const action = (n.type==='story' || n.type==='message')
+      ? `openChat('${esc(n.fromUid||'')}','${safeName}');SPA.navigate('messagesView');nvMarkRead('${n.key}')`
+      : n.type==='follow'
+      ? `openProfile('${esc(n.fromUid||'')}','${safeName}');SPA.navigate('profileView');nvMarkRead('${n.key}')`
       : n.postId
       ? `openPostById('${esc(n.postId)}');nvMarkRead('${n.key}')`
-      : `openProfile('${esc(n.fromUid||'')}','${esc(n.fromName||'')}');SPA.navigate('profileView');nvMarkRead('${n.key}')`;
+      : `openProfile('${esc(n.fromUid||'')}','${safeName}');SPA.navigate('profileView');nvMarkRead('${n.key}')`;
 
     return `<div class="nv-card ${isUnread?'unread':''}" onclick="${action}">
       <div style="position:relative;flex-shrink:0">
