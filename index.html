@@ -2144,6 +2144,7 @@ auth.onAuthStateChanged(user=>{
     loadHomeFeed();
     loadUserCache();
     loadChatList();
+    listenNotif(user.uid);
     if (document.getElementById('collectionsView')?.classList.contains('active')) loadCollectionsView();
     if (document.getElementById('discoverView')?.classList.contains('active')) loadDiscoverView();
     // ✅ ?view= param se SPA navigate karo (bina reload ke)
@@ -3922,19 +3923,29 @@ const _NV_META = {
   default: { icon:'🔔', bg:'#555',     label:'new activity' },
 };
 
+function _nvTsNum(ts){
+  if(!ts) return 0;
+  if(typeof ts === 'number') return ts;
+  if(typeof ts === 'object' && ts !== null) return Date.now();
+  const n = Number(ts);
+  return isNaN(n) ? Date.now() : n;
+}
+
 function _nvAge(ts){
-  if(!ts) return '';
-  const d = Date.now()-ts;
+  const t = _nvTsNum(ts);
+  if(!t) return '';
+  const d = Date.now() - t;
   if(d<60000)   return 'just now';
   if(d<3600000) return Math.floor(d/60000)+'m';
   if(d<86400000)return Math.floor(d/3600000)+'h';
   if(d<604800000)return Math.floor(d/86400000)+'d';
-  return new Date(ts).toLocaleDateString();
+  return new Date(t).toLocaleDateString();
 }
 
 let _prevNotifCount = -1;
 
 function listenNotif(uid){
+  if(!uid) return;
   db.ref('users/'+uid+'/notifications').limitToLast(80).on('value', snap=>{
     _allNotifs = [];
     if(snap.exists()){
@@ -3942,8 +3953,8 @@ function listenNotif(uid){
         const val = c.val();
         _allNotifs.push({ key: c.key, ...val });
       });
-      // Sort newest first by timestamp
-      _allNotifs.sort((a,b)=>(b.timestamp||0) - (a.timestamp||0));
+      // Sort newest first by numeric timestamp safely
+      _allNotifs.sort((a,b) => _nvTsNum(b.timestamp) - _nvTsNum(a.timestamp));
     }
 
     // Count unread
