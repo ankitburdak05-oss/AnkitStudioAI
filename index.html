@@ -2357,12 +2357,12 @@ function loadStoriesBar(){
         const d=c.val();
         const age=(now-d.timestamp)/3600000;
         if(age>24) return; // 24hr expiry
-        // Normalize storyElements (Firebase may store array as object)
+        const authorId = d.authorId || d.uid;
         if(d.storyElements && !Array.isArray(d.storyElements)){
           d.storyElements = Object.values(d.storyElements);
         }
-        const item={key:c.key,...d};
-        if(d.authorId===_myUid) _myStories.unshift(item);
+        const item={key:c.key, authorId, ...d};
+        if(authorId===_myUid) _myStories.unshift(item);
         else _friendStories.unshift(item);
       });
     }
@@ -2581,8 +2581,8 @@ function showStoryFrame(stories){
 function sendStoryReaction(emoji){
   if(!_myUid){ toast('Login required'); return; }
   const currentStory = _svActiveStories[_svIndex];
-  if(!currentStory || !currentStory.authorId) return;
-  const targetUid = currentStory.authorId;
+  const targetUid = currentStory ? (currentStory.authorId || currentStory.uid) : null;
+  if(!targetUid) return;
   const targetUser = getUser(targetUid);
   const targetName = targetUser.name || 'User';
 
@@ -2629,17 +2629,15 @@ function sendStoryReaction(emoji){
   });
   db.ref('users/'+targetUid+'/chats/'+_myUid+'/unreadCount').transaction(c=>(c||0)+1);
 
-  // 3. Send notification to story owner
-  if(targetUid !== _myUid){
-    db.ref('users/'+targetUid+'/notifications').push({
-      type: 'story',
-      fromUid: _myUid,
-      fromName: myName,
-      commentText: `Reacted ${emoji} to your story`,
-      timestamp: Date.now(),
-      read: false
-    });
-  }
+  // 3. Send notification to story owner (always push so notification list gets it)
+  db.ref('users/'+targetUid+'/notifications').push({
+    type: 'story',
+    fromUid: _myUid,
+    fromName: myName,
+    commentText: `Reacted ${emoji} to your story`,
+    timestamp: Date.now(),
+    read: false
+  });
 
   toast(`Reaction sent ${emoji}`);
 }
@@ -2652,8 +2650,8 @@ function sendStoryReplyText(){
   if(!replyText) return;
 
   const currentStory = _svActiveStories[_svIndex];
-  if(!currentStory || !currentStory.authorId) return;
-  const targetUid = currentStory.authorId;
+  const targetUid = currentStory ? (currentStory.authorId || currentStory.uid) : null;
+  if(!targetUid) return;
   const targetUser = getUser(targetUid);
   const targetName = targetUser.name || 'User';
   const chatId = _myUid < targetUid ? `${_myUid}_${targetUid}` : `${targetUid}_${_myUid}`;
@@ -2688,16 +2686,14 @@ function sendStoryReplyText(){
   db.ref('users/'+targetUid+'/chats/'+_myUid+'/unreadCount').transaction(c=>(c||0)+1);
 
   // Notification to story owner
-  if(targetUid !== _myUid){
-    db.ref('users/'+targetUid+'/notifications').push({
-      type: 'story',
-      fromUid: _myUid,
-      fromName: myName,
-      commentText: `Replied to story: "${replyText}"`,
-      timestamp: Date.now(),
-      read: false
-    });
-  }
+  db.ref('users/'+targetUid+'/notifications').push({
+    type: 'story',
+    fromUid: _myUid,
+    fromName: myName,
+    commentText: `Replied to story: "${replyText}"`,
+    timestamp: Date.now(),
+    read: false
+  });
 
   input.value = '';
   resumeStoryProgress();
