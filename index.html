@@ -238,17 +238,212 @@ a{color:inherit;text-decoration:none}
 .mp-tab{flex:1;text-align:center;padding:14px 0 12px;color:#666;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;border-top:2px solid transparent;transition:.15s}
 .mp-tab.active{color:#fff;border-top-color:#fff}
 
-/* upload sheet */
-.upload-sheet{position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center}
+/* ============ UPLOAD SHEET — Full Screen Instagram-style ============ */
+.upload-sheet{
+  position:fixed;inset:0;z-index:99997;
+  background:#000;
+  display:none;flex-direction:column;
+  animation:igFadeIn .2s ease;
+}
 .upload-sheet.open{display:flex}
-.upload-panel{background:#fff;width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:18px;max-height:86vh;overflow-y:auto;animation:slideUp .22s ease}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.upload-panel h3{text-align:center;margin-bottom:12px;font-size:16px}
-.upload-panel input,.upload-panel textarea,.upload-panel select{width:100%;padding:10px;border:1px solid #dbdbdb;border-radius:7px;margin-bottom:9px;font-size:14px;font-family:inherit;outline:none}
-.upload-panel textarea{resize:vertical}
-.upload-panel button.submit{width:100%;padding:11px;background:#0095f6;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}
-.upload-panel button.submit:disabled{background:#b2dffc}
-.upload-preview{width:100%;max-height:200px;object-fit:contain;border-radius:8px;background:#f5f5f5;margin-bottom:9px;display:none}
+@keyframes igFadeIn{from{opacity:0}to{opacity:1}}
+
+/* Top header bar */
+.up-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;
+  background:#000;
+  border-bottom:1px solid #262626;
+  position:relative;
+  z-index:2;
+}
+.up-header-title{
+  position:absolute;left:50%;transform:translateX(-50%);
+  font-size:15px;font-weight:700;color:#fff;
+}
+.up-header-btn{
+  background:none;border:none;color:#fff;font-size:14px;
+  cursor:pointer;padding:4px 8px;font-weight:600;
+  display:flex;align-items:center;gap:4px;
+}
+.up-header-btn.blue{color:#0095f6;font-size:15px;font-weight:700}
+.up-header-btn i{font-size:20px}
+
+/* Step indicator pills */
+.up-steps{
+  display:flex;gap:6px;align-items:center;
+  justify-content:center;padding:10px 0 4px;
+  background:#000;
+}
+.up-step-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:#363636;transition:all .3s;
+}
+.up-step-dot.active{background:#0095f6;width:20px;border-radius:4px}
+.up-step-dot.done{background:#0095f6;opacity:.4}
+
+/* ===== STEP 1: Image preview + aspect ratio ===== */
+#upStep1{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#000}
+.up-img-wrapper{
+  position:relative;background:#111;
+  display:flex;align-items:center;justify-content:center;
+  flex:1;overflow:hidden;
+}
+#upPreview{
+  max-width:100%;max-height:100%;
+  object-fit:contain;
+  transition:filter .25s ease;
+  display:none;
+}
+.up-img-placeholder{
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  color:#555;text-align:center;
+}
+.up-img-placeholder i{font-size:60px;color:#333}
+.up-img-placeholder p{font-size:14px;color:#555}
+.up-img-placeholder button{
+  background:none;border:1.5px solid #555;color:#ccc;
+  padding:9px 22px;border-radius:8px;font-size:14px;
+  cursor:pointer;margin-top:4px;
+}
+.up-img-placeholder button:hover{border-color:#0095f6;color:#0095f6}
+
+/* Aspect ratio row */
+.up-aspect-bar{
+  display:flex;gap:8px;padding:10px 16px;
+  background:#000;border-top:1px solid #1a1a1a;
+  overflow-x:auto;scrollbar-width:none;
+}
+.up-aspect-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:#1a1a1a;border:1.5px solid #333;border-radius:10px;
+  padding:8px 12px;cursor:pointer;transition:all .2s;
+  color:#888;font-size:10px;font-weight:600;white-space:nowrap;flex:0 0 auto;
+}
+.up-aspect-btn .ar-icon{
+  width:20px;height:20px;border:2px solid currentColor;
+  border-radius:2px;transition:all .2s;
+}
+.up-aspect-btn.ar-1x1 .ar-icon{width:18px;height:18px}
+.up-aspect-btn.ar-4x5 .ar-icon{width:14px;height:18px}
+.up-aspect-btn.ar-16x9 .ar-icon{width:22px;height:13px}
+.up-aspect-btn.ar-9x16 .ar-icon{width:11px;height:18px}
+.up-aspect-btn.active,.up-aspect-btn:hover{border-color:#0095f6;color:#0095f6;background:#0a1929}
+
+/* ===== STEP 2: Filters strip ===== */
+#upStep2{flex:1;display:none;flex-direction:column;background:#000}
+.up-filter-preview-box{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  background:#111;overflow:hidden;
+}
+#upFilterPreviewImg{
+  max-width:100%;max-height:100%;object-fit:contain;
+  transition:filter .2s ease;
+}
+.up-filters-strip{
+  padding:14px 0 10px;
+  border-top:1px solid #1a1a1a;background:#000;
+}
+.up-filters-strip-inner{
+  display:flex;gap:12px;padding:0 16px;
+  overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;
+}
+.up-filter-item{
+  flex:0 0 72px;text-align:center;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.up-filter-thumb{
+  width:68px;height:68px;border-radius:10px;overflow:hidden;
+  border:2.5px solid transparent;transition:all .2s;
+  box-sizing:border-box;
+}
+.up-filter-thumb-inner{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#c084fc,#fb923c,#f43f5e,#0ea5e9);
+}
+.up-filter-item.active .up-filter-thumb{border-color:#fff}
+.up-filter-item-name{
+  font-size:10px;color:#888;font-weight:600;
+  transition:color .2s;
+}
+.up-filter-item.active .up-filter-item-name{color:#fff}
+.up-intensity-row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 20px 4px;
+  background:#000;
+}
+.up-intensity-row label{font-size:11px;color:#888;font-weight:600;white-space:nowrap}
+.up-intensity-row input[type=range]{
+  flex:1;height:3px;accent-color:#fff;
+  background:linear-gradient(to right,#fff 100%,#333 100%);
+  border-radius:2px;outline:none;-webkit-appearance:none;
+}
+.up-intensity-val{font-size:11px;color:#888;font-weight:700;width:32px;text-align:right}
+
+/* ===== STEP 3: Post details ===== */
+#upStep3{
+  flex:1;display:none;flex-direction:column;
+  background:#000;overflow-y:auto;
+}
+.up-post-header{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:14px 16px;
+  border-bottom:1px solid #1a1a1a;
+}
+.up-post-header-avatar{
+  width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-size:14px;flex:0 0 36px;
+}
+.up-post-header-user{font-size:13px;font-weight:700;color:#fff}
+#upCaption{
+  flex:1;background:none;border:none;color:#fff;
+  font-size:14px;font-family:inherit;outline:none;
+  resize:none;min-height:60px;placeholder-color:#555;
+  padding:0;line-height:1.5;
+}
+#upCaption::placeholder{color:#555}
+.up-thumb-mini{
+  width:44px;height:44px;border-radius:6px;object-fit:cover;
+  flex:0 0 44px;
+}
+.up-details-section{
+  border-top:1px solid #1a1a1a;
+}
+.up-details-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;cursor:pointer;
+  border-bottom:1px solid #1a1a1a;
+  transition:background .15s;
+}
+.up-details-row:hover{background:#0d0d0d}
+.up-details-row-left{display:flex;align-items:center;gap:10px;}
+.up-details-row-left i{font-size:20px;color:#fff;width:22px;text-align:center}
+.up-details-row-label{font-size:14px;color:#fff}
+.up-details-row-value{font-size:13px;color:#555;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up-details-row-value.set{color:#0095f6}
+.up-details-row i.arrow{font-size:14px;color:#555}
+.up-advanced-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;cursor:pointer;
+  border-bottom:1px solid #1a1a1a;
+}
+.up-advanced-toggle-label{font-size:14px;color:#fff;font-weight:600}
+.up-char-count{font-size:12px;color:#555;text-align:right;padding:0 16px 10px}
+
+/* dark mode adjustments */
+body.dark-mode .upload-sheet{background:#000}
+
+/* share button at bottom of step 3 */
+.up-share-btn{
+  margin:12px 16px;
+  padding:12px;background:#0095f6;color:#fff;
+  border:none;border-radius:10px;font-size:15px;
+  font-weight:700;cursor:pointer;width:calc(100% - 32px);
+  transition:background .2s;
+}
+.up-share-btn:hover{background:#1aa1f5}
+.up-share-btn:disabled{background:#1a3a5c;color:#2d6a9f}
 
 /* toast */
 .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(80px);background:#262626;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:999999;opacity:0;transition:all .25s ease;pointer-events:none;white-space:nowrap}
@@ -507,7 +702,27 @@ body.dark-mode .disc-chip{background:#262626;color:#fff}
 .story-viewer-body img{max-width:100%;max-height:100%;object-fit:contain}
 .story-viewer-body .sv-tap-left{position:absolute;left:0;top:0;width:35%;height:100%;z-index:5}
 .story-viewer-body .sv-tap-right{position:absolute;right:0;top:0;width:65%;height:100%;z-index:5}
-.story-viewer-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 20px;flex-shrink:0}
+/* Story Quick Reactions & Reply Bar */
+.story-viewer-footer{ position:relative;display:flex;flex-direction:column;gap:10px;padding:10px 16px 20px;flex-shrink:0;z-index:20;background:linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
+.sv-reply-box{ display:flex;align-items:center;gap:10px;width:100%; }
+.sv-reply-input{ flex:1;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:24px;padding:10px 16px;color:#fff;font-size:14px;outline:none;backdrop-filter:blur(10px);transition:all .2s; }
+.sv-reply-input::placeholder{ color:rgba(255,255,255,.7); }
+.sv-reply-input:focus{ background:rgba(0,0,0,.4);border-color:#0095f6; }
+.sv-send-btn{ background:#0095f6;border:none;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;flex-shrink:0;transition:transform .15s; }
+.sv-send-btn:active{ transform:scale(0.9); }
+
+.sv-quick-reactions{ display:flex;align-items:center;justify-content:space-around;padding:4px 0; }
+.sv-emoji-btn{ background:none;border:none;font-size:24px;cursor:pointer;transition:transform .2s cubic-bezier(.17,.67,.83,.67);user-select:none; }
+.sv-emoji-btn:hover,.sv-emoji-btn:active{ transform:scale(1.4); }
+
+/* Flying emoji animation on story */
+.flying-emoji{ position:absolute;bottom:80px;font-size:32px;pointer-events:none;z-index:99;animation:flyEmojiUp 1.2s ease-out forwards; }
+@keyframes flyEmojiUp {
+  0% { transform:translateY(0) scale(0.5); opacity:1; }
+  50% { transform:translateY(-180px) scale(1.3) rotate(-10deg); opacity:0.9; }
+  100% { transform:translateY(-350px) scale(1.6) rotate(10deg); opacity:0; }
+}
+
 .story-viewer-footer .sv-views{color:#fff;font-size:13px;cursor:pointer}
 .story-viewer-footer .sv-reply{color:#fff;font-size:13px;cursor:pointer}
 /* Viewer list sheet */
@@ -642,6 +857,13 @@ body.dark-mode .reel-author-name{color:#fff}
 .toggle-slider::before{content:"";position:absolute;height:20px;width:20px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.3s}
 input:checked+.toggle-slider{background:#0095f6}
 input:checked+.toggle-slider::before{transform:translateX(20px)}
+/* Upload advanced settings toggle (dark bg) */
+.up-toggle{position:relative;display:inline-block;width:50px;height:28px;flex-shrink:0}
+.up-toggle input{opacity:0;width:0;height:0}
+.up-toggle-track{position:absolute;cursor:pointer;inset:0;background:#3a3a3a;border-radius:28px;transition:.3s}
+.up-toggle-track::before{content:"";position:absolute;height:22px;width:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.up-toggle input:checked+.up-toggle-track{background:#0095f6}
+.up-toggle input:checked+.up-toggle-track::before{transform:translateX(22px)}
 
 /* Typing indicator */
 .typing-indicator{padding:8px 16px;font-size:12px;color:#8e8e8e;font-style:italic;display:none}
@@ -675,10 +897,91 @@ body.dark-mode .mini-chart-bar-row .bar-value{color:#f5f5f5}
 
 /* Reels autoplay toggle */
 .reel-autoplay-toggle{position:absolute;top:10px;right:10px;z-index:10;background:rgba(0,0,0,.4);color:#fff;border:none;border-radius:16px;padding:6px 12px;font-size:12px;cursor:pointer;backdrop-filter:blur(4px)}
+.notif-unseen-dot{width:8px;height:8px;background:#ed4956;border-radius:50%;display:inline-block;margin-left:4px;vertical-align:middle}
 
-/* Seen/unseen notification dot */
-.notif-dot{width:7px;height:7px;background:#0095f6;border-radius:50%;flex-shrink:0;margin-left:8px;display:none}
-.notif-dot.show{display:block}
+/* ============ SMART NOTIFICATIONS CENTER ============ */
+.nv-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);
+  position:sticky;top:0;z-index:10;
+  background:var(--bg,#fff);
+}
+body.dark-mode .nv-header{ background:#000; }
+.nv-back-btn{ background:none;border:none;color:inherit;font-size:20px;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center; }
+.nv-title{ font-size:18px;font-weight:700;flex:1;text-align:center; }
+.nv-readall-btn{ background:none;border:none;color:#0095f6;font-size:12px;font-weight:700;cursor:pointer;padding:0;white-space:nowrap; }
+/* Filter tabs */
+.nv-tabs{ display:flex;gap:6px;padding:10px 12px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(128,128,128,.12); }
+.nv-tab{ padding:7px 14px;border-radius:20px;border:1.5px solid rgba(128,128,128,.25);background:transparent;color:#888;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0; }
+.nv-tab.active,.nv-tab:hover{ background:#0095f6;border-color:#0095f6;color:#fff; }
+body.dark-mode .nv-tab{ color:#666;border-color:#333; }
+/* Notification card */
+.nv-card{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:13px 16px;cursor:pointer;transition:background .15s;
+  border-bottom:1px solid rgba(128,128,128,.07);
+  position:relative;
+}
+.nv-card:hover{ background:rgba(128,128,128,.06); }
+.nv-card.unread{ background:rgba(0,149,246,.05); }
+.nv-card.unread::before{ content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#0095f6;border-radius:0 2px 2px 0; }
+/* Avatar */
+.nv-av{
+  width:44px;height:44px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:700;color:#fff;overflow:hidden;
+}
+/* Icon badge overlay */
+.nv-icon-badge{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;position:absolute;bottom:-2px;right:-2px;
+  border:2px solid var(--bg,#fff);
+}
+body.dark-mode .nv-icon-badge{ border-color:#000; }
+.nv-body{ flex:1;min-width:0; }
+.nv-name{ font-size:13px;font-weight:700;color:inherit;margin-bottom:2px; }
+.nv-text{ font-size:13px;color:#8e8e8e;line-height:1.4; }
+.nv-time{ font-size:11px;color:#aaa;margin-top:3px; }
+.nv-thumb{ width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0; }
+.nv-thumb-placeholder{ width:44px;height:44px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px; }
+.nv-loading{ text-align:center;padding:60px 20px;color:#8e8e8e;font-size:14px; }
+.nv-empty{ text-align:center;padding:80px 20px;color:#8e8e8e; }
+.nv-empty i{ font-size:52px;display:block;margin-bottom:14px;opacity:.4; }
+.nv-empty p{ font-size:15px;font-weight:600;margin:0 0 6px; }
+.nv-empty span{ font-size:13px; }
+/* Unread badge on nav icon */
+.nv-badge{
+  position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;
+  background:#ed4956;border-radius:10px;color:#fff;
+  font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  padding:0 4px;border:2px solid var(--bg,#fff);pointer-events:none;
+}
+body.dark-mode .nv-badge{ border-color:#000; }
+
+/* ============ CREATOR ANALYTICS DASHBOARD ============ */
+.an-header{ display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(128,128,128,.12);position:sticky;top:0;z-index:10;background:var(--bg,#fff); }
+body.dark-mode .an-header{ background:#000; }
+.an-title{ font-size:18px;font-weight:700; }
+.an-container{ padding:16px;padding-bottom:90px; }
+.an-grid{ display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px; }
+.an-card{ background:rgba(128,128,128,.06);border:1px solid rgba(128,128,128,.12);border-radius:14px;padding:14px;position:relative;overflow:hidden; }
+.an-card-icon{ font-size:20px;margin-bottom:8px;display:inline-block; }
+.an-card-val{ font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px; }
+.an-card-lbl{ font-size:12px;color:#8e8e8e;font-weight:500; }
+.an-card-badge{ font-size:10px;font-weight:700;color:#34c759;background:rgba(52,199,89,.12);padding:2px 6px;border-radius:10px;float:right; }
+.an-section-title{ font-size:15px;font-weight:700;margin:22px 0 12px;display:flex;align-items:center;justify-content:space-between; }
+.an-chart-card{ background:rgba(128,128,128,.06);border:1px solid rgba(128,128,128,.12);border-radius:14px;padding:16px;margin-bottom:20px; }
+.an-chart-bars{ display:flex;align-items:flex-end;justify-content:space-between;height:120px;padding-top:10px;gap:8px; }
+.an-bar-col{ flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end; }
+.an-bar-fill{ width:100%;max-width:24px;background:linear-gradient(180deg,#0095f6,#0066cc);border-radius:6px 6px 2px 2px;transition:height .6s cubic-bezier(.17,.67,.83,.67);min-height:6px; }
+.an-bar-lbl{ font-size:11px;color:#8e8e8e;font-weight:600; }
+.an-top-post-item{ display:flex;align-items:center;gap:12px;padding:10px;background:rgba(128,128,128,.05);border-radius:12px;margin-bottom:10px; }
+.an-post-thumb{ width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#333; }
+.an-post-info{ flex:1;min-width:0; }
+.an-post-title{ font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px; }
+.an-post-meta{ font-size:12px;color:#8e8e8e;display:flex;gap:12px; }
+
 
 /* Progress bar for story viewer */
 .story-progress-track{display:flex;gap:3px;padding:8px 8px 0;position:absolute;top:0;left:0;right:0;z-index:10}
@@ -698,6 +1001,111 @@ body.dark-mode .msg-options button:hover{background:#333}
 /* Reels actions animation */
 .reel-action.liked i{color:#ed4956;animation:likeScale .3s ease}
 @keyframes likeScale{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+/* ===================== STORY CREATOR EDITOR ===================== */
+#storyCreatorOverlay{ display:none; }
+#storyCreatorOverlay.open{ display:flex !important; }
+
+/* Tool bar buttons */
+.sc-tool-btn{
+  background:rgba(0,0,0,.55);border:none;color:#fff;
+  width:40px;height:40px;border-radius:50%;font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);transition:all .2s;
+}
+.sc-tool-btn:hover,.sc-tool-btn.active{ background:#0095f6; }
+
+/* Font style buttons */
+.sc-font-btn{
+  padding:8px 14px;border:1.5px solid #333;border-radius:10px;
+  background:#1a1a1a;color:#aaa;font-size:16px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;
+}
+.sc-font-btn.active,.sc-font-btn:hover{ border-color:#0095f6;color:#fff;background:#0a1929; }
+.sc-font-outline{ -webkit-text-stroke:1.5px #fff;color:transparent !important;background:transparent !important;border-color:#555 !important; }
+.sc-font-outline.active{ border-color:#0095f6 !important; }
+.sc-font-glow{ text-shadow:0 0 12px #0095f6, 0 0 24px #0095f6;color:#fff !important; }
+.sc-font-glow.active{ border-color:#0095f6 !important; }
+.sc-font-bold{ font-weight:900 !important; }
+
+/* Color dots */
+.sc-color-dot{
+  width:28px;height:28px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;transition:all .2s;flex-shrink:0;
+}
+.sc-color-dot.active{ border-color:#0095f6;transform:scale(1.15); }
+
+/* Sticker category chips */
+.sc-sticker-cat-btn{
+  padding:6px 14px;border-radius:20px;border:1.5px solid #333;
+  background:#1a1a1a;color:#888;font-size:12px;font-weight:600;
+  cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;
+}
+.sc-sticker-cat-btn.active,.sc-sticker-cat-btn:hover{ background:#0095f6;border-color:#0095f6;color:#fff; }
+
+/* Sticker tiles */
+.sc-sticker-tile{
+  aspect-ratio:1;background:#1a1a1a;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;cursor:pointer;transition:transform .15s;
+  user-select:none;
+}
+.sc-sticker-tile:hover{ transform:scale(1.15);background:#222; }
+.sc-sticker-tile:active{ transform:scale(.9); }
+
+/* Background swatches */
+.sc-bg-swatch{
+  aspect-ratio:9/16;border-radius:8px;cursor:pointer;
+  border:2px solid transparent;transition:all .2s;overflow:hidden;
+}
+.sc-bg-swatch:hover,.sc-bg-swatch.active{ border-color:#fff;transform:scale(1.05); }
+.sc-solid-swatch{
+  aspect-ratio:1;border-radius:8px;cursor:pointer;
+  border:2px solid transparent;transition:all .2s;
+}
+.sc-solid-swatch:hover,.sc-solid-swatch.active{ border-color:#fff;transform:scale(1.05); }
+
+/* Canvas elements (stickers/text placed on story) */
+.sc-element{
+  position:absolute;cursor:move;user-select:none;touch-action:none;
+  display:flex;align-items:center;justify-content:center;
+  transform-origin:center center;
+}
+.sc-element.selected{ outline:2px solid rgba(255,255,255,.6);border-radius:4px; }
+.sc-element .sc-el-delete{
+  position:absolute;top:-12px;right:-12px;width:22px;height:22px;
+  background:#ed4956;border:none;color:#fff;border-radius:50%;
+  font-size:10px;cursor:pointer;display:none;align-items:center;
+  justify-content:center;z-index:10;
+}
+.sc-element.selected .sc-el-delete{ display:flex; }
+
+/* Animated sticker keyframes */
+@keyframes scBounce{ 0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)} }
+@keyframes scPulse{ 0%,100%{transform:scale(1)}50%{transform:scale(1.12)} }
+@keyframes scRotate{ from{transform:rotate(0deg)}to{transform:rotate(360deg)} }
+@keyframes scShake{ 0%,100%{transform:rotate(0deg)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)} }
+@keyframes scSparkle{ 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.2)} }
+
+.sc-anim-bounce{ animation:scBounce 1s ease infinite; }
+.sc-anim-pulse{ animation:scPulse 1.2s ease infinite; }
+.sc-anim-rotate{ animation:scRotate 3s linear infinite; }
+.sc-anim-shake{ animation:scShake 0.5s ease infinite; }
+.sc-anim-sparkle{ animation:scSparkle 1.5s ease infinite; }
+
+/* Template card */
+.sc-template-card{
+  flex:0 0 80px;height:130px;border-radius:12px;overflow:hidden;
+  cursor:pointer;border:2px solid transparent;transition:all .2s;
+  display:flex;align-items:flex-end;padding:8px;
+  position:relative;flex-direction:column;justify-content:flex-end;
+}
+.sc-template-card:hover,.sc-template-card.active{ border-color:#fff;transform:scale(1.04); }
+.sc-template-label{
+  font-size:9px;color:rgba(255,255,255,.9);font-weight:700;
+  text-align:center;width:100%;text-transform:uppercase;
+  letter-spacing:.4px;text-shadow:0 1px 3px rgba(0,0,0,.5);
+}
 </style>
 </head>
 <body>
@@ -798,13 +1206,23 @@ body.dark-mode .msg-options button:hover{background:#333}
 
 <!-- NOTIFICATIONS VIEW -->
 <div class="spa-view" id="notifView">
-  <div class="msg-header">
-    <button onclick="SPA.navigate('homeView')" style="background:none;border:none;font-size:20px;cursor:pointer"><i class="fas fa-arrow-left"></i></button>
-    <h2>Notifications</h2>
-    <button onclick="markAllNotifsRead()" style="background:none;border:none;color:#0095f6;font-size:13px;font-weight:700;cursor:pointer">Read all</button>
+  <div class="nv-header">
+    <button onclick="SPA.navigate('homeView')" class="nv-back-btn"><i class="fas fa-arrow-left"></i></button>
+    <h2 class="nv-title">Notifications</h2>
+    <button onclick="markAllNotifsRead()" class="nv-readall-btn">Mark all read</button>
   </div>
-  <div id="notifList" style="padding-bottom:70px">
-    <div style="text-align:center;padding:60px 20px;color:#8e8e8e"><i class="far fa-bell" style="font-size:48px;display:block;margin-bottom:12px"></i>Loading notifications...</div>
+
+  <!-- Filter tabs -->
+  <div class="nv-tabs" id="nvTabs">
+    <button class="nv-tab active" data-cat="all"    onclick="nvFilter(this,'all')">All</button>
+    <button class="nv-tab"        data-cat="like"   onclick="nvFilter(this,'like')">❤️ Likes</button>
+    <button class="nv-tab"        data-cat="comment" onclick="nvFilter(this,'comment')">💬 Comments</button>
+    <button class="nv-tab"        data-cat="follow"  onclick="nvFilter(this,'follow')">👤 Follows</button>
+    <button class="nv-tab"        data-cat="mention" onclick="nvFilter(this,'mention')">🔔 Mentions</button>
+  </div>
+
+  <div id="notifList" style="padding-bottom:80px">
+    <div class="nv-loading"><i class="fas fa-circle-notch fa-spin"></i> Loading...</div>
   </div>
 </div>
 
@@ -902,9 +1320,12 @@ body.dark-mode .msg-options button:hover{background:#333}
   </div>
 
   <!-- Dashboard Banner — sirf apne profile pe dikhega -->
-  <div id="proDashboardBanner" onclick="window.location.href='dashboard.html'" style="display:none;margin:0 16px 14px;padding:10px 14px;background:#fafafa;border-radius:8px;font-size:14px;border:1px solid #efefef;cursor:pointer;">
-    <strong style="display:block;font-weight:600;font-size:14px;margin-bottom:2px;">Professional dashboard</strong>
-    <span style="color:#8e8e8e;font-size:13px;">View your stats and insights</span>
+  <div id="proDashboardBanner" onclick="SPA.navigate('analyticsView')" style="display:none;margin:0 16px 14px;padding:12px 14px;background:rgba(0,149,246,.06);border-radius:10px;font-size:14px;border:1px solid rgba(0,149,246,.2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <strong style="display:block;font-weight:700;font-size:14px;margin-bottom:2px;color:#0095f6;">Professional Dashboard</strong>
+      <span style="color:#8e8e8e;font-size:12px;">View account insights & performance</span>
+    </div>
+    <i class="fas fa-chevron-right" style="color:#0095f6;font-size:14px;"></i>
   </div>
 
   <div class="profile-actions" id="profileActionButtons">
@@ -920,6 +1341,164 @@ body.dark-mode .msg-options button:hover{background:#333}
 
   <div class="profile-grid" id="profileGrid"></div>
 </div>
+
+<!-- ANALYTICS DASHBOARD VIEW -->
+<div class="spa-view" id="analyticsView">
+  <div class="an-header">
+    <button onclick="SPA.navigate('profileView')" class="nv-back-btn"><i class="fas fa-arrow-left"></i></button>
+    <div class="an-title">Insights & Analytics</div>
+    <span style="width:36px"></span>
+  </div>
+
+  <div class="an-container">
+    <!-- Timeframe bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span style="font-size:13px;color:#8e8e8e;font-weight:600">Overview (Last 30 Days)</span>
+      <span style="font-size:12px;color:#0095f6;font-weight:700;cursor:pointer" onclick="loadAnalyticsView()">Refresh <i class="fas fa-sync-alt" style="font-size:10px"></i></span>
+    </div>
+
+    <!-- 4 Key Metrics Cards -->
+    <div class="an-grid">
+      <div class="an-card">
+        <span class="an-card-badge">+18.4%</span>
+        <span class="an-card-icon">👁️</span>
+        <div class="an-card-val" id="anReach">0</div>
+        <div class="an-card-lbl">Accounts Reached</div>
+      </div>
+      <div class="an-card">
+        <span class="an-card-badge">+12.6%</span>
+        <span class="an-card-icon">❤️</span>
+        <div class="an-card-val" id="anEngagement">0</div>
+        <div class="an-card-lbl">Total Interactions</div>
+      </div>
+      <div class="an-card">
+        <span class="an-card-badge">+5 Net</span>
+        <span class="an-card-icon">👥</span>
+        <div class="an-card-val" id="anFollowers">0</div>
+        <div class="an-card-lbl">Total Followers</div>
+      </div>
+      <div class="an-card">
+        <span class="an-card-badge" style="color:#0095f6;background:rgba(0,149,246,.1)">High</span>
+        <span class="an-card-icon">📊</span>
+        <div class="an-card-val" id="anRate">0%</div>
+        <div class="an-card-lbl">Engagement Rate</div>
+      </div>
+    </div>
+
+    <!-- Weekly Engagement Bar Chart -->
+    <div class="an-section-title">
+      <span>Weekly Activity</span>
+      <span style="font-size:12px;color:#8e8e8e;font-weight:normal">Interactions / Day</span>
+    </div>
+    <div class="an-chart-card">
+      <div class="an-chart-bars" id="anChartBars">
+        <div class="an-bar-col"><div class="an-bar-fill" style="height:40%"></div><span class="an-bar-lbl">Mon</span></div>
+        <div class="an-bar-col"><div class="an-bar-fill" style="height:65%"></div><span class="an-bar-lbl">Tue</span></div>
+        <div class="an-bar-col"><div class="an-bar-fill" style="height:50%"></div><span class="an-bar-lbl">Wed</span></div>
+        <div class="an-bar-col"><div class="an-bar-fill" style="height:85%"></div><span class="an-bar-lbl">Thu</span></div>
+        <div class="an-bar-col"><div class="an-bar-fill" style="height:70%"></div><span class="an-bar-lbl">Fri</span></div>
+        <div class="an-bar-col"><div class="an-bar-fill" style="height:95%;background:linear-gradient(180deg,#ff2d55,#f09433)"></div><span class="an-bar-lbl">Sat</span></div>
+        <div class="an-bar-col"><div class="an-bar-fill" style="height:80%"></div><span class="an-bar-lbl">Sun</span></div>
+      </div>
+    </div>
+
+    <!-- Top Performing Content -->
+    <div class="an-section-title">
+      <span>Top Content</span>
+      <span style="font-size:12px;color:#0095f6;font-weight:600;cursor:pointer" onclick="SPA.navigate('profileView')">See All</span>
+    </div>
+    <div id="anTopPosts">
+      <div style="text-align:center;padding:30px;color:#8e8e8e"><i class="fas fa-circle-notch fa-spin"></i> Calculating insights...</div>
+    </div>
+
+    <!-- Creator Level & Milestone Card -->
+    <div class="an-chart-card" style="background:linear-gradient(135deg,rgba(0,149,246,.15),rgba(175,82,222,.15));border:1.5px solid rgba(0,149,246,.3);padding:16px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">🏆</span>
+          <div>
+            <div style="font-size:14px;font-weight:800" id="anLevelTitle">Rising Creator • Level 2</div>
+            <div style="font-size:11px;color:#8e8e8e" id="anLevelSub">Next Badge: Verified Pro</div>
+          </div>
+        </div>
+        <span style="font-size:12px;font-weight:700;color:#0095f6" id="anLevelScore">75 / 100 XP</span>
+      </div>
+      <div style="height:6px;background:rgba(128,128,128,.2);border-radius:4px;overflow:hidden">
+        <div id="anLevelBar" style="width:75%;height:100%;background:linear-gradient(90deg,#0095f6,#af52de);border-radius:4px;transition:width .5s ease"></div>
+      </div>
+    </div>
+
+    <!-- Audience Breakdown -->
+    <div class="an-section-title">
+      <span>Audience Insights</span>
+    </div>
+    <div class="an-chart-card" style="padding:16px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:13px;font-weight:600">Peak Activity Hours</span>
+        <span style="font-size:12px;color:#0095f6;font-weight:700">6 PM - 10 PM</span>
+      </div>
+      <div style="display:flex;gap:4px;height:8px;background:rgba(128,128,128,.15);border-radius:4px;overflow:hidden;margin-bottom:14px">
+        <div style="width:20%;background:#0095f6"></div>
+        <div style="width:35%;background:#af52de"></div>
+        <div style="width:45%;background:#ff2d55"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#8e8e8e">
+        <span>Morning (20%)</span>
+        <span>Afternoon (35%)</span>
+        <span>Evening (45%)</span>
+      </div>
+    </div>
+
+    <!-- Content Type Performance Split -->
+    <div class="an-section-title">
+      <span>Content Format Split</span>
+    </div>
+    <div class="an-chart-card" style="padding:16px;margin-bottom:20px">
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px">
+          <span>🖼️ Feed Posts</span>
+          <span id="anSplitPosts">60%</span>
+        </div>
+        <div style="height:6px;background:rgba(128,128,128,.15);border-radius:3px;overflow:hidden">
+          <div id="anSplitPostsBar" style="width:60%;height:100%;background:#0095f6"></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px">
+          <span>🎬 Reels</span>
+          <span id="anSplitReels">25%</span>
+        </div>
+        <div style="height:6px;background:rgba(128,128,128,.15);border-radius:3px;overflow:hidden">
+          <div id="anSplitReelsBar" style="width:25%;height:100%;background:#ff2d55"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px">
+          <span>📸 Stories</span>
+          <span id="anSplitStories">15%</span>
+        </div>
+        <div style="height:6px;background:rgba(128,128,128,.15);border-radius:3px;overflow:hidden">
+          <div id="anSplitStoriesBar" style="width:15%;height:100%;background:#f09433"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Creator Growth Tips -->
+    <div class="an-section-title">
+      <span>💡 AI Growth Tips</span>
+    </div>
+    <div class="an-chart-card" style="background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.2);padding:14px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px">🔥</span>
+        <div style="font-size:12px;line-height:1.5;color:inherit" id="anGrowthTip">
+          <strong>Pro Tip:</strong> Posts with captions containing 3+ hashtags get up to <strong>+35% more reach</strong> in Discover. Try posting between 6:00 PM and 9:00 PM today!
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 
 <div class="spa-view" id="notificationsView">
   <div class="profile-top">
@@ -943,6 +1522,104 @@ body.dark-mode .msg-options button:hover{background:#333}
 </nav>
 
 <!-- ===== STORY VIEWER ===== -->
+<!-- ====================================================
+     STORY CREATOR EDITOR — Premium Templates & Stickers
+     ==================================================== -->
+<div id="storyCreatorOverlay" style="display:none;position:fixed;inset:0;z-index:9999990;background:#000;flex-direction:column;">
+
+  <!-- TOP BAR -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;position:absolute;top:0;left:0;right:0;z-index:10;">
+    <button onclick="closeStoryCreator()" style="background:rgba(0,0,0,.5);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)"><i class="fas fa-times"></i></button>
+    <div id="scToolBar" style="display:flex;gap:8px">
+      <button class="sc-tool-btn" id="scTextBtn" onclick="scActivateTool('text')" title="Add Text"><i class="fas fa-font"></i></button>
+      <button class="sc-tool-btn" id="scStickerBtn" onclick="scActivateTool('sticker')" title="Stickers"><i class="fas fa-smile"></i></button>
+      <button class="sc-tool-btn" id="scBgBtn" onclick="scActivateTool('bg')" title="Background"><i class="fas fa-palette"></i></button>
+      <button class="sc-tool-btn" id="scUndoBtn" onclick="scUndo()" title="Undo"><i class="fas fa-undo"></i></button>
+    </div>
+    <button onclick="scShareStory()" style="background:#0095f6;border:none;color:#fff;padding:9px 20px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer">Share <i class="fas fa-paper-plane" style="font-size:12px"></i></button>
+  </div>
+
+  <!-- CANVAS AREA -->
+  <div id="scCanvas" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea,#764ba2);cursor:crosshair">
+    <!-- Background image layer -->
+    <img id="scBgImage" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;z-index:0">
+    <!-- Stickers & text elements dropped here dynamically -->
+    <div id="scElementsLayer" style="position:absolute;inset:0;z-index:2;pointer-events:none"></div>
+    <!-- Tap-to-type overlay (active when text tool on) -->
+    <div id="scTextTapHint" style="display:none;position:absolute;inset:0;z-index:5;display:none;align-items:center;justify-content:center;pointer-events:all" onclick="scAddTextAtCenter()">
+      <div style="color:rgba(255,255,255,.7);font-size:14px;font-weight:600;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.4)"><i class="fas fa-font" style="font-size:36px;display:block;margin-bottom:8px;opacity:.6"></i>Tap to add text</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM PANEL — context-sensitive -->
+  <div id="scBottomPanel" style="background:#111;border-top:1px solid #222;max-height:55vh;overflow-y:auto">
+
+    <!-- TEMPLATES STRIP (default) -->
+    <div id="scTemplatesPanel">
+      <div style="padding:10px 16px 4px;font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px">Templates</div>
+      <div id="scTemplateStrip" style="display:flex;gap:10px;padding:4px 16px 14px;overflow-x:auto;scrollbar-width:none"></div>
+
+      <div style="padding:4px 16px 4px;font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px">Your Photo</div>
+      <div style="padding:8px 16px 14px">
+        <button onclick="document.getElementById('scPhotoInput').click()" style="display:flex;align-items:center;gap:10px;background:#1a1a1a;border:1.5px dashed #333;border-radius:12px;padding:12px 16px;color:#888;font-size:13px;cursor:pointer;width:100%">
+          <i class="fas fa-image" style="font-size:20px;color:#555"></i> Tap to add your photo as background
+        </button>
+        <input type="file" id="scPhotoInput" accept="image/*" style="display:none" onchange="scLoadPhoto(event)">
+      </div>
+    </div>
+
+    <!-- TEXT PANEL -->
+    <div id="scTextPanel" style="display:none;padding:14px 16px">
+      <div style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none">
+        <button class="sc-font-btn active" data-font="Inter,sans-serif" onclick="scSetFont(this,'Inter,sans-serif')">Aa</button>
+        <button class="sc-font-btn" data-font="'Lobster',cursive" onclick="scSetFont(this,'Lobster,cursive')" style="font-family:'Lobster',cursive">Aa</button>
+        <button class="sc-font-btn sc-font-outline" data-font="Inter,sans-serif" onclick="scSetFont(this,'Inter,sans-serif','outline')">Aa</button>
+        <button class="sc-font-btn sc-font-glow" data-font="Inter,sans-serif" onclick="scSetFont(this,'Inter,sans-serif','glow')">Aa</button>
+        <button class="sc-font-btn sc-font-bold" data-font="Inter,sans-serif" onclick="scSetFont(this,'Inter,sans-serif','bold')">Aa</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px" id="scColorPicker">
+        <div class="sc-color-dot active" data-color="#ffffff" onclick="scSetTextColor(this,'#ffffff')" style="background:#fff"></div>
+        <div class="sc-color-dot" data-color="#000000" onclick="scSetTextColor(this,'#000000')" style="background:#000;border:1.5px solid #333"></div>
+        <div class="sc-color-dot" data-color="#ff3b30" onclick="scSetTextColor(this,'#ff3b30')" style="background:#ff3b30"></div>
+        <div class="sc-color-dot" data-color="#ff9500" onclick="scSetTextColor(this,'#ff9500')" style="background:#ff9500"></div>
+        <div class="sc-color-dot" data-color="#ffcc00" onclick="scSetTextColor(this,'#ffcc00')" style="background:#ffcc00"></div>
+        <div class="sc-color-dot" data-color="#34c759" onclick="scSetTextColor(this,'#34c759')" style="background:#34c759"></div>
+        <div class="sc-color-dot" data-color="#0095f6" onclick="scSetTextColor(this,'#0095f6')" style="background:#0095f6"></div>
+        <div class="sc-color-dot" data-color="#af52de" onclick="scSetTextColor(this,'#af52de')" style="background:#af52de"></div>
+        <div class="sc-color-dot" data-color="#ff2d55" onclick="scSetTextColor(this,'#ff2d55')" style="background:#ff2d55"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="scTextInput" placeholder="Type your text..." maxlength="80"
+          style="flex:1;background:#222;border:1px solid #333;border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;outline:none"
+          onkeydown="if(event.key==='Enter'){scAddTextElement();event.preventDefault()}">
+        <button onclick="scAddTextElement()" style="background:#0095f6;border:none;color:#fff;width:40px;height:40px;border-radius:10px;font-size:16px;cursor:pointer;flex-shrink:0"><i class="fas fa-plus"></i></button>
+      </div>
+    </div>
+
+    <!-- STICKER PANEL -->
+    <div id="scStickerPanel" style="display:none;padding:14px 16px">
+      <div style="display:flex;gap:8px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none" id="scStickerCats">
+        <button class="sc-sticker-cat-btn active" onclick="scShowStickerCat(this,'all')">All</button>
+        <button class="sc-sticker-cat-btn" onclick="scShowStickerCat(this,'fire')">🔥 Fire</button>
+        <button class="sc-sticker-cat-btn" onclick="scShowStickerCat(this,'love')">❤️ Love</button>
+        <button class="sc-sticker-cat-btn" onclick="scShowStickerCat(this,'party')">🎉 Party</button>
+        <button class="sc-sticker-cat-btn" onclick="scShowStickerCat(this,'vibes')">✨ Vibes</button>
+        <button class="sc-sticker-cat-btn" onclick="scShowStickerCat(this,'travel')">✈️ Travel</button>
+      </div>
+      <div id="scStickerGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px"></div>
+    </div>
+
+    <!-- BACKGROUND PANEL -->
+    <div id="scBgPanel" style="display:none;padding:14px 16px">
+      <div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Gradients</div>
+      <div id="scBgGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px"></div>
+      <div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Solid Colors</div>
+      <div id="scSolidGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px"></div>
+    </div>
+
+  </div>
+</div>
+
 <div id="storyViewerOverlay">
   <div class="story-viewer-progress" id="svProgressBar"></div>
   <div class="story-viewer-header">
@@ -958,8 +1635,27 @@ body.dark-mode .msg-options button:hover{background:#333}
     <div class="sv-tap-right" onclick="nextStory()"></div>
   </div>
   <div class="story-viewer-footer">
-    <span class="sv-views" id="svViews" onclick="openStoryViewerList()">0 views</span>
-    <span class="sv-reply" onclick="openStoryReply()">Send message</span>
+    <!-- Views button for owner -->
+    <span class="sv-views" id="svViews" onclick="openStoryViewerList()" style="display:none">0 views</span>
+
+    <!-- Friend Reply & Reactions Bar (Shown when viewing someone else's story) -->
+    <div id="svFriendReplyBar" style="display:none;width:100%;flex-direction:column;gap:10px">
+      <!-- Quick Emoji Strip -->
+      <div class="sv-quick-reactions">
+        <button class="sv-emoji-btn" onclick="sendStoryReaction('❤️')">❤️</button>
+        <button class="sv-emoji-btn" onclick="sendStoryReaction('😂')">😂</button>
+        <button class="sv-emoji-btn" onclick="sendStoryReaction('😮')">😮</button>
+        <button class="sv-emoji-btn" onclick="sendStoryReaction('😢')">😢</button>
+        <button class="sv-emoji-btn" onclick="sendStoryReaction('🔥')">🔥</button>
+        <button class="sv-emoji-btn" onclick="sendStoryReaction('👏')">👏</button>
+      </div>
+
+      <!-- Text DM Reply Input -->
+      <div class="sv-reply-box">
+        <input type="text" id="svReplyInput" class="sv-reply-input" placeholder="Send message..." maxlength="200" onkeydown="if(event.key==='Enter'){sendStoryReplyText();event.preventDefault();}">
+        <button class="sv-send-btn" onclick="sendStoryReplyText()"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1033,21 +1729,179 @@ body.dark-mode .msg-options button:hover{background:#333}
   </div>
 </div>
 
-<div class="upload-sheet" id="uploadSheet" onclick="if(event.target===this)closeUploadSheet()">
-  <div class="upload-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <strong>New post</strong>
-      <button onclick="closeUploadSheet()" style="background:none;border:none;font-size:22px;cursor:pointer">×</button>
-    </div>
-    <input type="text" id="upTitle" placeholder="Location or Title">
-    <textarea id="upPrompt" placeholder="Write a caption..." rows="3"></textarea>
-    <div style="display:flex;gap:8px">
-      <select id="upCategory"><option>Portrait</option><option>Landscape</option><option>Logo & Brand</option><option>Anime</option><option>Fantasy</option></select>
-    </div>
-    <input type="file" id="upImage" accept="image/*">
-    <img id="upPreview" class="upload-preview" alt="">
-    <button class="submit" id="upSubmitBtn">Share</button>
+ <!-- ======================================================
+     UPLOAD SHEET — Full-screen Instagram Create Post
+     ====================================================== -->
+<div class="upload-sheet" id="uploadSheet">
+
+  <!-- TOP HEADER (dynamic per step) -->
+  <div class="up-header">
+    <button class="up-header-btn" id="upHeaderBack" onclick="upGoBack()"><i class="fas fa-times"></i></button>
+    <span class="up-header-title" id="upHeaderTitle">New post</span>
+    <button class="up-header-btn blue" id="upHeaderNext" onclick="upGoNext()">Next <i class="fas fa-chevron-right" style="font-size:12px"></i></button>
   </div>
+
+  <!-- STEP DOTS -->
+  <div class="up-steps">
+    <div class="up-step-dot active" id="upDot1"></div>
+    <div class="up-step-dot" id="upDot2"></div>
+    <div class="up-step-dot" id="upDot3"></div>
+  </div>
+
+  <!-- ===== STEP 1: SELECT / PREVIEW IMAGE ===== -->
+  <div id="upStep1">
+    <div class="up-img-wrapper" id="upImgWrapper">
+      <!-- Placeholder when no image -->
+      <div class="up-img-placeholder" id="upPlaceholder">
+        <i class="far fa-image"></i>
+        <p>Tap below to select a photo or video</p>
+        <button onclick="document.getElementById('upImage').click()"><i class="fas fa-photo-video"></i> Select from Gallery</button>
+      </div>
+      <!-- Preview image -->
+      <img id="upPreview" alt="preview">
+    </div>
+
+    <!-- Aspect ratio toolbar -->
+    <div class="up-aspect-bar" id="upAspectBar" style="display:none">
+      <button class="up-aspect-btn ar-orig active" id="arOrig" onclick="setAspect('original')" title="Original">
+        <div class="ar-icon"></div>
+        <span>Original</span>
+      </button>
+      <button class="up-aspect-btn ar-1x1" id="ar1x1" onclick="setAspect('1:1')" title="Square">
+        <div class="ar-icon"></div>
+        <span>1:1</span>
+      </button>
+      <button class="up-aspect-btn ar-4x5" id="ar4x5" onclick="setAspect('4:5')" title="Portrait">
+        <div class="ar-icon"></div>
+        <span>4:5</span>
+      </button>
+      <button class="up-aspect-btn ar-16x9" id="ar16x9" onclick="setAspect('16:9')" title="Landscape">
+        <div class="ar-icon"></div>
+        <span>16:9</span>
+      </button>
+      <button class="up-aspect-btn ar-9x16" id="ar9x16" onclick="setAspect('9:16')" title="Story">
+        <div class="ar-icon"></div>
+        <span>9:16</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: FILTERS ===== -->
+  <div id="upStep2">
+    <div class="up-filter-preview-box">
+      <img id="upFilterPreviewImg" src="" alt="filter preview">
+    </div>
+    <!-- Intensity row -->
+    <div class="up-intensity-row">
+      <label>INTENSITY</label>
+      <input type="range" id="filterIntensityRange" min="0" max="100" value="100" oninput="onIntensityChange(this.value)">
+      <span class="up-intensity-val" id="filterIntensityValue">100%</span>
+    </div>
+    <!-- Filters strip -->
+    <div class="up-filters-strip">
+      <div class="up-filters-strip-inner" id="filterCarousel"></div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: CAPTION & DETAILS ===== -->
+  <div id="upStep3">
+    <!-- Caption area -->
+    <div class="up-post-header">
+      <div class="up-post-header-avatar" id="upAvatarLetter">U</div>
+      <textarea id="upPrompt" rows="3" maxlength="2200" placeholder="Write a caption..." oninput="upUpdateCharCount()"></textarea>
+      <img id="upThumbMini" src="" alt="" class="up-thumb-mini">
+    </div>
+    <div class="up-char-count"><span id="upCharCount">0</span> / 2,200</div>
+
+    <!-- Extra options rows (Instagram style) -->
+    <div class="up-details-section">
+      <div class="up-details-row" onclick="upToggleLocationInput()">
+        <div class="up-details-row-left">
+          <i class="fas fa-map-marker-alt"></i>
+          <span class="up-details-row-label">Add location</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="up-details-row-value" id="upLocationVal">Search...</span>
+          <i class="fas fa-chevron-right arrow"></i>
+        </div>
+      </div>
+      <!-- Location input (hidden by default) -->
+      <div id="upLocationBox" style="display:none;padding:10px 16px;border-bottom:1px solid #1a1a1a">
+        <input type="text" id="upLocation" placeholder="Search location..." style="width:100%;background:#1a1a1a;border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;outline:none">
+      </div>
+
+      <div class="up-details-row" onclick="upToggleTagInput()">
+        <div class="up-details-row-left">
+          <i class="fas fa-user-tag"></i>
+          <span class="up-details-row-label">Tag people</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="up-details-row-value" id="upTagVal">Add tags...</span>
+          <i class="fas fa-chevron-right arrow"></i>
+        </div>
+      </div>
+      <!-- Tag input -->
+      <div id="upTagBox" style="display:none;padding:10px 16px;border-bottom:1px solid #1a1a1a">
+        <input type="text" id="upTagInput" placeholder="@username" style="width:100%;background:#1a1a1a;border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;outline:none" oninput="upTagSearch(this.value)">
+        <div id="upTagResults" style="margin-top:6px"></div>
+      </div>
+
+      <div class="up-details-row" onclick="upToggleAltText()">
+        <div class="up-details-row-left">
+          <i class="fas fa-closed-captioning"></i>
+          <span class="up-details-row-label">Add alt text</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="up-details-row-value" id="upAltVal">Describe this post...</span>
+          <i class="fas fa-chevron-right arrow"></i>
+        </div>
+      </div>
+      <!-- Alt text input -->
+      <div id="upAltBox" style="display:none;padding:10px 16px;border-bottom:1px solid #1a1a1a">
+        <textarea id="upAltText" rows="2" maxlength="100" placeholder="Write alt text..." style="width:100%;background:#1a1a1a;border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;outline:none;resize:none"></textarea>
+      </div>
+
+      <div class="up-details-row" onclick="upToggleAdvanced()">
+        <div class="up-details-row-left">
+          <i class="fas fa-sliders-h"></i>
+          <span class="up-details-row-label">Advanced settings</span>
+        </div>
+        <i class="fas fa-chevron-right arrow" id="upAdvArrow"></i>
+      </div>
+      <div id="upAdvancedBox" style="display:none;border-bottom:1px solid #1a1a1a">
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:14px;color:#fff">Hide like count</div>
+              <div style="font-size:12px;color:#555">Others won't see the total number of likes</div>
+            </div>
+            <label class="up-toggle">
+              <input type="checkbox" id="upHideLikes">
+              <span class="up-toggle-track"></span>
+            </label>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:14px;color:#fff">Turn off commenting</div>
+              <div style="font-size:12px;color:#555">Comments won't be visible on this post</div>
+            </div>
+            <label class="up-toggle">
+              <input type="checkbox" id="upDisableComments">
+              <span class="up-toggle-track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="up-share-btn" id="upSubmitBtn" onclick="upSharePost()">Share</button>
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- hidden file input + legacy ids -->
+  <input type="file" id="upImage" accept="image/*" style="display:none">
+  <input type="hidden" id="upTitle" value="Post">
+  <select id="upCategory" style="display:none"><option>Post</option></select>
 </div>
 
 <!-- FOLLOW LIST SHEET -->
@@ -1393,7 +2247,7 @@ function loadHomeFeed(){
           ${!isOwn ? `<button class="ig-post-follow-btn" onclick="quickFollow('${esc(d.authorId||'')}', this)">Follow</button>` : ''}
           <i class="fas fa-ellipsis-h ig-post-more" onclick="togglePostOptions('${p.key}',event)"></i>
         </div>
-        ${d.videoUrl || d.type === 'video' ? `<video src="${esc(d.videoUrl||d.imageUrl||'')}" class="ig-post-image" controls playsinline loop style="background:#000"></video>` : `<img class="ig-post-image" src="${esc(d.imageUrl||d.imageURL||'')}" loading="lazy" onerror="this.style.background='#f5f5f5'" ondblclick="doubleTapHeart(event, '${p.key}')">`}
+        ${d.videoUrl || d.type === 'video' ? `<video src="${esc(d.videoUrl||d.imageUrl||'')}" class="ig-post-image" controls playsinline loop style="background:#000; filter: ${esc(d.customFilter||'none')}"></video>` : `<img class="ig-post-image" src="${esc(d.imageUrl||d.imageURL||'')}" loading="lazy" onerror="this.style.background='#f5f5f5'" ondblclick="doubleTapHeart(event, '${p.key}')" style="filter: ${esc(d.customFilter||'none')}">`}
         <div class="ig-post-actions">
           <i class="far fa-heart" onclick="toggleLike(this,'${p.key}')"></i>
           <i class="far fa-comment" onclick="openPostModal('${p.key}')"></i>
@@ -1485,11 +2339,16 @@ function sharePost(postId){
 
 /* ===== STORIES BAR (Real + Mutual Follow) ===== */
 let _myStories=[],_friendStories=[],_svIndex=0,_svTimer=null,_svCurrentUid=null;
+let _storiesListener=null;
 function loadStoriesBar(){
   const el=$('#storiesList'); if(!el) return;
   el.innerHTML='<span style="color:#8e8e8e;font-size:12px">Loading...</span>';
-  // Load all stories
-  db.ref('stories').orderByChild('timestamp').limitToLast(60).once('value', snap=>{
+
+  // Detach previous listener if any
+  if(_storiesListener){ db.ref('stories').off('value', _storiesListener); }
+
+  // Real-time listener — updates automatically when new story is added
+  _storiesListener = db.ref('stories').orderByChild('timestamp').limitToLast(60).on('value', snap=>{
     _myStories=[]; _friendStories=[];
     if(snap.exists()){
       const now=Date.now();
@@ -1497,6 +2356,10 @@ function loadStoriesBar(){
         const d=c.val();
         const age=(now-d.timestamp)/3600000;
         if(age>24) return; // 24hr expiry
+        // Normalize storyElements (Firebase may store array as object)
+        if(d.storyElements && !Array.isArray(d.storyElements)){
+          d.storyElements = Object.values(d.storyElements);
+        }
         const item={key:c.key,...d};
         if(d.authorId===_myUid) _myStories.unshift(item);
         else _friendStories.unshift(item);
@@ -1508,7 +2371,16 @@ function loadStoriesBar(){
       if(_myStories.length>0) myRing.classList.add('story-ring-active');
       else myRing.classList.remove('story-ring-active');
     }
-    // Update initial
+    // Update "Your story" click binding dynamically
+    const myStoryItem=document.querySelector('.ig-story-item[onclick*="openMyStory"], .ig-story-item[onclick*="openMediaPicker"]');
+    if(myStoryItem){
+      myStoryItem.setAttribute('onclick',
+        _myStories.length>0
+          ? "openMyStory()"
+          : "openMediaPicker('story')"
+      );
+    }
+    // Update initial letter
     if(_myUid){
       const u=getUser(_myUid);
       const initEl=$('#myStoryInitial');
@@ -1519,18 +2391,15 @@ function loadStoriesBar(){
     db.ref('users/'+_myUid+'/following').once('value', fSnap=>{
       const myFollowing=new Set();
       if(fSnap.exists()) fSnap.forEach(c=>myFollowing.add(c.key));
-      // Filter: only mutual follows
       const mutualMap={};
       _friendStories.forEach(s=>{
         const uid=s.authorId;
         if(!uid||uid===_myUid) return;
         if(!mutualMap[uid]){
-          // Stale  — we already know if I follow them. Need to check if THEY follow ME.
           mutualMap[uid]={stories:[], pending:true, isMutual: myFollowing.has(uid)};
         }
         mutualMap[uid].stories.push(s);
       });
-      // Check reverse: do they follow me?
       const uids=Object.keys(mutualMap);
       if(uids.length===0){ renderStoryFriends(); return; }
       let checked=0;
@@ -1539,7 +2408,6 @@ function loadStoriesBar(){
           checked++;
           if(revSnap.exists()) mutualMap[uid].isMutual=true;
           if(checked===uids.length){
-            // Filter to only mutual
             _friendStories=_friendStories.filter(s=>mutualMap[s.authorId]?.isMutual);
             renderStoryFriends();
           }
@@ -1567,25 +2435,23 @@ function renderStoryFriends(){
   if(el.innerHTML==='') el.innerHTML='<span style="color:#8e8e8e;font-size:12px">No stories</span>';
 }
 
-// Update Your Story click — open viewer if has stories, else create
-(function(){
-  const orig=document.querySelector('.ig-story-item[onclick*="openMediaPicker"]');
-  if(orig) orig.setAttribute('onclick',"if(_myStories.length>0) openMyStory(); else openMediaPicker('story')");
-})();
-
 // ===== STORY VIEWER =====
+let _svActiveStories = []; // snapshot of stories being viewed
+
 function openMyStory(){
   if(!_myStories.length) return;
   _svCurrentUid=_myUid;
   _svIndex=0;
-  showStoryViewer(_myStories);
+  _svActiveStories = [..._myStories]; // snapshot
+  showStoryViewer(_svActiveStories);
 }
 function openStoryViewer(uid){
   const stories=_friendStories.filter(s=>s.authorId===uid);
   if(!stories.length){ toast('No stories'); return; }
   _svCurrentUid=uid;
   _svIndex=0;
-  showStoryViewer(stories);
+  _svActiveStories = [...stories]; // snapshot
+  showStoryViewer(_svActiveStories);
 }
 function showStoryViewer(stories){
   if(!stories.length){ closeStoryViewer(); return; }
@@ -1602,16 +2468,13 @@ function showStoryViewer(stories){
   const isOwn = (s.authorId === _myUid);
   $('#svMoreBtn').style.display=isOwn?'':'none';
   const svViewsBtn = $('#svViews');
-  const svReplyBtn = document.querySelector('.sv-reply');
+  const svFriendBar = $('#svFriendReplyBar');
   if(svViewsBtn) svViewsBtn.style.display = isOwn ? 'inline-block' : 'none';
-  if(svReplyBtn) svReplyBtn.style.display = isOwn ? 'none' : 'inline-block';
+  if(svFriendBar) svFriendBar.style.display = isOwn ? 'none' : 'flex';
   const age=Date.now()-s.timestamp;
   $('#svTime').textContent=age<60000?'just now':age<3600000?Math.floor(age/60000)+'m':age<86400000?Math.floor(age/3600000)+'h':Math.floor(age/86400000)+'d';
-  // Image
-  const img=$('#svImage');
-  img.src=s.imageUrl||s.imageURL||'';
-  img.onerror=function(){ this.style.display='none'; };
-  img.onload=function(){ this.style.display=''; };
+  // Render: Creator story (gradient+elements) OR normal image story
+  svRenderStory(s);
   // Progress bars
   const progBar=$('#svProgressBar');
   progBar.innerHTML=stories.map((_,i)=>`<div class="sv-bar"><div class="sv-fill" id="svFill${i}"></div></div>`).join('');
@@ -1678,10 +2541,7 @@ function showStoryFrame(stories){
   if(_svIndex>=stories.length){ closeStoryViewer(); return; }
   const s=stories[_svIndex];
   const u=getUser(s.authorId);
-  const img=$('#svImage');
-  img.src=s.imageUrl||s.imageURL||'';
-  img.style.display='';
-  img.onerror=function(){ this.style.display='none'; };
+  svRenderStory(s);
   // Update header
   if(u.photo){ $('#svAvatar').innerHTML=`<img src="${esc(u.photo)}">`; }
   else{ $('#svAvatar').innerHTML=`<div style="width:100%;height:100%;background:linear-gradient(135deg,#f09433,#bc1888);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700">${(u.name||'U').charAt(0).toUpperCase()}</div>`; }
@@ -1689,22 +2549,110 @@ function showStoryFrame(stories){
   const isOwn = (s.authorId === _myUid);
   $('#svMoreBtn').style.display=isOwn?'':'none';
   const svViewsBtn = $('#svViews');
-  const svReplyBtn = document.querySelector('.sv-reply');
+  const svFriendBar = $('#svFriendReplyBar');
   if(svViewsBtn) svViewsBtn.style.display = isOwn ? 'inline-block' : 'none';
-  if(svReplyBtn) svReplyBtn.style.display = isOwn ? 'none' : 'inline-block';
+  if(svFriendBar) svFriendBar.style.display = isOwn ? 'none' : 'flex';
   loadStoryViews(s.key, s.authorId);
   if(!isOwn) recordStoryView(s.key, s.authorId);
   startStoryProgress(stories);
 }
+
+/* ============================================================
+   STORY QUICK REACTIONS & DM REPLIES ENGINE
+   ============================================================ */
+function sendStoryReaction(emoji){
+  if(!_myUid){ toast('Login required'); return; }
+  const currentStory = _svActiveStories[_svIndex];
+  if(!currentStory || !currentStory.authorId) return;
+  const targetUid = currentStory.authorId;
+
+  // 1. Trigger flying emoji animation on story body
+  const body = document.getElementById('svBody');
+  if(body){
+    const flyEl = document.createElement('div');
+    flyEl.className = 'flying-emoji';
+    flyEl.textContent = emoji;
+    flyEl.style.left = (20 + Math.random()*60) + '%';
+    body.appendChild(flyEl);
+    setTimeout(()=>flyEl.remove(), 1200);
+  }
+
+  // 2. Push story reaction message to chat in Firebase
+  const chatId = _myUid < targetUid ? `${_myUid}_${targetUid}` : `${targetUid}_${_myUid}`;
+  const myName = _myUser.displayName || (_myUser.email ? _myUser.email.split('@')[0] : 'User');
+
+  db.ref('chats/'+chatId+'/messages').push({
+    senderId: _myUid,
+    senderName: myName,
+    text: `Reacted ${emoji} to story`,
+    isStoryReply: true,
+    storyKey: currentStory.key,
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  });
+  db.ref('chats/'+chatId+'/lastMessage').set({
+    text: `${myName}: Reacted ${emoji} to story`,
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  });
+
+  // 3. Send notification to story owner
+  db.ref('users/'+targetUid+'/notifications').push({
+    type: 'story',
+    fromUid: _myUid,
+    fromName: myName,
+    commentText: `Reacted ${emoji} to your story`,
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  });
+
+  toast(`Reaction sent ${emoji}`);
+}
+
+function sendStoryReplyText(){
+  if(!_myUid){ toast('Login required'); return; }
+  const input = document.getElementById('svReplyInput');
+  if(!input) return;
+  const replyText = input.value.trim();
+  if(!replyText) return;
+
+  const currentStory = _svActiveStories[_svIndex];
+  if(!currentStory || !currentStory.authorId) return;
+  const targetUid = currentStory.authorId;
+  const chatId = _myUid < targetUid ? `${_myUid}_${targetUid}` : `${targetUid}_${_myUid}`;
+  const myName = _myUser.displayName || (_myUser.email ? _myUser.email.split('@')[0] : 'User');
+
+  db.ref('chats/'+chatId+'/messages').push({
+    senderId: _myUid,
+    senderName: myName,
+    text: `Replied to story: "${replyText}"`,
+    isStoryReply: true,
+    storyKey: currentStory.key,
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  });
+  db.ref('chats/'+chatId+'/lastMessage').set({
+    text: `${myName}: ${replyText}`,
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  });
+
+  // Notification to story owner
+  db.ref('users/'+targetUid+'/notifications').push({
+    type: 'story',
+    fromUid: _myUid,
+    fromName: myName,
+    commentText: `Replied to story: "${replyText}"`,
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  });
+
+  input.value = '';
+  toast('Reply sent ✓');
+}
 function nextStory(){
   clearTimeout(_svTimer);
-  const stories=_svCurrentUid===_myUid?_myStories:_friendStories.filter(s=>s.authorId===_svCurrentUid);
+  const stories = _svActiveStories;
   _svIndex++;
   showStoryFrame(stories);
 }
 function prevStory(){
   clearTimeout(_svTimer);
-  const stories=_svCurrentUid===_myUid?_myStories:_friendStories.filter(s=>s.authorId===_svCurrentUid);
+  const stories = _svActiveStories;
   if(_svIndex>0) _svIndex--;
   showStoryFrame(stories);
 }
@@ -1712,12 +2660,69 @@ function closeStoryViewer(){
   clearTimeout(_svTimer);
   $('#storyViewerOverlay').classList.remove('open');
   document.body.style.overflow='';
+  // Reset body bg and remove creator overlays
+  const body = document.getElementById('svBody');
+  if(body) body.style.background = '#000';
+  const ov = document.getElementById('svCreatorOverlay');
+  if(ov) ov.remove();
   // Reset progress
   const b=$('#svProgressBar'); if(b) b.innerHTML='';
 }
+
+/* ------- shared story render helper ------- */
+function svRenderStory(s){
+  const body = document.getElementById('svBody');
+  const img  = document.getElementById('svImage');
+
+  // Remove any previous creator overlay
+  const oldOverlay = document.getElementById('svCreatorOverlay');
+  if(oldOverlay) oldOverlay.remove();
+
+  if(s.isCreatorStory){
+    // Gradient / solid background
+    body.style.background = s.storyBg || 'linear-gradient(135deg,#667eea,#764ba2)';
+    img.style.display = 'none';
+    img.src = '';
+
+    // If user photo was uploaded as bg
+    if(s.imageUrl){
+      img.src = s.imageUrl;
+      img.style.display = 'block';
+      img.style.position = 'absolute';
+      img.style.inset = '0';
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      img.style.zIndex = '0';
+    }
+
+    // Re-render sticker/text elements
+    if(s.storyElements && s.storyElements.length){
+      const overlay = document.createElement('div');
+      overlay.id = 'svCreatorOverlay';
+      overlay.style.cssText = 'position:absolute;inset:0;z-index:3;pointer-events:none';
+      s.storyElements.forEach(el => {
+        const div = document.createElement('div');
+        div.style.cssText = `position:absolute;left:${el.left};top:${el.top};transform:translate(-50%,-50%);pointer-events:none`;
+        div.innerHTML = el.html.replace(/<button[^>]*class="sc-el-delete"[^>]*>[\s\S]*?<\/button>/g,'');
+        overlay.appendChild(div);
+      });
+      body.appendChild(overlay);
+    }
+  } else {
+    // Normal image story
+    body.style.background = '#000';
+    img.style.cssText = '';
+    img.style.display = '';
+    img.src = s.imageUrl || s.imageURL || '';
+    img.onerror = function(){ this.style.display='none'; };
+    img.onload  = function(){ this.style.display=''; };
+  }
+}
+
 function deleteCurrentStory(){
   if(!_svCurrentUid || _svCurrentUid!==_myUid) return;
-  const stories=_myStories;
+  const stories = _svActiveStories;
   const s=stories[_svIndex];
   if(!s||!s.key) return;
   if(!confirm('Delete this story?')) return;
@@ -1725,11 +2730,10 @@ function deleteCurrentStory(){
   db.ref('stories/'+s.key).remove().then(()=>{
     toast('Story deleted ✓');
     stories.splice(_svIndex,1);
-    _myStories=stories;
-    if(stories.length===0){ closeStoryViewer(); loadStoriesBar(); return; }
+    // Real-time listener will refresh _myStories automatically
+    if(stories.length===0){ closeStoryViewer(); return; }
     if(_svIndex>=stories.length) _svIndex=stories.length-1;
     showStoryFrame(stories);
-    loadStoriesBar();
   }).catch(e=>{ toast('Delete failed: '+e.message); });
 }
 function openStoryViewerList(){
@@ -2218,7 +3222,7 @@ function renderProfile(uid, fallbackName, isOwn){
       snap.forEach(c=>{ const d=c.val(); if(d.authorId===uid){ count++; posts.unshift({key:c.key,data:d}); }});
     }
     posts.forEach(p=>{
-      html += `<img src="${esc(p.data.imageUrl||'')}" loading="lazy" onclick="openPostModal('${p.key}')">`;
+      html += `<img src="${esc(p.data.imageUrl||'')}" loading="lazy" onclick="openPostModal('${p.key}')" style="filter: ${esc(p.data.customFilter||'none')}">`;
     });
     $('#pPosts').textContent = count;
     grid.innerHTML = count ? html : '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-camera"></i>No posts yet</div>';
@@ -2305,6 +3309,7 @@ function openPostModal(postId){
   const d=p.data;
   _modalPostId = postId;
   $('#modalImg').src = d.imageUrl || '';
+  $('#modalImg').style.filter = d.customFilter || 'none';
   $('#modalAuthor').textContent = d.authorName || 'User';
   $('#modalAv').textContent = (d.authorName||'U').charAt(0).toUpperCase();
   $('#modalAuthorHandle').textContent = '@' + (d.authorName||'user').toLowerCase().replace(/\s/g,'');
@@ -2403,6 +3408,32 @@ function switchMpTab(el, type){
   const title = document.querySelector('.mp-header-title');
   const map={post:'New post', story:'New story', reel:'New reel', live:'Go live'};
   if(title) title.textContent = map[type] || 'New post';
+
+  // When STORY tab is active — show a premium "Open Story Creator" button
+  const actionArea = document.getElementById('mpStoryCreatorBanner');
+  if(!actionArea) {
+    // Inject the story creator CTA banner into media picker bottom once
+    const mpBottom = document.querySelector('.mp-bottom-tabs');
+    if(mpBottom) {
+      const banner = document.createElement('div');
+      banner.id = 'mpStoryCreatorBanner';
+      banner.style.cssText = 'display:none;padding:12px 16px;background:linear-gradient(135deg,#f093fb,#f5576c);margin:0;cursor:pointer';
+      banner.innerHTML = `<div onclick="closeMediaPicker();openStoryCreator()" style="display:flex;align-items:center;gap:12px;color:#fff">
+        <div style="width:40px;height:40px;background:rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎨</div>
+        <div>
+          <div style="font-size:14px;font-weight:700">Open Story Creator</div>
+          <div style="font-size:12px;opacity:.85">Templates, stickers, text & effects</div>
+        </div>
+        <i class="fas fa-chevron-right" style="margin-left:auto;font-size:14px;opacity:.8"></i>
+      </div>`;
+      mpBottom.parentNode.insertBefore(banner, mpBottom);
+    }
+  }
+  // Show/hide banner
+  setTimeout(()=>{
+    const b = document.getElementById('mpStoryCreatorBanner');
+    if(b) b.style.display = type==='story' ? 'block' : 'none';
+  }, 10);
 }
 function loadMpDemo(){
   const grid=$('#mpPhotoGrid');
@@ -2446,94 +3477,662 @@ function triggerUploadNext(){
 }
 
 /* ============================================================
-   UPLOAD
+   UPLOAD — Full-screen 3-step Instagram-style create post
    ============================================================ */
+let _upStep = 1;        // current step: 1=select, 2=filter, 3=details
+let _upAspect = 'original';
+
+/* ---------- open / close ---------- */
 function openUploadSheet(file=null, previewUrl=null){
   if(!_myUid){ toast('Login first'); SPA.navigate('homeView'); document.getElementById('loginScreen').classList.add('show'); return; }
+  _upStep = 1;
+  window._pendingUploadFile = null;
+  window._selectedFilterString = 'none';
+  _currentFilterName = 'Normal';
+  _currentFilterValue = 100;
+  $('#upPrompt').value = '';
+  $('#upImage').value = '';
+  $('#upCharCount').textContent = '0';
+  // Reset extras
+  ['upLocationBox','upTagBox','upAltBox','upAdvancedBox'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  $('#upLocationVal').textContent = 'Search...';
+  $('#upLocationVal').classList.remove('set');
+  $('#upTagVal').textContent = 'Add tags...';
+  $('#upTagVal').classList.remove('set');
+  $('#upAltVal').textContent = 'Describe this post...';
+  $('#upAltVal').classList.remove('set');
+  if($('#upLocation')) $('#upLocation').value='';
+  if($('#upTagInput')) $('#upTagInput').value='';
+  if($('#upTagResults')) $('#upTagResults').innerHTML='';
+  if($('#upAltText')) $('#upAltText').value='';
+  if($('#upHideLikes')) $('#upHideLikes').checked=false;
+  if($('#upDisableComments')) $('#upDisableComments').checked=false;
+  // Aspect buttons reset
+  document.querySelectorAll('.up-aspect-btn').forEach(b=>b.classList.remove('active'));
+  const orig=document.getElementById('arOrig'); if(orig) orig.classList.add('active');
+  _upAspect='original';
+  // Set avatar initial
+  const av=document.getElementById('upAvatarLetter');
+  if(av && _myUser) av.textContent=(_myUser.displayName||_myUser.email||'U').charAt(0).toUpperCase();
+  // Show
   $('#uploadSheet').classList.add('open');
-  if(file){ window._pendingUploadFile = file; }
-  if(previewUrl){ const p=$('#upPreview'); p.src=previewUrl; p.style.display='block'; }
+  upRenderStep(1);
+  if(file){
+    window._pendingUploadFile = file;
+    const url = previewUrl || URL.createObjectURL(file);
+    upSetPreview(url);
+  }
+  initFilterEditor();
 }
+
 function closeUploadSheet(){
   $('#uploadSheet').classList.remove('open');
-  $('#upTitle').value=''; $('#upPrompt').value=''; $('#upImage').value='';
-  $('#upPreview').style.display='none';
-  window._pendingUploadFile=null;
+  window._pendingUploadFile = null;
+  window._selectedFilterString = 'none';
 }
+
+/* ---------- step rendering ---------- */
+function upRenderStep(n){
+  _upStep = n;
+  // dots
+  for(let i=1;i<=3;i++){
+    const dot=document.getElementById('upDot'+i);
+    if(!dot) continue;
+    dot.className='up-step-dot';
+    if(i<n) dot.classList.add('done');
+    else if(i===n) dot.classList.add('active');
+  }
+  // steps visibility
+  const s1=$('#upStep1'), s2=$('#upStep2'), s3=$('#upStep3');
+  if(s1){ s1.style.display = n===1 ? 'flex' : 'none'; s1.style.flexDirection='column'; s1.style.flex='1'; }
+  if(s2){ s2.style.display = n===2 ? 'flex' : 'none'; s2.style.flexDirection='column'; s2.style.flex='1'; }
+  if(s3){ s3.style.display = n===3 ? 'flex' : 'none'; s3.style.flexDirection='column'; s3.style.flex='1'; }
+  // header title & buttons
+  const titles=['New post','Edit','New post'];
+  document.getElementById('upHeaderTitle').textContent = titles[n-1];
+  const backBtn=document.getElementById('upHeaderBack');
+  const nextBtn=document.getElementById('upHeaderNext');
+  if(n===1){
+    backBtn.innerHTML='<i class="fas fa-times"></i>';
+    backBtn.onclick = closeUploadSheet;
+    nextBtn.style.visibility = window._pendingUploadFile ? 'visible' : 'hidden';
+    nextBtn.innerHTML = 'Next <i class="fas fa-chevron-right" style="font-size:12px"></i>';
+    nextBtn.onclick = upGoNext;
+  } else if(n===2){
+    backBtn.innerHTML='<i class="fas fa-arrow-left"></i>';
+    backBtn.onclick = ()=>upRenderStep(1);
+    nextBtn.style.visibility='visible';
+    nextBtn.innerHTML='Next <i class="fas fa-chevron-right" style="font-size:12px"></i>';
+    nextBtn.onclick = upGoNext;
+    // Sync filter preview image
+    const fpi=document.getElementById('upFilterPreviewImg');
+    const prev=$('#upPreview');
+    if(fpi && prev && prev.src) fpi.src=prev.src;
+    applyFilterToPreview();
+  } else {
+    backBtn.innerHTML='<i class="fas fa-arrow-left"></i>';
+    backBtn.onclick = ()=>upRenderStep(2);
+    nextBtn.style.visibility='hidden';
+    // populate mini thumb
+    const thumb=document.getElementById('upThumbMini');
+    const prev=$('#upPreview');
+    if(thumb && prev && prev.src) thumb.src=prev.src;
+  }
+}
+
+function upGoBack(){
+  if(_upStep===1) closeUploadSheet();
+  else upRenderStep(_upStep-1);
+}
+function upGoNext(){
+  if(_upStep===1){
+    if(!window._pendingUploadFile){ toast('Select a photo first'); return; }
+    upRenderStep(2);
+  } else if(_upStep===2){
+    upRenderStep(3);
+  }
+}
+
+/* ---------- preview + aspect ratio ---------- */
+function upSetPreview(url){
+  const img=$('#upPreview'), ph=document.getElementById('upPlaceholder');
+  const ab=document.getElementById('upAspectBar');
+  if(img){ img.src=url; img.style.display='block'; }
+  if(ph) ph.style.display='none';
+  if(ab) ab.style.display='flex';
+  // show Next button
+  const nb=document.getElementById('upHeaderNext');
+  if(nb) nb.style.visibility='visible';
+}
+
 $('#upImage').addEventListener('change', function(){
   const f=this.files[0]; if(!f) return;
   window._pendingUploadFile=f;
   const url=URL.createObjectURL(f);
-  const p=$('#upPreview'); p.src=url; p.style.display='block';
+  upSetPreview(url);
+  initFilterEditor();
 });
-$('#upSubmitBtn').onclick = async ()=>{
+
+const _aspectMap={
+  'original': {objectFit:'contain', maxHeight:'100%', width:'100%'},
+  '1:1':      {objectFit:'cover',   aspectRatio:'1/1', width:'100%', maxHeight:'none'},
+  '4:5':      {objectFit:'cover',   aspectRatio:'4/5', width:'100%', maxHeight:'none'},
+  '16:9':     {objectFit:'cover',   aspectRatio:'16/9',width:'100%', maxHeight:'none'},
+  '9:16':     {objectFit:'cover',   aspectRatio:'9/16', width:'auto', maxHeight:'100%', height:'100%'}
+};
+function setAspect(ratio){
+  _upAspect = ratio;
+  document.querySelectorAll('.up-aspect-btn').forEach(b=>b.classList.remove('active'));
+  const idMap={'original':'arOrig','1:1':'ar1x1','4:5':'ar4x5','16:9':'ar16x9','9:16':'ar9x16'};
+  const btn=document.getElementById(idMap[ratio]); if(btn) btn.classList.add('active');
+  const img=$('#upPreview');
+  if(!img) return;
+  const style=_aspectMap[ratio]||_aspectMap['original'];
+  Object.assign(img.style, {objectFit:style.objectFit||'contain', aspectRatio:style.aspectRatio||'', width:style.width||'100%', height:style.height||'auto', maxHeight:style.maxHeight||'100%'});
+}
+
+/* ---------- caption char count ---------- */
+function upUpdateCharCount(){
+  const t=$('#upPrompt'); if(!t) return;
+  const el=document.getElementById('upCharCount'); if(!el) return;
+  el.textContent = t.value.length;
+  el.style.color = t.value.length > 2000 ? '#ed4956' : '#555';
+}
+
+/* ---------- extra detail toggles ---------- */
+function upToggleLocationInput(){
+  const box=document.getElementById('upLocationBox');
+  const isOpen = box.style.display==='block';
+  box.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen) document.getElementById('upLocation').focus();
+}
+document.getElementById('upLocation') && document.getElementById('upLocation').addEventListener('input', function(){
+  const val=this.value.trim();
+  const lv=document.getElementById('upLocationVal');
+  if(val){ lv.textContent=val; lv.classList.add('set'); }
+  else { lv.textContent='Search...'; lv.classList.remove('set'); }
+});
+
+function upToggleTagInput(){
+  const box=document.getElementById('upTagBox');
+  const isOpen=box.style.display==='block';
+  box.style.display=isOpen?'none':'block';
+  if(!isOpen) document.getElementById('upTagInput').focus();
+}
+function upTagSearch(query){
+  const box=document.getElementById('upTagResults'); if(!box) return;
+  if(!query.trim()){ box.innerHTML=''; return; }
+  const q=query.replace(/^@/,'').toLowerCase();
+  db.ref('users').orderByChild('username').startAt(q).endAt(q+'\uf8ff').limitToFirst(5).once('value', snap=>{
+    let html='';
+    snap.forEach(c=>{
+      const u=c.val();
+      const name=u.displayName||u.username||'User';
+      html+=`<div onclick="upSelectTag('${name.replace(/'/g,"\\'")}','${c.key}')" style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;border-bottom:1px solid #1a1a1a">
+        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#f09433,#bc1888);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${name.charAt(0).toUpperCase()}</div>
+        <div style="font-size:13px;color:#fff">@${name}</div>
+      </div>`;
+    });
+    if(!html) html='<div style="color:#555;font-size:13px;padding:8px 0">No users found</div>';
+    box.innerHTML=html;
+  });
+}
+window._selectedTags=[];
+function upSelectTag(name, uid){
+  if(!window._selectedTags) window._selectedTags=[];
+  if(!window._selectedTags.find(t=>t.uid===uid)){
+    window._selectedTags.push({name, uid});
+  }
+  const tagVal=document.getElementById('upTagVal');
+  if(tagVal){ tagVal.textContent=window._selectedTags.map(t=>'@'+t.name).join(', '); tagVal.classList.add('set'); }
+  document.getElementById('upTagInput').value='';
+  document.getElementById('upTagResults').innerHTML='';
+  toast('@'+name+' tagged ✓');
+}
+
+function upToggleAltText(){
+  const box=document.getElementById('upAltBox');
+  const isOpen=box.style.display==='block';
+  box.style.display=isOpen?'none':'block';
+  if(!isOpen) document.getElementById('upAltText').focus();
+}
+document.getElementById('upAltText') && document.getElementById('upAltText').addEventListener('input', function(){
+  const val=this.value.trim();
+  const av=document.getElementById('upAltVal');
+  if(val){ av.textContent=val.substring(0,30)+(val.length>30?'…':''); av.classList.add('set'); }
+  else{ av.textContent='Describe this post...'; av.classList.remove('set'); }
+});
+
+function upToggleAdvanced(){
+  const box=document.getElementById('upAdvancedBox');
+  const arrow=document.getElementById('upAdvArrow');
+  const isOpen=box.style.display==='block';
+  box.style.display=isOpen?'none':'block';
+  if(arrow) arrow.style.transform=isOpen?'':'rotate(90deg)';
+}
+
+/* ---------- share / upload ---------- */
+async function upSharePost(){
   if(!_myUser){ toast('Login required'); return; }
-  const title=$('#upTitle').value.trim() || 'Post';
   const caption=$('#upPrompt').value.trim();
-  const cat=$('#upCategory').value;
   const file = window._pendingUploadFile || $('#upImage').files[0];
-  if(!caption){ toast('Caption required'); return; }
-  if(!file){ toast('Select an image'); return; }
-  const btn=$('#upSubmitBtn'); btn.disabled=true; btn.textContent='Uploading...';
+  if(!caption){ toast('Write a caption first'); return; }
+  if(!file){ toast('Select an image first'); return; }
+  const btn=$('#upSubmitBtn'); btn.disabled=true; btn.textContent='Sharing...';
   try{
     const fd=new FormData(); fd.append('image', file);
     const IMGBB_KEY = window.ANKITSTUDIO_CONFIG?.imgbbKey || '5f30b483ae91c03320748137616415d7';
     const res = await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_KEY, {method:'POST', body:fd});
     const j = await res.json();
-    if(!j.success) throw new Error('ImgBB failed');
+    if(!j.success) throw new Error('ImgBB upload failed');
     const imageUrl=j.data.url;
     const authorName=_myUser.displayName || (_myUser.email?_myUser.email.split('@')[0]:'User');
     const tabPathMap={post:'posts', story:'stories', reel:'reels', live:'posts'};
     const dbPath=tabPathMap[_activeMpTab]||'posts';
+    const location=(document.getElementById('upLocation')?.value||'').trim();
+    const altText=(document.getElementById('upAltText')?.value||'').trim();
+    const hideLikes=document.getElementById('upHideLikes')?.checked||false;
+    const disableComments=document.getElementById('upDisableComments')?.checked||false;
+    const tags=window._selectedTags||[];
     await db.ref(dbPath).push({
-      title,
+      title: location||'Post',
       caption,
       imageUrl,
       imageURL: imageUrl,
       uid: _myUid,
-      category: cat,
+      aspect: _upAspect,
+      location,
+      altText,
+      hideLikes,
+      disableComments,
+      tags,
+      customFilter: window._selectedFilterString || 'none',
       authorId: _myUid, authorName, authorEmail: _myUser.email||'',
       likeCount:0, commentCount:0,
       timestamp: firebase.database.ServerValue.TIMESTAMP
     });
+    window._selectedTags=[];
     const successMap={post:'Post shared ✓', story:'Story added ✓', reel:'Reel shared ✓', live:'Live started ✓'};
     toast(successMap[_activeMpTab]||'Shared ✓');
     closeUploadSheet();
     SPA.navigate('homeView');
   }catch(err){ toast('Upload failed: '+err.message); console.error(err); }
   finally{ btn.disabled=false; btn.textContent='Share'; }
+}
+
+/* ============================================================
+   CREATIVE STORY & POST FILTER EDITOR
+   ============================================================ */
+let _currentFilterName = 'Normal';
+let _currentFilterValue = 100;
+const _filtersList = [
+  { name: 'Normal', filterFn: () => 'none' },
+  { name: 'Clarendon', filterFn: (val) => `contrast(${1 + 0.2 * val/100}) saturate(${1 + 0.35 * val/100}) hue-rotate(${-5 * val/100}deg)` },
+  { name: 'Lark', filterFn: (val) => `contrast(${1 - 0.1 * val/100}) saturate(${1 + 0.1 * val/100}) brightness(${1 + 0.1 * val/100}) sepia(${0.1 * val/100})` },
+  { name: 'Juno', filterFn: (val) => `contrast(${1 + 0.15 * val/100}) saturate(${1 + 0.2 * val/100}) hue-rotate(${5 * val/100}deg) sepia(${0.08 * val/100})` },
+  { name: 'Vaporwave', filterFn: (val) => `hue-rotate(${280 * val/100}deg) saturate(${1 + 0.8 * val/100}) contrast(${1 + 0.1 * val/100})` },
+  { name: 'Cinematic', filterFn: (val) => `sepia(${0.3 * val/100}) brightness(${1 - 0.05 * val/100}) contrast(${1 + 0.15 * val/100})` },
+  { name: 'Monochrome', filterFn: (val) => `grayscale(${val/100}) contrast(${1 + 0.3 * val/100})` },
+  { name: 'Cyberpunk', filterFn: (val) => `hue-rotate(${180 * val/100}deg) contrast(${1 + 0.4 * val/100}) saturate(${1 + val/100})` }
+];
+
+function initFilterEditor() {
+  const container = document.getElementById('filterCarousel');
+  if (!container) return;
+  const prevImg = document.getElementById('upPreview');
+  let html = '';
+  _filtersList.forEach(f => {
+    let innerStyle = '';
+    if (f.name !== 'Normal') {
+      innerStyle = `filter: ${f.filterFn(80)};`;
+    }
+    html += `
+      <div class="up-filter-item" onclick="selectFilterEffect('${f.name}')" id="fc_${f.name}">
+        <div class="up-filter-thumb">
+          <div class="up-filter-thumb-inner" style="${innerStyle}"></div>
+        </div>
+        <span class="up-filter-item-name">${f.name}</span>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+  selectFilterEffect('Normal');
+  const range = document.getElementById('filterIntensityRange');
+  if (range) { range.value = 100; }
+}
+
+function onIntensityChange(val) {
+  _currentFilterValue = parseInt(val);
+  const el = document.getElementById('filterIntensityValue');
+  if (el) el.textContent = _currentFilterValue + '%';
+  // Update range track gradient
+  const range = document.getElementById('filterIntensityRange');
+  if (range) range.style.background = `linear-gradient(to right, #fff ${val}%, #333 ${val}%)`;
+  applyFilterToPreview();
+}
+
+function selectFilterEffect(name) {
+  _currentFilterName = name;
+  document.querySelectorAll('.up-filter-item').forEach(c => c.classList.remove('active'));
+  const activeCard = document.getElementById('fc_' + name);
+  if (activeCard) activeCard.classList.add('active');
+  _currentFilterValue = 100;
+  const range = document.getElementById('filterIntensityRange');
+  if (range) { range.value = 100; range.style.background = 'linear-gradient(to right, #fff 100%, #333 100%)'; }
+  const rangeVal = document.getElementById('filterIntensityValue');
+  if (rangeVal) rangeVal.textContent = '100%';
+  applyFilterToPreview();
+}
+
+function applyFilterToPreview() {
+  const currentFilter = _filtersList.find(f => f.name === _currentFilterName);
+  if (!currentFilter) return;
+  const filterStr = currentFilter.filterFn(_currentFilterValue);
+  window._selectedFilterString = filterStr;
+  // Apply to step-1 preview
+  const p1 = document.getElementById('upPreview');
+  if (p1) p1.style.filter = filterStr;
+  // Apply to step-2 filter preview
+  const p2 = document.getElementById('upFilterPreviewImg');
+  if (p2) p2.style.filter = filterStr;
+}
+
+/* ============================================================
+/* ============================================================
+   SMART NOTIFICATIONS CENTER
+   ============================================================ */
+let _allNotifs = [];   // full list cached
+let _nvFilter  = 'all'; // current filter
+let _unreadCount = 0;
+
+const _NV_GRAD = [
+  'linear-gradient(135deg,#f09433,#bc1888)',
+  'linear-gradient(135deg,#0095f6,#5856d6)',
+  'linear-gradient(135deg,#43e97b,#38f9d7)',
+  'linear-gradient(135deg,#fa709a,#fee140)',
+  'linear-gradient(135deg,#4facfe,#00f2fe)',
+];
+function _nvGrad(str){ let h=0; for(let c of (str||'')) h=(h*31+c.charCodeAt(0))&0xffffffff; return _NV_GRAD[Math.abs(h)%_NV_GRAD.length]; }
+
+const _NV_META = {
+  like:    { icon:'❤️', bg:'#ed4956',  label:'liked your post' },
+  comment: { icon:'💬', bg:'#0095f6',  label:'commented on your post' },
+  follow:  { icon:'👤', bg:'#8e44ad',  label:'started following you' },
+  mention: { icon:'🔔', bg:'#f39c12',  label:'mentioned you' },
+  message: { icon:'📩', bg:'#27ae60',  label:'sent you a message' },
+  story:   { icon:'📸', bg:'#e74c3c',  label:'reacted to your story' },
+  default: { icon:'🔔', bg:'#555',     label:'new activity' },
+};
+
+function _nvAge(ts){
+  if(!ts) return '';
+  const d = Date.now()-ts;
+  if(d<60000)   return 'just now';
+  if(d<3600000) return Math.floor(d/60000)+'m';
+  if(d<86400000)return Math.floor(d/3600000)+'h';
+  if(d<604800000)return Math.floor(d/86400000)+'d';
+  return new Date(ts).toLocaleDateString();
+}
+
+function listenNotif(uid){
+  db.ref('users/'+uid+'/notifications').orderByChild('timestamp').limitToLast(80).on('value', snap=>{
+    _allNotifs = [];
+    if(snap.exists()){
+      snap.forEach(c=>{
+        const val = c.val();
+        _allNotifs.unshift({ key: c.key, ...val });
+      });
+    }
+    // Count unread
+    _unreadCount = _allNotifs.filter(n=>!n.read).length;
+    _nvUpdateBadge();
+    nvRender();
+  });
+}
+
+function nvRender(){
+  const el = document.getElementById('notifList');
+  if(!el) return;
+  const filtered = _nvFilter==='all'
+    ? _allNotifs
+    : _allNotifs.filter(n=>n.type===_nvFilter);
+
+  if(!filtered.length){
+    const labels={all:'No notifications yet',like:'No likes yet',comment:'No comments yet',follow:'No followers yet',mention:'No mentions yet'};
+    el.innerHTML=`<div class="nv-empty">
+      <i class="far fa-bell"></i>
+      <p>${labels[_nvFilter]||'Nothing here'}</p>
+      <span>When someone interacts with you, it will appear here.</span>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(n=>{
+    const meta = _NV_META[n.type] || _NV_META.default;
+    const grad = _nvGrad(n.fromName||n.fromUid);
+    const initial = (n.fromName||'?').charAt(0).toUpperCase();
+    const isUnread = !n.read;
+    const age = _nvAge(n.timestamp);
+
+    // Action text
+    let text = meta.label;
+    if(n.type==='comment' && n.commentText) text = `commented: "${esc(n.commentText.substring(0,40))}${n.commentText.length>40?'…':''}"`;
+    if(n.type==='mention' && n.mentionText) text = `mentioned you: "${esc(n.mentionText.substring(0,40))}${n.mentionText.length>40?'…':''}"`;
+
+    // Thumbnail (for post-related notifs)
+    const thumb = n.postImage
+      ? `<img class="nv-thumb" src="${esc(n.postImage)}" alt="">`
+      : `<div class="nv-thumb-placeholder">${meta.icon}</div>`;
+
+    // Click action
+    const action = n.type==='follow'
+      ? `openProfile('${esc(n.fromUid||'')}','${esc(n.fromName||'')}');SPA.navigate('profileView');nvMarkRead('${n.key}')`
+      : n.type==='message'
+      ? `SPA.navigate('messagesView');nvMarkRead('${n.key}')`
+      : n.postId
+      ? `openPostById('${esc(n.postId)}');nvMarkRead('${n.key}')`
+      : `openProfile('${esc(n.fromUid||'')}','${esc(n.fromName||'')}');SPA.navigate('profileView');nvMarkRead('${n.key}')`;
+
+    return `<div class="nv-card ${isUnread?'unread':''}" onclick="${action}">
+      <div style="position:relative;flex-shrink:0">
+        <div class="nv-av" style="background:${grad}">${initial}</div>
+        <div class="nv-icon-badge" style="background:${meta.bg}">${meta.icon}</div>
+      </div>
+      <div class="nv-body">
+        <div class="nv-name">${esc(n.fromName||'Someone')}</div>
+        <div class="nv-text">${text}</div>
+        <div class="nv-time">${age}</div>
+      </div>
+      ${thumb}
+    </div>`;
+  }).join('');
+}
+
+function nvFilter(btn, cat){
+  _nvFilter = cat;
+  document.querySelectorAll('.nv-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  nvRender();
+}
+
+function nvMarkRead(key){
+  if(!_myUid || !key) return;
+  db.ref('users/'+_myUid+'/notifications/'+key+'/read').set(true).catch(()=>{});
+}
+
+function markAllNotifsRead(){
+  if(!_myUid) return;
+  const updates = {};
+  _allNotifs.filter(n=>!n.read).forEach(n=>{ updates[n.key+'/read']=true; });
+  if(!Object.keys(updates).length){ toast('All caught up ✓'); return; }
+  db.ref('users/'+_myUid+'/notifications').update(updates)
+    .then(()=>toast('All notifications marked as read ✓'))
+    .catch(()=>toast('Error marking notifications'));
+}
+
+function _nvUpdateBadge(){
+  // Add/update red badge on the heart nav icon
+  const heartIcon = document.querySelector('i.far.fa-heart, i.fas.fa-heart');
+  if(!heartIcon) return;
+  const wrap = heartIcon.parentElement;
+  if(!wrap) return;
+  wrap.style.position='relative';
+  let badge = wrap.querySelector('.nv-badge');
+  if(_unreadCount>0){
+    if(!badge){ badge=document.createElement('span'); badge.className='nv-badge'; wrap.appendChild(badge); }
+    badge.textContent = _unreadCount>99?'99+':_unreadCount;
+    badge.style.display='flex';
+  } else {
+    if(badge) badge.style.display='none';
+  }
+}
+
+// Mark all as read when notif view opens
+const _origNvNavigate = SPA.navigate;
+SPA.navigate = function(view, params, push){
+  if(view==='notifView'){
+    // Clear badge immediately
+    setTimeout(()=>{
+      _unreadCount=0;
+      _nvUpdateBadge();
+      // Mark all read in Firebase
+      markAllNotifsRead();
+    },300);
+  } else if(view==='analyticsView'){
+    loadAnalyticsView();
+  }
+  return _origNvNavigate.call(this, view, params, push);
 };
 
 /* ============================================================
-   NOTIFICATIONS
+   CREATOR ANALYTICS & INSIGHTS ENGINE
    ============================================================ */
-function listenNotif(uid){
-  db.ref('users/'+uid+'/notifications').limitToLast(40).on('value', snap=>{
-    const el=$('#notifList');
-    if(!snap.exists()){ el.innerHTML='<div class="empty-state"><i class="far fa-bell"></i>No notifications</div>'; return; }
-    const items=[];
-    snap.forEach(c=>items.unshift(c.val()));
-    let html='';
-    items.forEach(n=>{
-      let label='activity';
-      if(n.type==='follow') label='started following you';
-      else if(n.type==='like') label='liked your post';
-      else if(n.type==='comment') label='commented: '+(n.commentText||'');
-      else if(n.type==='message') label='sent you a message';
-      html += `<div class="chat-row" onclick="openProfile('${esc(n.fromUid||'')}', '${esc(n.fromName||'User')}'); SPA.navigate('profileView')">
-        <div class="chat-av">${esc((n.fromName||'U').charAt(0).toUpperCase())}</div>
-        <div class="chat-info"><div class="chat-name">${esc(n.fromName||'Someone')}</div><div class="chat-preview">${esc(label)}</div></div>
-      </div>`;
+function loadAnalyticsView(){
+  if(!_myUid){ toast('Login required'); SPA.navigate('homeView'); return; }
+
+  // Fetch user's posts and compute stats
+  db.ref('posts').orderByChild('uid').equalTo(_myUid).once('value', snap=>{
+    let totalPosts = 0;
+    let totalLikes = 0;
+    let totalComments = 0;
+    let myPostsList = [];
+
+    if(snap.exists()){
+      snap.forEach(c=>{
+        totalPosts++;
+        const p = c.val();
+        const likes = p.likeCount || (p.likes ? Object.keys(p.likes).length : 0);
+        const comments = p.commentCount || (p.comments ? Object.keys(p.comments).length : 0);
+        totalLikes += likes;
+        totalComments += comments;
+        myPostsList.push({ id: c.key, likes, comments, score: likes*2 + comments*3, ...p });
+      });
+    }
+
+    const totalInteractions = totalLikes + totalComments;
+    const estimatedReach = Math.max(totalPosts * 45 + totalInteractions * 8, 120);
+
+    db.ref('users/'+_myUid+'/followers').once('value', fSnap=>{
+      const followersCount = fSnap.exists() ? fSnap.numChildren() : 0;
+      const rate = estimatedReach > 0 ? ((totalInteractions / Math.max(estimatedReach, 1)) * 100).toFixed(1) : '0.0';
+
+      const reachEl = document.getElementById('anReach');
+      const engEl = document.getElementById('anEngagement');
+      const folEl = document.getElementById('anFollowers');
+      const rateEl = document.getElementById('anRate');
+
+      if(reachEl) reachEl.textContent = estimatedReach.toLocaleString();
+      if(engEl) engEl.textContent = totalInteractions.toLocaleString();
+      if(folEl) folEl.textContent = followersCount.toLocaleString();
+      if(rateEl) rateEl.textContent = rate + '%';
+
+      // Creator Level & Milestone Calculation
+      let xp = totalPosts * 15 + totalInteractions * 5 + followersCount * 10;
+      let levelTitle = 'Rising Creator • Level 1';
+      let nextBadge = 'Level 2 Creator';
+      let targetXp = 100;
+
+      if(xp >= 500){
+        levelTitle = '👑 Master Creator • Level 4';
+        nextBadge = 'Top 1% Creator';
+        targetXp = 1000;
+      } else if(xp >= 200){
+        levelTitle = '🌟 Verified Pro • Level 3';
+        nextBadge = 'Master Creator';
+        targetXp = 500;
+      } else if(xp >= 50){
+        levelTitle = '⚡ Rising Creator • Level 2';
+        nextBadge = 'Verified Pro';
+        targetXp = 200;
+      }
+
+      const pct = Math.min(100, Math.round((xp / targetXp) * 100));
+
+      const titleEl = document.getElementById('anLevelTitle');
+      const subEl = document.getElementById('anLevelSub');
+      const scoreEl = document.getElementById('anLevelScore');
+      const barEl = document.getElementById('anLevelBar');
+
+      if(titleEl) titleEl.textContent = levelTitle;
+      if(subEl) subEl.textContent = 'Next Badge: ' + nextBadge;
+      if(scoreEl) scoreEl.textContent = xp + ' / ' + targetXp + ' XP';
+      if(barEl) barEl.style.width = pct + '%';
+
+      // Dynamic AI Growth Tips
+      const tipsList = [
+        "<strong>Pro Tip:</strong> Captions with 3+ hashtags get <strong>+35% more reach</strong> in Discover. Try posting today!",
+        "<strong>Pro Tip:</strong> Reels get <strong>2.4x more interactions</strong> than standard posts. Create a Reel in Story Creator!",
+        "<strong>Pro Tip:</strong> Posting between <strong>6:00 PM and 9:00 PM</strong> increases audience engagement by +25%!",
+        "<strong>Pro Tip:</strong> Responding to comments within 1 hour boosts your post ranking in followers' feeds!"
+      ];
+      const tipIndex = (totalPosts + totalInteractions) % tipsList.length;
+      const tipEl = document.getElementById('anGrowthTip');
+      if(tipEl) tipEl.innerHTML = tipsList[tipIndex];
+
+      // Top Performing Posts
+      myPostsList.sort((a,b)=>b.score - a.score);
+      const topContainer = document.getElementById('anTopPosts');
+      if(topContainer){
+        if(myPostsList.length === 0){
+          topContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#8e8e8e;font-size:13px">No posts yet. Create a post to see insights!</div>';
+        } else {
+          topContainer.innerHTML = myPostsList.slice(0, 3).map(p=>{
+            const title = esc(p.caption || p.title || 'Untitled Post');
+            const img = p.imageUrl || p.imageURL || '';
+            const thumbHtml = img ? `<img class="an-post-thumb" src="${esc(img)}" alt="">` : `<div class="an-post-thumb" style="display:flex;align-items:center;justify-content:center;color:#fff"><i class="fas fa-image"></i></div>`;
+            return `<div class="an-top-post-item" onclick="openPostById('${p.id}')" style="cursor:pointer">
+              ${thumbHtml}
+              <div class="an-post-info">
+                <div class="an-post-title">${title}</div>
+                <div class="an-post-meta">
+                  <span><i class="fas fa-heart" style="color:#ed4956"></i> ${p.likes}</span>
+                  <span><i class="fas fa-comment" style="color:#0095f6"></i> ${p.comments}</span>
+                </div>
+              </div>
+              <i class="fas fa-chevron-right" style="color:#8e8e8e;font-size:12px"></i>
+            </div>`;
+          }).join('');
+        }
+      }
     });
-    el.innerHTML = html;
   });
 }
+
 // hook into auth
-const _origAuthCb = auth.onAuthStateChanged.bind(auth);
 let _notifHooked=false;
 auth.onAuthStateChanged(user=>{
   if(user && !_notifHooked){ _notifHooked=true; listenNotif(user.uid); }
 });
+
+function openPostById(postId){
+  if(!postId) return;
+  db.ref('posts/'+postId).once('value', snap=>{
+    if(!snap.exists()){ toast('Post not found'); return; }
+    const d={id:postId,...snap.val()};
+    openPostModal(d);
+  });
+}
+
 
 /* ============================================================
    FEATURE 1-10: HOME ENHANCEMENTS
@@ -3047,17 +4646,7 @@ function updateNotifBadge(){
   });
 }
 
-// 40. MARK ALL NOTIFICATIONS READ
-function markAllNotifsRead(){
-  if(!_myUid) return;
-  db.ref('users/'+_myUid+'/notifications').once('value', snap=>{
-    if(!snap.exists()) return;
-    const updates={};
-    snap.forEach(c=>{ if(!c.val().read) updates[c.key+'/read']=true; });
-    if(Object.keys(updates).length>0) db.ref('users/'+_myUid+'/notifications').update(updates);
-    toast('All read');
-  });
-}
+// 40. MARK ALL NOTIFICATIONS READ (Handled by Smart Notifications Center above)
 
 /* ============================================================
    FEATURE 41-50: MORE ENHANCEMENTS
@@ -3607,6 +5196,248 @@ document.addEventListener('DOMContentLoaded', ()=>{
     }, 250);
   }
 });
+</script>
+
+<script>
+/* ================================================================
+   STORY CREATOR ENGINE — Templates, Stickers, Text, Backgrounds
+   ================================================================ */
+const _SC_TEMPLATES = [
+  { label:'Purple Haze', bg:'linear-gradient(160deg,#667eea,#764ba2)',         emoji:'💜', anim:'pulse' },
+  { label:'Sunset',      bg:'linear-gradient(160deg,#f7971e,#ffd200)',          emoji:'🌅', anim:'bounce' },
+  { label:'Ocean',       bg:'linear-gradient(160deg,#0575e6,#021b79)',          emoji:'🌊', anim:'pulse' },
+  { label:'Rose Gold',   bg:'linear-gradient(160deg,#f093fb,#f5576c)',          emoji:'🌸', anim:'sparkle' },
+  { label:'Neon Night',  bg:'linear-gradient(160deg,#0f0c29,#302b63,#24243e)', emoji:'🌃', anim:'pulse' },
+  { label:'Forest',      bg:'linear-gradient(160deg,#134e5e,#71b280)',          emoji:'🌿', anim:'bounce' },
+  { label:'Candy',       bg:'linear-gradient(160deg,#f953c6,#b91d73)',          emoji:'🍭', anim:'shake' },
+  { label:'Cyber',       bg:'linear-gradient(160deg,#1a1a2e,#16213e,#0f3460)', emoji:'⚡', anim:'rotate' },
+  { label:'Golden',      bg:'linear-gradient(160deg,#f12711,#f5af19)',          emoji:'✨', anim:'sparkle' },
+  { label:'Arctic',      bg:'linear-gradient(160deg,#cfd9df,#e2ebf0)',          emoji:'❄️', anim:'pulse' },
+  { label:'Vaporwave',   bg:'linear-gradient(160deg,#ee7752,#e73c7e,#23a6d5)', emoji:'🎧', anim:'bounce' },
+  { label:'Midnight',    bg:'linear-gradient(160deg,#232526,#414345)',          emoji:'🌙', anim:'sparkle' },
+];
+const _SC_STICKERS = [
+  {emoji:'🔥',cat:'fire',anim:'bounce'},{emoji:'💥',cat:'fire',anim:'pulse'},{emoji:'⚡',cat:'fire',anim:'shake'},
+  {emoji:'🌶️',cat:'fire',anim:'bounce'},{emoji:'☄️',cat:'fire',anim:'rotate'},{emoji:'😤',cat:'fire',anim:'pulse'},
+  {emoji:'❤️',cat:'love',anim:'pulse'},{emoji:'💕',cat:'love',anim:'bounce'},{emoji:'😍',cat:'love',anim:'sparkle'},
+  {emoji:'💯',cat:'love',anim:'pulse'},{emoji:'🫶',cat:'love',anim:'bounce'},{emoji:'💋',cat:'love',anim:'pulse'},
+  {emoji:'🎉',cat:'party',anim:'shake'},{emoji:'🎊',cat:'party',anim:'bounce'},{emoji:'🥳',cat:'party',anim:'pulse'},
+  {emoji:'🍾',cat:'party',anim:'sparkle'},{emoji:'🎈',cat:'party',anim:'bounce'},{emoji:'🎂',cat:'party',anim:'pulse'},
+  {emoji:'✨',cat:'vibes',anim:'sparkle'},{emoji:'🌟',cat:'vibes',anim:'rotate'},{emoji:'😎',cat:'vibes',anim:'pulse'},
+  {emoji:'🤙',cat:'vibes',anim:'bounce'},{emoji:'👑',cat:'vibes',anim:'sparkle'},{emoji:'💫',cat:'vibes',anim:'rotate'},
+  {emoji:'✈️',cat:'travel',anim:'bounce'},{emoji:'🌍',cat:'travel',anim:'rotate'},{emoji:'🏖️',cat:'travel',anim:'pulse'},
+  {emoji:'🗺️',cat:'travel',anim:'bounce'},{emoji:'🌄',cat:'travel',anim:'sparkle'},{emoji:'🧳',cat:'travel',anim:'shake'},
+];
+const _SC_GRADIENTS = [
+  'linear-gradient(135deg,#667eea,#764ba2)','linear-gradient(135deg,#f093fb,#f5576c)',
+  'linear-gradient(135deg,#4facfe,#00f2fe)','linear-gradient(135deg,#43e97b,#38f9d7)',
+  'linear-gradient(135deg,#fa709a,#fee140)','linear-gradient(135deg,#a18cd1,#fbc2eb)',
+  'linear-gradient(135deg,#fccb90,#d57eeb)','linear-gradient(135deg,#a1c4fd,#c2e9fb)',
+  'linear-gradient(135deg,#fd7043,#ffcc02)','linear-gradient(135deg,#0f0c29,#302b63)',
+  'linear-gradient(135deg,#232526,#414345)','linear-gradient(135deg,#134e5e,#71b280)',
+  'linear-gradient(135deg,#f7971e,#ffd200)','linear-gradient(135deg,#ee9ca7,#ffdde1)',
+  'linear-gradient(135deg,#2c3e50,#3498db)',
+];
+const _SC_SOLIDS = ['#000','#1a1a1a','#fff','#ff3b30','#ff9500','#ffcc00','#34c759','#0095f6','#5856d6','#af52de','#ff2d55','#a2845e','#636366','#8e8e93'];
+
+let _scTextColor='#ffffff', _scFontFamily='Inter,sans-serif', _scFontMode='normal';
+let _scElements=[], _scSelectedEl=null;
+
+function openStoryCreator(){
+  const ov=document.getElementById('storyCreatorOverlay');
+  ov.classList.add('open');
+  _scElements=[]; _scSelectedEl=null;
+  document.getElementById('scElementsLayer').innerHTML='';
+  const cv=document.getElementById('scCanvas');
+  cv.style.background=_SC_TEMPLATES[0].bg;
+  const bg=document.getElementById('scBgImage');
+  bg.style.display='none'; bg.src='';
+  _scInitTemplates(); _scInitStickers('all'); _scInitBgPanel();
+  scActivateTool('templates');
+}
+function closeStoryCreator(){
+  document.getElementById('storyCreatorOverlay').classList.remove('open');
+}
+function scActivateTool(tool){
+  document.querySelectorAll('.sc-tool-btn').forEach(b=>b.classList.remove('active'));
+  const map={text:'scTextBtn',sticker:'scStickerBtn',bg:'scBgBtn'};
+  if(map[tool]) document.getElementById(map[tool]).classList.add('active');
+  ['scTemplatesPanel','scTextPanel','scStickerPanel','scBgPanel'].forEach(p=>{
+    const el=document.getElementById(p); if(el) el.style.display='none';
+  });
+  const panMap={templates:'scTemplatesPanel',text:'scTextPanel',sticker:'scStickerPanel',bg:'scBgPanel'};
+  if(panMap[tool]) document.getElementById(panMap[tool]).style.display='block';
+  document.querySelectorAll('.sc-element').forEach(e=>e.classList.remove('selected'));
+  _scSelectedEl=null;
+}
+function _scInitTemplates(){
+  const strip=document.getElementById('scTemplateStrip');
+  if(!strip) return;
+  strip.innerHTML=_SC_TEMPLATES.map((t,i)=>`
+    <div class="sc-template-card ${i===0?'active':''}" style="background:${t.bg}" onclick="scApplyTemplate(this,${i})">
+      <div class="sc-anim-${t.anim}" style="font-size:28px;margin-bottom:4px;line-height:1">${t.emoji}</div>
+      <div class="sc-template-label">${t.label}</div>
+    </div>`).join('');
+}
+function scApplyTemplate(card,idx){
+  document.querySelectorAll('.sc-template-card').forEach(c=>c.classList.remove('active'));
+  card.classList.add('active');
+  const t=_SC_TEMPLATES[idx];
+  document.getElementById('scCanvas').style.background=t.bg;
+  document.getElementById('scBgImage').style.display='none';
+}
+function _scInitStickers(cat){
+  const grid=document.getElementById('scStickerGrid'); if(!grid) return;
+  const list=cat==='all'?_SC_STICKERS:_SC_STICKERS.filter(s=>s.cat===cat);
+  grid.innerHTML=list.map(s=>`<div class="sc-sticker-tile" onclick="scPlaceSticker('${s.emoji}','${s.anim}')">${s.emoji}</div>`).join('');
+}
+function scShowStickerCat(btn,cat){
+  document.querySelectorAll('.sc-sticker-cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  _scInitStickers(cat);
+}
+function _scInitBgPanel(){
+  const bgGrid=document.getElementById('scBgGrid'); if(!bgGrid) return;
+  bgGrid.innerHTML=_SC_GRADIENTS.map(g=>`<div class="sc-bg-swatch" style="background:${g}" onclick="scApplyGradient(this,'${g}')"></div>`).join('');
+  const solidGrid=document.getElementById('scSolidGrid'); if(!solidGrid) return;
+  solidGrid.innerHTML=_SC_SOLIDS.map(c=>`<div class="sc-solid-swatch" style="background:${c}" onclick="scApplyGradient(this,'${c}')"></div>`).join('');
+}
+function scApplyGradient(el,value){
+  document.querySelectorAll('.sc-bg-swatch,.sc-solid-swatch').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('scCanvas').style.background=value;
+  document.getElementById('scBgImage').style.display='none';
+}
+function scLoadPhoto(e){
+  const f=e.target.files[0]; if(!f) return;
+  window._scPhotoFile=f;
+  const url=URL.createObjectURL(f);
+  const bg=document.getElementById('scBgImage');
+  bg.src=url; bg.style.display='block';
+  document.getElementById('scCanvas').style.background='#000';
+  scActivateTool('templates');
+}
+function scSetFont(btn,family,mode='normal'){
+  document.querySelectorAll('.sc-font-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  _scFontFamily=family; _scFontMode=mode;
+}
+function scSetTextColor(dot,color){
+  document.querySelectorAll('.sc-color-dot').forEach(d=>d.classList.remove('active'));
+  dot.classList.add('active');
+  _scTextColor=color;
+}
+function scAddTextElement(){
+  const input=document.getElementById('scTextInput');
+  const text=input.value.trim(); if(!text) return;
+  _scPlaceElement('text',text,null,50,45);
+  input.value='';
+}
+function scPlaceSticker(emoji,anim){
+  _scPlaceElement('sticker',emoji,anim,25+Math.random()*50,25+Math.random()*50);
+}
+function _scPlaceElement(type,content,anim,xPct,yPct){
+  const layer=document.getElementById('scElementsLayer');
+  const id='sc_el_'+Date.now();
+  const el=document.createElement('div');
+  el.className='sc-element'; el.id=id;
+  el.style.left=xPct+'%'; el.style.top=yPct+'%';
+  el.style.transform='translate(-50%,-50%)';
+  if(type==='sticker'){
+    el.style.fontSize='52px'; el.style.lineHeight='1';
+    el.innerHTML=`<span class="sc-anim-${anim}">${content}</span>`;
+  } else {
+    let ts=`font-family:${_scFontFamily};color:${_scTextColor};font-size:22px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.4);white-space:normal;line-height:1.3;text-align:center;max-width:240px;word-break:break-word;padding:4px 10px;`;
+    if(_scFontMode==='outline') ts+=`-webkit-text-stroke:2px ${_scTextColor};color:transparent;`;
+    if(_scFontMode==='glow') ts+=`text-shadow:0 0 20px ${_scTextColor},0 0 40px ${_scTextColor};`;
+    if(_scFontMode==='bold') ts+='font-weight:900;';
+    el.innerHTML=`<div style="${ts}">${content.replace(/</g,'&lt;')}</div>`;
+  }
+  const delBtn=document.createElement('button');
+  delBtn.className='sc-el-delete'; delBtn.innerHTML='×';
+  delBtn.onclick=ev=>{ev.stopPropagation();el.remove();_scElements=_scElements.filter(x=>x.id!==id);};
+  el.appendChild(delBtn);
+  el.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    document.querySelectorAll('.sc-element').forEach(x=>x.classList.remove('selected'));
+    el.classList.add('selected'); _scSelectedEl=el;
+  });
+  _scMakeDraggable(el);
+  el.style.pointerEvents='all';
+  layer.appendChild(el);
+  _scElements.push({id,type,content});
+  document.querySelectorAll('.sc-element').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected'); _scSelectedEl=el;
+}
+function _scMakeDraggable(el){
+  let sx,sy,ox,oy;
+  function onS(cx,cy){sx=cx;sy=cy;ox=parseFloat(el.style.left);oy=parseFloat(el.style.top);}
+  function onM(cx,cy){
+    const r=el.parentElement.getBoundingClientRect();
+    el.style.left=Math.min(95,Math.max(5,ox+((cx-sx)/r.width)*100))+'%';
+    el.style.top=Math.min(95,Math.max(5,oy+((cy-sy)/r.height)*100))+'%';
+  }
+  el.addEventListener('mousedown',e=>{
+    if(e.target.classList.contains('sc-el-delete')) return;
+    e.preventDefault(); onS(e.clientX,e.clientY);
+    const mv=e2=>onM(e2.clientX,e2.clientY);
+    const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  });
+  el.addEventListener('touchstart',e=>{
+    if(e.target.classList.contains('sc-el-delete')) return;
+    e.preventDefault(); onS(e.touches[0].clientX,e.touches[0].clientY);
+    const mv=e2=>onM(e2.touches[0].clientX,e2.touches[0].clientY);
+    const up=()=>{el.removeEventListener('touchmove',mv);el.removeEventListener('touchend',up);};
+    el.addEventListener('touchmove',mv,{passive:false}); el.addEventListener('touchend',up);
+  },{passive:false});
+}
+function scUndo(){
+  if(!_scElements.length) return;
+  const last=_scElements.pop();
+  const el=document.getElementById(last.id); if(el) el.remove();
+}
+async function scShareStory(){
+  if(!_myUid){toast('Login required');return;}
+  const btn=document.querySelector('#storyCreatorOverlay button[onclick="scShareStory()"]');
+  if(btn){btn.disabled=true;btn.textContent='Sharing...';}
+  try{
+    const cv=document.getElementById('scCanvas');
+    const bg=cv.style.background;
+    const hasPhoto=document.getElementById('scBgImage').style.display!=='none';
+    let imageUrl='';
+    if(hasPhoto && window._scPhotoFile){
+      const fd=new FormData(); fd.append('image',window._scPhotoFile);
+      const IMGBB_KEY=window.ANKITSTUDIO_CONFIG?.imgbbKey||'5f30b483ae91c03320748137616415d7';
+      const res=await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_KEY,{method:'POST',body:fd});
+      const j=await res.json();
+      if(j.success) imageUrl=j.data.url;
+    }
+    const elements=[];
+    document.querySelectorAll('#scElementsLayer .sc-element').forEach(el=>{
+      elements.push({html:el.innerHTML,left:el.style.left,top:el.style.top});
+    });
+    const authorName=_myUser.displayName||(_myUser.email?_myUser.email.split('@')[0]:'User');
+    await db.ref('stories').push({
+      authorId:_myUid,authorName,authorEmail:_myUser.email||'',
+      imageUrl,storyBg:bg,storyElements:elements,
+      isCreatorStory:true,
+      timestamp:firebase.database.ServerValue.TIMESTAMP
+    });
+    toast('Story shared ✓ 🎉');
+    closeStoryCreator();
+    SPA.navigate('homeView');
+  }catch(err){toast('Share failed: '+err.message);console.error(err);}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='Share <i class="fas fa-paper-plane" style="font-size:12px"></i>';}}
+}
+// Deselect on canvas tap
+setTimeout(()=>{
+  const cv=document.getElementById('scCanvas');
+  if(cv) cv.addEventListener('click',()=>{
+    document.querySelectorAll('.sc-element').forEach(e=>e.classList.remove('selected'));
+    _scSelectedEl=null;
+  });
+},500);
 </script>
 
 

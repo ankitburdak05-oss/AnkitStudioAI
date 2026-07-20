@@ -805,14 +805,15 @@ function attachPostsListener(uid){
                         ai: '',
                         posts: [d.caption],
                         likes: d.likeCount||0,
-                        post: d.caption
+                        post: d.caption,
+                        customFilter: d.customFilter || 'none'
                     };
                     if(exists){ Object.assign(exists, postObj); } else { window.posts.push(postObj); }
                 }
             });
             posts.forEach(p=>{
                 const url = p.data.imageUrl || 'https://via.placeholder.com/400?text=AI';
-                html += `<img src="${esc(url)}" loading="lazy" onclick="openModal('${escJS(p.key)}')" alt="post">`;
+                html += `<img src="${esc(url)}" loading="lazy" onclick="openModal('${escJS(p.key)}')" alt="post" style="filter: ${esc(p.data.customFilter||'none')}">`;
             });
         }
         document.getElementById('igRealPosts').textContent = count;
@@ -941,7 +942,9 @@ function openModal(id){
     if(!p){ showToast('Post not found'); return; }
     _currentModalId = id;
 
-    document.getElementById('modalMainImage').src = (p.images && p.images[0]) || '';
+    const imgEl = document.getElementById('modalMainImage');
+    imgEl.src = (p.images && p.images[0]) || '';
+    imgEl.style.filter = p.customFilter || 'none';
     document.getElementById('modalAuthorAvatar').textContent = (p.author||'U').charAt(0).toUpperCase();
     document.getElementById('modalAuthorName').textContent = p.author || 'User';
     document.getElementById('modalAuthorHandle').textContent = '@' + (p.author||'user').toLowerCase().replace(/\s/g,'');
