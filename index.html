@@ -2274,23 +2274,51 @@ function toggleLike(el, postId){
   const countEl = el.querySelector('span');
   if(liked){
     el.classList.remove('liked','fas'); el.classList.add('far');
-    // Sirf likes/$uid remove karo — likeCount Cloud Function update karega
     db.ref('posts/'+postId+'/likes/'+_myUid).remove();
+    db.ref('reels/'+postId+'/likes/'+_myUid).remove();
     if(countEl) countEl.textContent = Math.max(0, (parseInt(countEl.textContent)||1) - 1);
   }
   else {
     el.classList.remove('far'); el.classList.add('fas','liked');
-    // Sirf likes/$uid set karo — likeCount Cloud Function update karega
     db.ref('posts/'+postId+'/likes/'+_myUid).set(true);
     if(countEl) countEl.textContent = (parseInt(countEl.textContent)||0) + 1;
-    // Notify post owner
-    const p=_feedCache.find(x=>x.key===postId);
-    if(p && p.data.authorId !== _myUid){
-      const myName=_myUser.displayName||(_myUser.email?_myUser.email.split('@')[0]:'User');
-      db.ref('users/'+p.data.authorId+'/notifications').push({
-        type:'like',fromUid:_myUid,fromName:myName,postId:postId,
-        timestamp:firebase.database.ServerValue.TIMESTAMP,read:false
-      }).catch(()=>{});
+
+    // Helper to send like notification
+    const myName = _myUser.displayName || (_myUser.email ? _myUser.email.split('@')[0] : 'User');
+    function _sendLikeNotif(authorId, postImg){
+      if(!authorId || authorId === _myUid) return;
+      db.ref('users/'+authorId+'/notifications').push({
+        type: 'like',
+        fromUid: _myUid,
+        fromName: myName,
+        postId: postId,
+        postImage: postImg || '',
+        timestamp: Date.now(),
+        read: false
+      }).catch(err => console.error("Like notif err:", err));
+    }
+
+    // Try finding post in cache first
+    const p = _feedCache.find(x=>x.key===postId);
+    if(p && p.data){
+      const authorId = p.data.authorId || p.data.uid;
+      const postImg = p.data.imageUrl || p.data.imageURL || '';
+      _sendLikeNotif(authorId, postImg);
+    } else {
+      // Fetch post or reel from Firebase to get authorId
+      db.ref('posts/'+postId).once('value', snap=>{
+        if(snap.exists()){
+          const val = snap.val();
+          _sendLikeNotif(val.authorId || val.uid, val.imageUrl || val.imageURL);
+        } else {
+          db.ref('reels/'+postId).once('value', rSnap=>{
+            if(rSnap.exists()){
+              const val = rSnap.val();
+              _sendLikeNotif(val.authorId || val.uid, val.imageUrl || val.videoUrl);
+            }
+          });
+        }
+      });
     }
   }
 }
@@ -4915,39 +4943,12 @@ function toggleCommentLike(btn, commentId, postId){
   }
 }
 
-// 52. LOAD NOTIFICATION VIEW
+// 52. LOAD NOTIFICATION VIEW (Delegates to Smart Notifications Center)
 function loadNotifView(){
-  if(!_myUid) return;
-  const list=document.getElementById('notifList');
-  if(!list) return;
-  list.innerHTML='<div style="text-align:center;padding:60px 20px;color:#8e8e8e"><i class="fas fa-circle-notch fa-spin"></i><br>Loading...</div>';
-  db.ref('users/'+_myUid+'/notifications').orderByChild('timestamp').limitToLast(50).once('value', snap=>{
-    if(!snap.exists()||!snap.numChildren()){
-      list.innerHTML='<div style="text-align:center;padding:80px 20px;color:#8e8e8e"><i class="far fa-bell" style="font-size:48px;display:block;margin-bottom:12px"></i><h3>No notifications yet</h3><p style="font-size:13px">When someone likes, comments, or follows you, it will show up here.</p></div>';
-      return;
-    }
-    const notifs=[];
-    snap.forEach(c=>notifs.unshift({key:c.key,...c.val()}));
-    let html='';
-    notifs.forEach(n=>{
-      const name=n.fromName||'Someone';
-      const iconMap={like:'❤️',comment:'💬',follow:'👤',message:'📩'};
-      const icon=iconMap[n.type]||'🔔';
-      const msgMap={like:'liked your post',comment:'commented: '+((n.commentText||'').substring(0,60)),follow:'started following you',message:'sent you a message'};
-      const msg=msgMap[n.type]||'interacted with you';
-      html+=`<div class="notif-item${n.read?'':' unread'}" onclick="handleNotifTap('${n.key}','${n.type||''}','${n.postId||''}','${n.fromUid||''}')">
-        <div class="notif-av">${esc(name.charAt(0).toUpperCase())}</div>
-        <div class="notif-text"><strong>${esc(name)}</strong> ${msg}<div class="notif-time">${fmtTime(n.timestamp)}</div></div>
-        ${!n.read?'<div class="notif-dot"></div>':''}
-      </div>`;
-    });
-    list.innerHTML=html;
-  });
+  if(_myUid) nvRender();
 }
 function handleNotifTap(key, type, postId, fromUid){
-  db.ref('users/'+_myUid+'/notifications/'+key+'/read').set(true);
-  if(type==='follow'&&fromUid) SPA.navigate('profileView');
-  else if(postId) openPostModal(postId);
+  nvMarkRead(key);
 }
 
 // 53. SUGGESTED POSTS after feed
