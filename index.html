@@ -2630,13 +2630,16 @@ function sendStoryReaction(emoji){
   db.ref('users/'+targetUid+'/chats/'+_myUid+'/unreadCount').transaction(c=>(c||0)+1);
 
   // 3. Send notification to story owner
-  db.ref('users/'+targetUid+'/notifications').push({
-    type: 'story',
-    fromUid: _myUid,
-    fromName: myName,
-    commentText: `Reacted ${emoji} to your story`,
-    timestamp: firebase.database.ServerValue.TIMESTAMP
-  });
+  if(targetUid !== _myUid){
+    db.ref('users/'+targetUid+'/notifications').push({
+      type: 'story',
+      fromUid: _myUid,
+      fromName: myName,
+      commentText: `Reacted ${emoji} to your story`,
+      timestamp: Date.now(),
+      read: false
+    });
+  }
 
   toast(`Reaction sent ${emoji}`);
 }
@@ -2685,13 +2688,16 @@ function sendStoryReplyText(){
   db.ref('users/'+targetUid+'/chats/'+_myUid+'/unreadCount').transaction(c=>(c||0)+1);
 
   // Notification to story owner
-  db.ref('users/'+targetUid+'/notifications').push({
-    type: 'story',
-    fromUid: _myUid,
-    fromName: myName,
-    commentText: `Replied to story: "${replyText}"`,
-    timestamp: firebase.database.ServerValue.TIMESTAMP
-  });
+  if(targetUid !== _myUid){
+    db.ref('users/'+targetUid+'/notifications').push({
+      type: 'story',
+      fromUid: _myUid,
+      fromName: myName,
+      commentText: `Replied to story: "${replyText}"`,
+      timestamp: Date.now(),
+      read: false
+    });
+  }
 
   input.value = '';
   resumeStoryProgress();
@@ -3930,17 +3936,33 @@ function _nvAge(ts){
   return new Date(ts).toLocaleDateString();
 }
 
+let _prevNotifCount = -1;
+
 function listenNotif(uid){
-  db.ref('users/'+uid+'/notifications').orderByChild('timestamp').limitToLast(80).on('value', snap=>{
+  db.ref('users/'+uid+'/notifications').limitToLast(80).on('value', snap=>{
     _allNotifs = [];
     if(snap.exists()){
       snap.forEach(c=>{
         const val = c.val();
-        _allNotifs.unshift({ key: c.key, ...val });
+        _allNotifs.push({ key: c.key, ...val });
       });
+      // Sort newest first by timestamp
+      _allNotifs.sort((a,b)=>(b.timestamp||0) - (a.timestamp||0));
     }
+
     // Count unread
-    _unreadCount = _allNotifs.filter(n=>!n.read).length;
+    const newUnreadCount = _allNotifs.filter(n => n.read === false || !n.read).length;
+
+    // Toast alert on new incoming notification
+    if(_prevNotifCount !== -1 && newUnreadCount > _unreadCount && _allNotifs.length > 0){
+      const latest = _allNotifs[0];
+      const meta = _NV_META[latest.type] || _NV_META.default;
+      const text = latest.commentText || meta.label;
+      toast(`${meta.icon} ${latest.fromName || 'Someone'}: ${text}`);
+    }
+
+    _unreadCount = newUnreadCount;
+    _prevNotifCount = _unreadCount;
     _nvUpdateBadge();
     nvRender();
   });
@@ -4045,17 +4067,14 @@ function _nvUpdateBadge(){
   }
 }
 
-// Mark all as read when notif view opens
+// Clear unread badge on heart icon when notifView is opened
 const _origNvNavigate = SPA.navigate;
 SPA.navigate = function(view, params, push){
   if(view==='notifView'){
-    // Clear badge immediately
     setTimeout(()=>{
-      _unreadCount=0;
+      _unreadCount = 0;
       _nvUpdateBadge();
-      // Mark all read in Firebase
-      markAllNotifsRead();
-    },300);
+    }, 200);
   } else if(view==='analyticsView'){
     loadAnalyticsView();
   }
