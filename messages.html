@@ -82,6 +82,11 @@ a { color: inherit; text-decoration: none; }
 .dm-header h1 { font-size: 18px; font-weight: 700; color: var(--ig-primary-text); display: flex; align-items: center; gap: 4px; }
 .dm-header .compose-btn { font-size: 22px; cursor: pointer; color: var(--ig-primary-text); background: none; border: none; transition: opacity 0.15s; }
 .dm-header .compose-btn:active { opacity: 0.5; }
+.dm-header .group-btn { font-size: 22px; cursor: pointer; color: var(--ig-primary-text); background: none; border: none; transition: opacity 0.15s; }
+.dm-header .group-btn:active { opacity: 0.5; }
+.compose-overlay { position: fixed; inset: 0; z-index: 999999; background: var(--ig-primary-background); display: none; flex-direction: column; }
+.compose-overlay.open { display: flex; }
+.compose-sheet { background: var(--ig-primary-background); width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 
 /* ===== CHAT LIST VIEW ===== */
 .dm-list-view {
@@ -285,7 +290,10 @@ a { color: inherit; text-decoration: none; }
 <div class="dm-header">
     <button class="back-btn" id="dmBackBtn" onclick="goBackFromMessages()"><i class="fas fa-arrow-left"></i></button>
     <h1>Messages</h1>
-    <button class="compose-btn" onclick="openCompose()"><i class="fas fa-pen-to-square"></i></button>
+    <div style="display: flex; gap: 14px; align-items: center;">
+        <button class="group-btn" onclick="openGroupModal()"><i class="fas fa-users"></i></button>
+        <button class="compose-btn" onclick="openCompose()"><i class="fas fa-pen-to-square"></i></button>
+    </div>
 </div>
 
 <!-- ===== CHAT LIST VIEW ===== -->
@@ -311,9 +319,16 @@ a { color: inherit; text-decoration: none; }
             <div class="chat-user-name" id="chatUserName">User</div>
             <div class="chat-user-status" id="chatUserStatus">Offline</div>
         </div>
-        <div class="chat-actions">
+        <div class="chat-actions" style="position: relative; display: flex; gap: 10px; align-items: center;">
             <button onclick="startVideoCall()"><i class="fas fa-video"></i></button>
             <button onclick="startVoiceCall()"><i class="fas fa-phone"></i></button>
+            <button id="chatMenuBtn" onclick="toggleChatMenu()" style="display: none; background: none; border: none; font-size: 16px; cursor: pointer; color: inherit;"><i class="fas fa-ellipsis-v"></i></button>
+            
+            <div id="chatHeaderMenu" style="display:none; position:absolute; top:45px; right:0; background:var(--ig-primary-background, #fff); border:1px solid var(--ig-stroke, rgba(0,0,0,0.1)); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; overflow:hidden; min-width:120px;">
+                <button id="deleteGroupMenuOption" onclick="deleteCurrentGroup()" style="width:100%; padding:10px 14px; background:none; border:none; text-align:left; color:#ed4956; font-weight:600; cursor:pointer; font-size:14px; display:flex; align-items:center; gap:8px;">
+                    <i class="far fa-trash-alt" style="font-size:14px;"></i> Delete Group
+                </button>
+            </div>
         </div>
     </div>
 
@@ -342,6 +357,28 @@ a { color: inherit; text-decoration: none; }
         </div>
         <div class="compose-list" id="composeList">
             <!-- User list will appear here -->
+        </div>
+    </div>
+</div>
+
+<!-- ===== GROUP MODAL ===== -->
+<div class="compose-overlay" id="groupModalOverlay">
+    <div class="compose-sheet" style="position: relative;">
+        <div class="compose-header">
+            <h2>New Group</h2>
+            <button onclick="closeGroupModal()">&times;</button>
+        </div>
+        <div style="padding: 12px 16px; border-bottom: 1px solid var(--ig-stroke);">
+            <input type="text" id="groupNameInput" placeholder="Enter group name..." style="width: 100%; padding: 10px 14px; border: 1px solid var(--ig-stroke); border-radius: 8px; font-size: 14px; outline: none; background: var(--ig-secondary-background); color: var(--ig-primary-text);">
+        </div>
+        <div class="compose-search">
+            <input type="text" id="groupSearchInput" placeholder="Search users to add..." oninput="searchGroupUsers(this.value)">
+        </div>
+        <div class="compose-list" id="groupUserList" style="padding-bottom: 70px;">
+            <!-- User checkbox list will appear here -->
+        </div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 12px 16px; background: var(--ig-primary-background); border-top: 1px solid var(--ig-stroke); display: flex; justify-content: flex-end; box-sizing: border-box; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 10;">
+            <button onclick="createGroup()" style="padding: 10px 24px; border: none; border-radius: 8px; background: var(--ig-success); color: #fff; font-weight: 600; cursor: pointer;">Create Group</button>
         </div>
     </div>
 </div>
@@ -470,6 +507,72 @@ function listenForChatList() {
 
     _chatListListenerRef = firebase.database().ref('users/' + _myUid + '/chats');
     _chatListListenerRef.on('value', function(snap) {
+        if (snap.exists()) {
+            snap.forEach(function(partnerSnap) {
+                const partnerUid = partnerSnap.key;
+                const partnerData = partnerSnap.val();
+                
+                // Auto-process Group Invites
+                if (partnerData.groupInvites) {
+                    Object.keys(partnerData.groupInvites).forEach(groupId => {
+                        const invite = partnerData.groupInvites[groupId];
+                        firebase.database().ref('users/' + _myUid + '/chats/' + groupId).set({
+                            partnerUid: groupId,
+                            partnerName: invite.groupName,
+                            members: invite.members,
+                            lastMessage: invite.text,
+                            lastMessageTime: invite.timestamp,
+                            lastSender: 'system',
+                            unreadCount: 1
+                        });
+                        firebase.database().ref('users/' + _myUid + '/chats/' + groupId + '/messages').push({
+                            text: invite.text,
+                            senderId: 'system',
+                            timestamp: invite.timestamp,
+                            read: true,
+                            type: 'text'
+                        });
+                        firebase.database().ref('users/' + _myUid + '/chats/' + partnerUid + '/groupInvites/' + groupId).remove();
+                    });
+                }
+                
+                // Auto-process Group Messages
+                if (partnerData.groupMessages) {
+                    Object.keys(partnerData.groupMessages).forEach(groupId => {
+                        const messagesMap = partnerData.groupMessages[groupId];
+                        Object.keys(messagesMap).forEach(msgId => {
+                            const msg = messagesMap[msgId];
+                            firebase.database().ref('users/' + _myUid + '/chats/' + groupId + '/messages/' + msgId).set({
+                                text: msg.text,
+                                senderId: msg.senderId,
+                                timestamp: msg.timestamp,
+                                read: false,
+                                type: 'text'
+                            });
+                            firebase.database().ref('users/' + _myUid + '/chats/' + groupId).update({
+                                partnerUid: groupId,
+                                partnerName: msg.groupName,
+                                lastMessage: msg.text,
+                                lastMessageTime: msg.timestamp,
+                                lastSender: msg.senderId
+                            });
+                            if (_chatPartnerUid !== groupId) {
+                                firebase.database().ref('users/' + _myUid + '/chats/' + groupId + '/unreadCount').transaction(count => (count || 0) + 1);
+                            }
+                            firebase.database().ref('users/' + _myUid + '/chats/' + partnerUid + '/groupMessages/' + groupId + '/' + msgId).remove();
+                        });
+                    });
+                }
+                // Auto-process Group Deletes
+                if (partnerData.groupDeletes) {
+                    Object.keys(partnerData.groupDeletes).forEach(groupId => {
+                        firebase.database().ref('users/' + _myUid + '/chats/' + groupId).remove();
+                        firebase.database().ref('users/' + _myUid + '/chats/' + partnerUid + '/groupDeletes/' + groupId).remove();
+                    });
+                }
+            });
+        }
+
         if (!snap.exists()) {
             renderChatList([]);
             return;
@@ -477,6 +580,7 @@ function listenForChatList() {
 
         let chats = [];
         snap.forEach(function(child) {
+            if (child.key !== 'ankitstudio_ai_bot' && !child.key.startsWith('group_') && (child.val().groupInvites || child.val().groupMessages || child.val().groupDeletes)) return;
             chats.push({ partnerUid: child.key, ...child.val() });
         });
 
@@ -511,17 +615,28 @@ function renderChatList(chats) {
         };
     }
 
+    let html = `
+        <div class="dm-item" onclick="openGroupModal()" style="border-bottom: 1px solid var(--ig-stroke); cursor: pointer; transition: background-color 0.15s;">
+            <div class="dm-avatar" style="background: linear-gradient(135deg, #0095f6, #00ea87); padding: 1.8px; display:flex; align-items:center; justify-content:center;">
+                <div style="width:100%; height:100%; border-radius:50%; background:var(--ig-primary-background); display:flex; align-items:center; justify-content:center; font-size:18px;">👥</div>
+            </div>
+            <div class="dm-info">
+                <div class="dm-name" style="color: var(--ig-success); font-weight: 700;">Create New Group</div>
+                <div class="dm-preview">Start a group conversation with multiple creators</div>
+            </div>
+        </div>
+    `;
+
     if (chats.length === 0) {
-        container.innerHTML = '';
-        container.innerHTML = `<div class="dm-empty">
+        html += `<div class="dm-empty" style="padding-top: 40px;">
             <i class="far fa-paper-plane"></i>
             <h3>Your Messages</h3>
             <p>Send private messages to other creators. Share posts, ideas & collaborate!</p>
         </div>`;
+        container.innerHTML = html;
         return;
     }
 
-    let html = '';
     chats.forEach(function(chat) {
         const uid = chat.partnerUid;
         const cached = _userCache[uid] || {};
@@ -536,9 +651,11 @@ function renderChatList(chats) {
         
         const avatarHtml = uid === 'ankitstudio_ai_bot' 
             ? `<div class="dm-avatar" style="background:linear-gradient(135deg, #a200ff, #3797f0); padding: 1.8px; display:flex; align-items:center; justify-content:center;"><div style="width:100%; height:100%; border-radius:50%; background:var(--ig-primary-background); display:flex; align-items:center; justify-content:center; font-size:22px;">💬</div></div>`
-            : (photoUrl
-                ? `<div class="dm-avatar"><img src="${escHTML(photoUrl)}" alt="${escHTML(name)}"></div>`
-                : `<div class="dm-avatar">${initial}</div>`);
+            : (uid.startsWith('group_')
+                ? `<div class="dm-avatar" style="background:linear-gradient(135deg, #0095f6, #00ea87); padding: 1.8px; display:flex; align-items:center; justify-content:center;"><div style="width:100%; height:100%; border-radius:50%; background:var(--ig-primary-background); display:flex; align-items:center; justify-content:center; font-size:18px;">👥</div></div>`
+                : (photoUrl
+                    ? `<div class="dm-avatar"><img src="${escHTML(photoUrl)}" alt="${escHTML(name)}"></div>`
+                    : `<div class="dm-avatar">${initial}</div>`));
 
         // Truncate message preview
         let preview = lastMsg;
@@ -591,12 +708,19 @@ function openChatWith(uid, name) {
 
     document.getElementById('chatUserName').textContent = name;
 
+    const menuBtn = document.getElementById('chatMenuBtn');
+    if (menuBtn) {
+        menuBtn.style.display = uid.startsWith('group_') ? 'inline-block' : 'none';
+    }
+
     // 🔥 FIX: Show partner's profile photo in chat header if available
     const cached = _userCache[uid] || {};
     const photoUrl = cached.photo || null;
     const chatAvatarEl = document.getElementById('chatAvatar');
     if (uid === 'ankitstudio_ai_bot') {
         chatAvatarEl.innerHTML = `<div style="font-size:20px;">💬</div>`;
+    } else if (uid.startsWith('group_')) {
+        chatAvatarEl.innerHTML = `<div style="font-size:18px;">👥</div>`;
     } else if (chatAvatarEl && photoUrl) {
         chatAvatarEl.innerHTML = `<img src="${escHTML(photoUrl)}" alt="${escHTML(name)}">`;
     } else {
@@ -655,7 +779,9 @@ function listenForMessages(partnerUid) {
 
     // Generate chat room ID (sorted UIDs)
     const chatId = getChatId(_myUid, partnerUid);
-    _chatListenerRef = firebase.database().ref('chats/' + chatId + '/messages').limitToLast(80);
+    _chatListenerRef = partnerUid.startsWith('group_')
+        ? firebase.database().ref('users/' + _myUid + '/chats/' + partnerUid + '/messages').limitToLast(80)
+        : firebase.database().ref('chats/' + chatId + '/messages').limitToLast(80);
 
     _chatListenerRef.on('value', function(snap) {
         const container = document.getElementById('chatMessages');
@@ -692,9 +818,15 @@ function renderMessages(messages) {
         const timeStr = formatTime(msg.timestamp);
         const readReceipt = isSent ? (msg.read ? '<span class="msg-read-receipt read">✓✓</span>' : '<span class="msg-read-receipt delivered">✓✓</span>') : '';
 
+        const senderName = _userCache[msg.senderId]?.name || 'User';
+        const senderPrefix = (_chatPartnerUid && _chatPartnerUid.startsWith('group_') && !isSent && msg.senderId !== 'system') 
+            ? `<div style="font-size: 11px; font-weight: 700; margin-bottom: 2px; color: var(--ig-secondary-text);">${escHTML(senderName)}</div>` 
+            : '';
+
         if (msg.type === 'post') {
             // Shared post message
             html += `<div class="msg-bubble ${isSent ? 'msg-sent' : 'msg-received'}">
+                ${senderPrefix}
                 <div>${escHTML(msg.text || 'Shared a post')}</div>
                 ${msg.postImageUrl ? `<div class="msg-post-card" onclick="window.open('${escHTML(msg.postImageUrl)}', '_blank')">
                     <img src="${escHTML(msg.postImageUrl)}" alt="Post">
@@ -711,6 +843,7 @@ function renderMessages(messages) {
         } else {
             // Regular text message
             html += `<div class="msg-bubble ${isSent ? 'msg-sent' : 'msg-received'}">
+                ${senderPrefix}
                 ${escHTML(msg.text || '')}
                 <div class="msg-meta">
                     <span class="msg-time">${timeStr}</span>
@@ -735,8 +868,8 @@ function sendMessage() {
     const sendBtn = document.getElementById('chatSendBtn');
     sendBtn.disabled = true;
 
-    const chatId = getChatId(_myUid, _chatPartnerUid);
-    const msgRef = firebase.database().ref('chats/' + chatId + '/messages').push();
+    const myName = firebase.auth().currentUser?.displayName || (firebase.auth().currentUser?.email ? firebase.auth().currentUser.email.split('@')[0] : 'User');
+    const myPhoto = firebase.auth().currentUser?.photoURL || null;
 
     const messageData = {
         text: text,
@@ -746,13 +879,56 @@ function sendMessage() {
         type: 'text'
     };
 
+    if (_chatPartnerUid.startsWith('group_')) {
+        const msgRef = firebase.database().ref('users/' + _myUid + '/chats/' + _chatPartnerUid + '/messages').push();
+        const msgId = msgRef.key;
+        msgRef.set(messageData).then(() => {
+            input.value = '';
+            autoResizeTextarea(input);
+            sendBtn.disabled = false;
+
+            firebase.database().ref('users/' + _myUid + '/chats/' + _chatPartnerUid + '/members').once('value', function(snap) {
+                if (!snap.exists()) return;
+                const members = snap.val();
+                Object.keys(members).forEach(function(memberUid) {
+                    const isMe = memberUid === _myUid;
+                    if (isMe) {
+                        firebase.database().ref('users/' + _myUid + '/chats/' + _chatPartnerUid).update({
+                            partnerUid: _chatPartnerUid,
+                            partnerName: _chatPartnerName,
+                            members: members,
+                            lastMessage: text,
+                            lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
+                            lastSender: _myUid,
+                            unreadCount: 0
+                        });
+                    } else {
+                        // Write group message to transit queue: users/{memberUid}/chats/{_myUid}/groupMessages/{groupId}/{msgId}
+                        firebase.database().ref('users/' + memberUid + '/chats/' + _myUid + '/groupMessages/' + _chatPartnerUid + '/' + msgId).set({
+                            groupId: _chatPartnerUid,
+                            groupName: _chatPartnerName,
+                            text: text,
+                            senderId: _myUid,
+                            timestamp: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    }
+                });
+            });
+        }).catch(err => {
+            console.error('Send message error:', err);
+            sendBtn.disabled = false;
+        });
+        return;
+    }
+
+    const chatId = getChatId(_myUid, _chatPartnerUid);
+    const msgRef = firebase.database().ref('chats/' + chatId + '/messages').push();
+
     msgRef.set(messageData).then(() => {
         input.value = '';
         autoResizeTextarea(input);
         sendBtn.disabled = false;
 
-        const myName = firebase.auth().currentUser?.displayName || (firebase.auth().currentUser?.email ? firebase.auth().currentUser.email.split('@')[0] : 'User');
-        const myPhoto = firebase.auth().currentUser?.photoURL || null;
         const partnerCached = _userCache[_chatPartnerUid] || {};
         const partnerPhoto = partnerCached.photo || null;
 
@@ -786,7 +962,7 @@ function sendMessage() {
         // Increment unread count for partner
         firebase.database().ref('users/' + _chatPartnerUid + '/chats/' + _myUid + '/unreadCount').transaction(count => (count || 0) + 1);
 
-        // Send notification
+        // Send notification (catch silently if permissions deny)
         firebase.database().ref('users/' + _chatPartnerUid + '/notifications').push({
             type: 'message',
             fromUid: _myUid,
@@ -834,6 +1010,10 @@ function toggleSendBtn() {
 
 // 🔥 REAL video / voice call + emoji
 function startVideoCall(){
+  if (_chatPartnerUid && _chatPartnerUid.startsWith('group_')) {
+      showToast('📞 Calls are not supported in group chats.');
+      return;
+  }
   const partnerName = _chatPartnerName || 'User';
   const partnerInitial = partnerName.charAt(0).toUpperCase();
   const cached = _userCache[activeChatUid] || {};
@@ -856,6 +1036,10 @@ function startVideoCall(){
 }
 
 function startVoiceCall(){
+  if (_chatPartnerUid && _chatPartnerUid.startsWith('group_')) {
+      showToast('📞 Calls are not supported in group chats.');
+      return;
+  }
   const partnerName = _chatPartnerName || 'User';
   const partnerInitial = partnerName.charAt(0).toUpperCase();
   const cached = _userCache[activeChatUid] || {};
@@ -923,6 +1107,15 @@ function listenForOnlineStatus(uid) {
         if (statusEl) {
             statusEl.textContent = 'Online';
             statusEl.classList.add('online');
+        }
+        return;
+    }
+
+    if (uid.startsWith('group_')) {
+        const statusEl = document.getElementById('chatUserStatus');
+        if (statusEl) {
+            statusEl.textContent = 'Group Chat';
+            statusEl.classList.remove('online');
         }
         return;
     }
@@ -1003,6 +1196,8 @@ window.sharePostInDM = function(postId, postTitle, postImageUrl) {
 //  HELPERS
 // ============================================================
 function getChatId(uid1, uid2) {
+    if (uid1 && uid1.startsWith('group_')) return uid1;
+    if (uid2 && uid2.startsWith('group_')) return uid2;
     return [uid1, uid2].sort().join('_');
 }
 
@@ -1052,6 +1247,146 @@ function showToast(msg) {
     toast.textContent = msg;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ============================================================
+//  GROUP CHAT
+// ============================================================
+let _selectedGroupMembers = [];
+
+function openGroupModal() {
+    const overlay = document.getElementById('groupModalOverlay');
+    if (overlay) {
+        overlay.classList.add('open');
+        document.getElementById('groupNameInput').value = '';
+        document.getElementById('groupSearchInput').value = '';
+        _selectedGroupMembers = [];
+        searchGroupUsers('');
+    }
+}
+
+function closeGroupModal() {
+    const overlay = document.getElementById('groupModalOverlay');
+    if (overlay) overlay.classList.remove('open');
+}
+
+document.getElementById('groupModalOverlay')?.addEventListener('click', function(e) {
+    if (e.target === this) closeGroupModal();
+});
+
+function searchGroupUsers(query) {
+    const list = document.getElementById('groupUserList');
+    if (!list) return;
+    const q = query.toLowerCase().trim();
+
+    let html = '';
+    const seen = new Set();
+    Object.keys(_userCache).forEach(function(uid) {
+        if (uid === 'ankitstudio_ai_bot' || uid === _myUid) return; // Don't add AI bot or myself to checkbox list
+        const u = _userCache[uid];
+        const name = u.name || 'User';
+        const email = u.email || '';
+
+        if (q && !name.toLowerCase().includes(q) && !email.toLowerCase().includes(q) && !uid.toLowerCase().includes(q)) return;
+        if (seen.has(uid)) return;
+        seen.add(uid);
+
+        const initial = name.charAt(0).toUpperCase();
+        const isChecked = _selectedGroupMembers.includes(uid) ? 'checked' : '';
+
+        html += `<div class="compose-user-row" onclick="toggleGroupUserSelect('${uid}')">
+            <input type="checkbox" id="chk_group_user_${uid}" value="${uid}" ${isChecked} style="width: 18px; height: 18px; cursor: pointer; margin-right: 8px;" onclick="event.stopPropagation(); toggleGroupUserSelect('${uid}')">
+            <div class="compose-user-av">${initial}</div>
+            <div class="compose-user-name">${escHTML(name)}</div>
+        </div>`;
+    });
+
+    if (!html) {
+        html = '<div style="text-align:center; padding:40px; color:#8e8e8e;">Koi user nahi mila. Others will appear once they upload posts.</div>';
+    }
+
+    list.innerHTML = html;
+}
+
+function toggleGroupUserSelect(uid) {
+    const chk = document.getElementById('chk_group_user_' + uid);
+    if (_selectedGroupMembers.includes(uid)) {
+        _selectedGroupMembers = _selectedGroupMembers.filter(id => id !== uid);
+        if (chk) chk.checked = false;
+    } else {
+        _selectedGroupMembers.push(uid);
+        if (chk) chk.checked = true;
+    }
+}
+
+function createGroup() {
+    const nameInput = document.getElementById('groupNameInput');
+    const groupName = nameInput.value.trim();
+    if (!groupName) {
+        showToast('Please enter a group name!');
+        return;
+    }
+    if (_selectedGroupMembers.length === 0) {
+        showToast('Please select at least one member!');
+        return;
+    }
+
+    const groupId = 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    // Add all members + myself
+    const members = {};
+    _selectedGroupMembers.forEach(uid => {
+        members[uid] = true;
+    });
+    members[_myUid] = true;
+
+    const creatorName = firebase.auth().currentUser?.displayName || (firebase.auth().currentUser?.email ? firebase.auth().currentUser.email.split('@')[0] : 'User');
+    const initMessage = `${creatorName} created group "${groupName}"`;
+
+    // 1. Set creator's own chat path
+    firebase.database().ref('users/' + _myUid + '/chats/' + groupId).set({
+        partnerUid: groupId,
+        partnerName: groupName,
+        members: members,
+        lastMessage: initMessage,
+        lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
+        lastSender: 'system',
+        unreadCount: 0
+    }).then(() => {
+        // 2. Push initial system message to group thread in creator's own path
+        firebase.database().ref('users/' + _myUid + '/chats/' + groupId + '/messages').push({
+            text: initMessage,
+            senderId: 'system',
+            timestamp: Date.now(),
+            read: true,
+            type: 'text'
+        });
+
+        // 3. Send invite notifications to other members
+        const promises = _selectedGroupMembers.map(memberUid => {
+            return firebase.database().ref('users/' + memberUid + '/notifications').push({
+                type: 'group_invite',
+                fromUid: _myUid,
+                fromName: creatorName,
+                groupId: groupId,
+                groupName: groupName,
+                members: members,
+                text: creatorName + ' added you to group "' + groupName + '"',
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                read: false,
+                processed: false
+            });
+        });
+
+        Promise.all(promises).then(() => {
+            closeGroupModal();
+            openChatWith(groupId, groupName);
+            showToast('✅ Group created successfully!');
+        });
+    }).catch(err => {
+        console.error('Group creation error:', err);
+        showToast('❌ Failed to create group!');
+    });
 }
 
 // Enter key to send
@@ -1122,9 +1457,38 @@ window.startChat = function(uid, name) {
             window._pendingSharePost = null;
         }, 1000);
     }
-};
+function toggleChatMenu() {
+    const menu = document.getElementById('chatHeaderMenu');
+    if (menu) {
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+}
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('chatHeaderMenu');
+    const btn = document.getElementById('chatMenuBtn');
+    if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.style.display = 'none';
+    }
+});
+function deleteCurrentGroup() {
+    if (!_chatPartnerUid || !_chatPartnerUid.startsWith('group_')) return;
+    if (!confirm('Are you sure you want to delete this group? This will delete the group for all members.')) return;
 
+    const groupId = _chatPartnerUid;
+    firebase.database().ref('users/' + _myUid + '/chats/' + groupId + '/members').once('value', function(snap) {
+        const members = snap.exists() ? snap.val() : {};
+        firebase.database().ref('users/' + _myUid + '/chats/' + groupId).remove().then(function() {
+            Object.keys(members).forEach(function(memberUid) {
+                if (memberUid === _myUid) return;
+                firebase.database().ref('users/' + memberUid + '/chats/' + _myUid + '/groupDeletes/' + groupId).set(true);
+            });
+            closeChatView();
+            showToast('🗑️ Group deleted successfully!');
+        });
+    });
+}
 </script>
+
 <!-- ✅ Anti-flicker: nav bar instantly show hoga, content smooth aayega -->
 <style>
   /* Bottom nav instantly render — firebase load ka wait nahi */
